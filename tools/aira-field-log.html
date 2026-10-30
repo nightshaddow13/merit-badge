@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A.I.R.A. Field Log</title>
+<style>
+:root{
+  --bg:#16352B; --panel:#1d4538; --panel2:#0f2a21; --gold:#F2A900; --ink:#f4f1e8; --mut:#9fb8ac; --line:#35604f; --ok:#5fc48a; --red:#e0506b;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;gap:14px;padding:18px 0 6px}
+.badge{background:var(--gold);color:var(--bg);font-weight:800;letter-spacing:.06em;border-radius:8px;padding:6px 10px;font-size:20px}
+h1{margin:0;font-size:24px;line-height:1.1}
+.sub{color:var(--mut);font-size:14px;margin:2px 0 0}
+.stamp{margin-left:auto;border:3px solid var(--red);color:var(--red);font:700 13px "Courier New",monospace;padding:4px 8px;transform:rotate(-4deg);letter-spacing:.1em;white-space:nowrap}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+.card h2{margin:0 0 4px;font-size:18px;color:var(--gold)}
+.hint{color:var(--mut);font-size:14px;margin:0 0 12px}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px;font-weight:600}
+input[type=text],textarea{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
+textarea{min-height:68px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}.stamp{display:none}}
+.safe{background:var(--panel2);border-left:4px solid var(--gold);padding:10px 12px;border-radius:6px;font-size:14px;margin-top:12px}
+.progress{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 8px;border-bottom:1px solid var(--line)}
+.bar{height:10px;border-radius:6px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
+.bar>i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
+.pl{display:flex;justify-content:space-between;font-size:13px;color:var(--mut);margin-bottom:6px}
+.term{border:1px solid var(--line);border-radius:10px;padding:12px;margin:12px 0;background:var(--panel2)}
+.term.done{border-color:var(--ok)}
+.term h3{margin:0 0 2px;font-size:17px;display:flex;align-items:center;gap:8px}
+.n{background:var(--gold);color:var(--bg);width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-size:13px;font-weight:800;flex:none}
+.chk{margin-left:auto;color:var(--ok);font-weight:800;visibility:hidden}
+.term.done .chk{visibility:visible}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+button{font:inherit;font-weight:700;border:0;border-radius:10px;padding:12px 16px;cursor:pointer}
+.primary{background:var(--gold);color:var(--bg)}
+.secondary{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.msg{margin-top:10px;font-size:14px;min-height:20px}
+.msg.err{color:#ffb4c0}.msg.ok{color:var(--ok)}
+ol.how{margin:6px 0 0;padding-left:20px;color:var(--mut);font-size:14px}
+footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
+.coming{opacity:.6;font-size:14px;color:var(--mut)}
+.nav{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;margin:6px 0 0;-webkit-overflow-scrolling:touch}
+.nav button{flex:none;background:var(--panel);color:var(--ink);border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-size:14px}
+.nav button.cur{background:var(--gold);color:var(--bg);border-color:var(--gold)}
+.nav button:disabled{opacity:.45}
+.subnav{display:flex;gap:6px;margin:0 0 10px;border-bottom:2px solid var(--line)}.subnav button{background:none;color:var(--ink);border:0;border-bottom:3px solid transparent;padding:8px 14px;font-size:14px;margin-bottom:-2px;opacity:.7}.subnav button.cur{border-bottom-color:var(--gold);opacity:1;font-weight:700}
+.page{animation:pg .35s ease both}
+@keyframes pg{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.page{animation:none}}
+.codebox{border:2px dashed var(--gold);border-radius:12px;padding:14px;margin:14px 0;background:var(--panel2)}
+.codebox h2{margin:0 0 4px;color:var(--gold);font-size:17px}
+.codebox .row{display:flex;gap:10px;flex-wrap:wrap}
+.codebox input{flex:1;min-width:150px;font:700 20px "Courier New",monospace;letter-spacing:.25em;text-transform:uppercase}
+.shake{animation:sh .35s}
+@keyframes sh{20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.stub{text-align:center;padding:26px 10px}
+.stub .big{font-size:48px;font-weight:800;color:var(--gold)}
+.win{border-color:var(--ok);text-align:center}
+.qq{font-size:18px;font-weight:700;margin:6px 0 12px}
+.opt{display:block;width:100%;text-align:left;background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin:8px 0;padding:12px;font-weight:600}
+.opt.right{border-color:var(--ok);background:#1d4a38}
+.opt.wrong{border-color:var(--red);background:#4a2030}
+.fb{margin:10px 0;font-size:15px;min-height:22px}
+.score{font-size:44px;font-weight:800;color:var(--gold);text-align:center}
+.tabooTerm{font-size:30px;font-weight:800;color:var(--gold);text-align:center;margin:10px 0}
+.small{font-size:13px;color:var(--mut)}
+.tools{display:flex;flex-wrap:wrap;gap:10px}
+.tools a{display:inline-block;background:var(--gold);color:var(--bg);font-weight:700;text-decoration:none;padding:11px 14px;border-radius:10px}
+.tools a.alt{background:transparent;color:var(--ink);border:1px solid var(--gold)}
+.sc{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0}
+.sc h3{margin:0 0 4px;color:var(--gold);font-size:17px}
+.sc ul{margin:6px 0 0;padding-left:20px;color:var(--ink);font-size:15px}
+.vote{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.vote button{padding:16px;font-size:18px}
+.stance button{display:block;width:100%;text-align:left;margin:6px 0}
+.stance button.sel{border-color:var(--gold);background:#3a3a12}
+.stephead{margin:18px 2px 4px;padding:8px 12px;border-left:4px solid var(--accent,#2f7d5b);background:rgba(47,125,91,.10);border-radius:6px;font-size:14px}.stephead b{display:block;font-size:15px}.stephead span{opacity:.85}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">A.I.R.A.</span>
+    <div><h1>Field Log</h1><p class="sub">Mission: AI Ready &middot; Artificial Intelligence merit badge</p></div>
+    <span class="stamp">TOP SECRET</span>
+  </header>
+
+  <section class="card" id="agent">
+    <h2>Agent file</h2>
+    <p class="hint">Only your first name and last initial. Nothing here is typed into an AI chatbot.</p>
+    <div class="grid2">
+      <div><label for="name">Agent name (first name + last initial)</label><input type="text" id="name" autocomplete="off" maxlength="40"></div>
+      <div><label for="squad">Squad name</label><input type="text" id="squad" autocomplete="off" maxlength="40"></div>
+    </div>
+    <div class="safe"><b>Saved on this device only.</b> Your answers stay in this browser until you download the PDF and send it. You can also save them to a file and load them back. Counselor email: xgoss@live.com</div>
+  </section>
+
+  <section class="card" id="toolsCard">
+    <h2>Agent tools</h2>
+    <p class="hint">Opens in a new tab. Never type your name, school, address, or photos into a chatbot. Check what the AI tells you.</p>
+    <div class="tools" id="tools"></div>
+  </section>
+
+  <nav class="nav" id="nav" aria-label="Levels"></nav>
+  <nav class="subnav" id="subnav" aria-label="Level sections" hidden></nav>
+
+  <div class="page" id="p-L1">
+  <div class="progress" aria-live="polite">
+    <div class="pl"><span id="plabel">Level 1 &middot; 0 of 16 terms done</span><span id="ppct">0%</span></div>
+    <div class="bar"><i id="pbar"></i></div>
+  </div>
+
+  <section class="card" id="level1">
+    <h2>Level 1 &middot; Operation: THE DECODER</h2>
+    <p class="hint">Requirement 1. Be ready to explain every term to your counselor. Ask Scoutly, then jot each one in <b>your own words</b> with an example. These notes are optional. The Vocab Vault quiz is required.</p>
+    <div id="terms"></div>
+  </section>
+  <div class="actions" style="margin:6px 0 4px"><button class="primary" id="goVault">Open the Vocab Vault (required) &rarr;</button></div>
+
+  </div>
+
+  <div class="page" id="p-V1" hidden>
+    <section class="card">
+      <h2>Level 1 &middot; Vocab Vault <span class="small">(Boss Challenge: 50 XP)</span></h2>
+      <p class="hint">Squads answer together on <b>one device</b>. Ten questions drawn from the 16 terms. Talk it over, then pick one answer.</p>
+      <div id="quiz"></div>
+    </section>
+    <section class="card" id="bonusCard">
+      <h2>Bonus round &middot; describe it without saying it</h2>
+      <p class="hint">One scout describes the term using a Scouting example. Squad guesses. You can&rsquo;t say any word in the term. Counselor awards the bonus XP.</p>
+      <div class="tabooTerm" id="bTerm">&mdash;</div>
+      <div class="actions"><button class="secondary" id="bNext">Draw a term</button><button class="secondary" id="bTimer">Start 45s timer</button><span id="bClock" class="small" style="align-self:center"></span></div>
+    </section>
+  </div>
+
+  <div class="page" id="p-G4" hidden>
+    <section class="card">
+      <h2>Level 4 &middot; What Would You Do? <span class="small">(Requirement 4b &middot; Boss Challenge: 50 XP)</span></h2>
+      <p class="hint">Five scenarios. Discuss as a squad, pick a stance, and write your reason. Strong reasoning earns points, not the &ldquo;right&rdquo; answer.</p>
+      <div id="wwyd"></div>
+    </section>
+  </div>
+
+  <div id="extraPages"></div>
+
+  <div class="page" id="p-send" hidden>
+  <section class="card" id="finish">
+    <h2>Send your log to the counselor</h2>
+    <ol class="how">
+      <li>Fill in your name and squad.</li>
+      <li>Tap <b>Download PDF</b>.</li>
+      <li>Tap <b>Email to counselor</b> and attach the PDF if it isn&rsquo;t attached for you.</li>
+    </ol>
+    <div class="actions" style="margin-top:12px">
+      <button class="primary" id="btnPdf">Download PDF</button>
+      <button class="secondary" id="btnMail">Email to counselor</button>
+      <button class="secondary" id="btnClear">Start over</button>
+    </div>
+    <h2 style="margin-top:18px">Save or load your progress</h2>
+    <p class="hint">Your work already saves on this device automatically. Save a file to keep a backup or move to another device, then load it back later.</p>
+    <div class="actions">
+      <button class="secondary" id="btnSave">Save progress (.json)</button>
+      <button class="secondary" id="btnLoad">Load progress (.json)</button>
+      <input type="file" id="fileIn" accept=".json,application/json" hidden>
+    </div>
+    <div class="msg" id="msg"></div>
+  </section>
+  </div>
+
+  <footer>A.I.R.A. Field Log &middot; Scouting America Artificial Intelligence merit badge class</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+"use strict";
+var COUNSELOR_EMAIL = "xgoss@live.com";
+var STORE_KEY = "aira_field_log_v1";
+
+// Add later levels here as new sections (same shape as Level 1).
+var LEVELS = [{
+  id: "L1", title: "Level 1 - Operation: THE DECODER", req: "Requirement 1",
+  items: ["artificial intelligence (AI)","AI agents","automation","basic programming","bots","data","databases","digital workers","general AI","machine learning (ML)","narrow AI","superintelligent AI","tasks","triggers","workflows","variables"]
+}];
+
+var META = [
+  ["Key Concepts","THE DECODER","Requirement 1"],["AI Basics","SLEEPER CELL","Requirement 2"],["Automation","THE MACHINE ROOM","Requirement 3"],
+  ["Ethics in AI","THE MORAL COMPASS","Requirement 4"],["Deepfakes","MIRROR, MIRROR","Requirement 5"],["AI Skills","THE INTERROGATION ROOM","Requirement 6"],
+  ["Train Your Own AI","THE COUNTER-AGENT","Requirement 7(a)"],["Career Exploration","THE CHIEF'S BRIEFING","Requirement 8(b)"]];
+// Hashes of the cumulative code letters (so the word is not readable in the page source).
+var HASHES = ["ete9el9w48","1o6n1s8ih4a","1j3mearcxzd","jurhpi0419","1bofzgihqm8","24zy200ioz3","1n1f2lir93f","18anar7cuum"];
+var SINGLES = ["2bn8k1fztiv","4nyjic7ll4","1vovipyt05n","1qr7ruwm9l","1mz1u42q71e","1qr7ruwm9l","4nyjic7ll4","1bm5h5huoic"];
+function hash(s){var a=0xdeadbeef,b=0x41c6ce57;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);a=Math.imul(a^c,2654435761);b=Math.imul(b^c,1597334677);}
+  a=Math.imul(a^(a>>>16),2246822507)^Math.imul(b^(b>>>13),3266489909);b=Math.imul(b^(b>>>16),2246822507)^Math.imul(a^(a>>>13),3266489909);
+  return (4294967296*(2097151&b)+(a>>>0)).toString(36);}
+
+var DEFS = [
+ ["artificial intelligence (AI)","Computer systems that do things that normally take human intelligence, like learning, reasoning, and recognizing pictures."],
+ ["AI agents","AI systems that can pursue a goal and take actions on their own with little human help."],
+ ["automation","Using technology to do a task with little or no human effort."],
+ ["basic programming","Writing step-by-step instructions, called code, that a computer follows."],
+ ["bots","Software programs that automatically do tasks, often simple or repetitive ones, like a chatbot."],
+ ["data","Facts and information, like numbers, words, and pictures, that are collected and used."],
+ ["databases","Organized collections of data stored so they are easy to search and update."],
+ ["digital workers","Software, such as AI or bots, that does jobs a human employee would otherwise do."],
+ ["general AI","A hypothetical AI that could learn and do any thinking task a human can. It does not exist yet."],
+ ["machine learning (ML)","A kind of AI that learns patterns from data instead of following only hand-written rules."],
+ ["narrow AI","AI built to do one specific job well, like a spam filter. All AI today is this kind."],
+ ["superintelligent AI","A hypothetical AI that would be smarter than humans at nearly everything."],
+ ["tasks","The individual actions or steps that make up a workflow."],
+ ["triggers","Events that start an automation, like getting a new email."],
+ ["workflows","A series of tasks done in order to finish a job."],
+ ["variables","Named containers in a program that hold a value, which can change."]];
+var AION = [
+ ["Basic calculator","A basic calculator performing math operations.",false,"This is simple automation following pre-programmed rules.","","What makes this different from AI?|Could this become AI? How?|What would need to change?"],
+ ["Smart chess program","A chess program that improves its strategy by analyzing past games.",true,"The program learns and adapts from experience.","Chess merit badge","How does the program learn?|What data does it use?|How is this different from a basic calculator?"],
+ ["Weather prediction app","A phone app that predicts weather and adjusts forecasts based on actual outcomes.",true,"It learns from past predictions and real weather patterns to improve future forecasts.","Weather for outdoor activities and camping","How does weather prediction help Scout activities?|What data does the system use?|How does it improve over time?"],
+ ["Digital alarm clock","A basic digital alarm clock that goes off at set times.",false,"A simple time-based trigger with no learning or adaptation.","Camp schedule management","What would make this alarm clock “smart”?|How is this different from a smart home system?|What features would add AI?"],
+ ["Music recommendations","A streaming service that suggests songs based on your listening history.",true,"It uses machine learning to understand preferences and make personal recommendations.","Music merit badge","How does the system learn your preferences?|What patterns might it find?|How could this help in other areas?"],
+ ["Traffic light timer","A traffic light that changes at fixed intervals.",false,"It runs on predetermined timing without adapting.","Traffic Safety merit badge","What would make this light “smart”?|How could AI improve traffic flow?|What sensors would be needed?"],
+ ["Smart traffic management","Traffic lights that adjust their timing based on current traffic patterns.",true,"The system learns and adapts to traffic patterns in real time.","Traffic Safety merit badge","How does this improve traffic flow?|What data does it collect?|How does it handle special events?"],
+ ["Automatic door","A store door that opens when someone approaches.",false,"A simple motion sensor trigger with no learning.","Engineering merit badge","What sensors does it use?|How is this different from AI?|What would make it “smart”?"],
+ ["Smart home security","A security system that learns household patterns and alerts you to unusual activity.",true,"It learns normal patterns and spots anomalies.","Crime Prevention merit badge","What patterns might it learn?|How does it decide what is “unusual”?|What privacy concerns exist?"],
+ ["Automated sprinklers","Lawn sprinklers that turn on at scheduled times.",false,"Simple timer-based automation with no adaptation.","Gardening merit badge","How could this system be improved?|What would make it “smart”?|How could it be more efficient?"],
+ ["Smart irrigation","Sprinklers that adjust watering based on soil moisture, weather forecasts, and plant needs.",true,"It learns the best watering patterns from several data sources.","Environmental Science merit badge","What factors influence its decisions?|How does it save water?|What sensors does it use?"],
+ ["Vending machine","A basic vending machine that dispenses an item when money is inserted.",false,"A simple input-output machine with no learning.","American Business merit badge","How does it verify payment?|What would make it “smart”?|How could AI improve it?"],
+ ["Language translation app","An app that translates between languages and improves with user corrections.",true,"It learns from user feedback and context to improve translations.","American Cultures merit badge","How does it handle new phrases?|What makes translations accurate?|How does it learn from corrections?"],
+ ["Digital thermostat","A thermostat that keeps a set temperature.",false,"Simple temperature control with no learning or adaptation.","Home energy management","How does it maintain temperature?|What would make it “smart”?|How could AI improve efficiency?"],
+ ["Homework helper","An app that solves math problems by following fixed formulas.",false,"It uses programmed rules with no understanding or adaptation.","Scholarship merit badge","How does it solve problems?|What are its limitations?|How could AI improve it?"],
+ ["Smart study tutor","An education app that adapts to a student's learning patterns and changes its teaching methods.",true,"It learns from student responses and adjusts its approach.","Scholarship merit badge","How does it spot learning styles?|What patterns does it recognize?|How does it adjust methods?"],
+ ["Automatic hand dryer","A bathroom hand dryer that turns on when hands are present.",false,"A simple sensor-triggered response with no learning.","Engineering merit badge","What type of sensor does it use?|How is this different from AI?|What would make it “smart”?"],
+ ["Smart energy monitor","A home system that learns your energy-use patterns and suggests improvements.",true,"It analyzes patterns and gives adaptive recommendations.","Energy merit badge","What patterns does it analyze?|How does it make recommendations?|How does this save energy?"],
+ ["Automated manufacturing line","A factory line that assembles products in a fixed sequence.",false,"A programmed sequence of actions with no adaptation.","Engineering merit badge","How is the sequence programmed?|What would make it “smart”?|How could AI improve it?"],
+ ["Quality control system","A factory system that learns to spot defects from example images.",true,"It learns to recognize and classify defects through training.","Engineering merit badge","How does it learn to identify defects?|What makes it more reliable than humans?|How does it handle new kinds of defects?"]
+];
+var WWYD = [
+ ["School admissions","An AI system reviews student applications to decide who gets into a school program.","Data: grades, test scores, activities. Bias risks: historical, demographic, geographic. Oversight: reviews, appeals, audits.","Trustworthy (transparent process), Kind (individual circumstances)","How can we make sure the system is fair?|What role should humans play?|How does this connect to Scout values?"],
+ ["AI healthcare assistant","A hospital uses AI to decide which emergency room patients are treated first, using vital signs and symptoms.","Data: vitals, symptoms, history, age. Issues: life-or-death choices, errors, override procedures, who is responsible.","Helpful, Courteous, Kind, Brave","Who is responsible if the system makes a mistake?|How should human judgment be included?|What backup systems should exist?"],
+ ["AI in law enforcement","Police use AI to predict high-crime areas from past crime data and decide where to send patrols.","Data: crime history, demographics, location and time. Concerns: bias, community impact, privacy, accountability.","Trustworthy, Loyal, Helpful, Brave","How do we treat all communities fairly?|What oversight should exist?|How should this data be used responsibly?|What role does human judgment play?"],
+ ["AI essay grading","A school uses AI to grade essays on writing quality, content, and creativity.","Criteria: mechanics, understanding, creativity. Challenges: subjective scoring, cultural and language differences.","Trustworthy, Helpful, Kind","How can creativity be graded fairly?|What appeals process should exist?|How should cultural differences be handled?|What role should teachers play?"],
+ ["Environmental monitoring","An AI system controls water use, energy use, and waste management for a community.","Competing needs: protecting nature, community needs, costs, the future. Impacts on communities and future generations.","Thrifty, Clean, Helpful","How should different needs be balanced?|What priorities should guide decisions?|How can fairness be ensured?|What role does conservation play?"],
+ ["Social media moderation","An AI system filters content and monitors interactions on a platform for young people.","Evaluating: age-appropriateness, context, safety. Challenges: false positives and negatives, free expression, privacy.","Clean, Courteous, Friendly, Brave","How strict should filtering be?|What appeals process is needed?|How should context be considered?|What role do human moderators play?"],
+ ["Self-driving car safety","An autonomous vehicle must make split-second decisions in possible accident situations.","Priorities: passengers, pedestrians, property. Issues: who is accountable, legal liability, moral responsibility.","Trustworthy, Helpful, Brave, Loyal","How should priorities be programmed?|Who is responsible for decisions?|What safety measures are needed?|How should risks be balanced?"],
+ ["Loan approvals","An AI system approves or denies loan applications by judging creditworthiness and risk.","Criteria: credit history, income, debt, patterns. Fairness: equal access, historical bias, special circumstances.","Trustworthy, Thrifty, Helpful","How can bias be prevented?|What appeals process is needed?|How should special circumstances be considered?|What role should human judgment play?"],
+ ["Job application screening","An AI system screens job applications and resumes.","Criteria: skills, experience, qualifications. Fairness: bias, equal opportunity, transparency, human oversight.","Friendly, Kind, Helpful","How can fairness be ensured?|What oversight is needed?|How should unique situations be handled?|What role should human recruiters play?"],
+ ["Personal privacy","An AI system collects and analyzes personal data to personalize and improve a service.","Data: what is collected, how it is stored and used, consent. Privacy: data rights, control, transparency.","Trustworthy, Loyal, Courteous","What data should be collected?|How should it be protected?|What control should users have?|How can transparency be maintained?"]
+];
+
+var QN = 10;
+// Links shown in the Agent tools card. Leave a url empty to hide that link.
+var TOOLS = [
+  {label:"Open Scoutly", url:"https://scoutly.scouting.org/"},
+  {label:"Scouting America ChatGPT agent", url:"", alt:true},
+  {label:"Sightengine AI-or-Not (images)", url:"https://sightengine.com/ai-or-not", alt:true}
+];
+
+var state = { name:"", squad:"", answers:{}, unlocked:1, won:false, page:"L1", vault:{best:null,last:null}, games:{ai:{best:null,last:null}}, wwyd:[], l2:null };   // answers["L1|0"] = {def, ex}
+
+function load(){
+  try { var s = JSON.parse(localStorage.getItem(STORE_KEY)||"null"); if(s && typeof s==="object") state = Object.assign(state,s); } catch(e){}
+}
+var saveTimer;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(function(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }, 250);
+}
+function $(id){ return document.getElementById(id); }
+function key(l,i){ return LEVELS[l].id+"|"+i; }
+function isDone(l,i){ var a=state.answers[key(l,i)]; return !!(a && a.def && a.def.trim().length>=8); }
+
+function build(){
+  var host = $("terms"); host.innerHTML="";
+  LEVELS[0].items.forEach(function(term,i){
+    var a = state.answers[key(0,i)] || {def:"",ex:""};
+    var d = document.createElement("div"); d.className="term"; d.id="t"+i;
+    d.innerHTML = '<h3><span class="n">'+(i+1)+'</span><span></span><span class="chk" title="Done">&#10003; done</span></h3>'+
+      '<label for="d'+i+'">In my own words</label><textarea id="d'+i+'" maxlength="400"></textarea>'+
+      '<label for="e'+i+'">Example (a Scouting example earns bonus XP)</label><textarea id="e'+i+'" maxlength="300"></textarea>';
+    d.querySelector("h3 span:nth-child(2)").textContent = term;
+    host.appendChild(d);
+    $("d"+i).value = a.def||""; $("e"+i).value = a.ex||"";
+    function upd(){ state.answers[key(0,i)] = {def:$("d"+i).value, ex:$("e"+i).value}; refresh(); save(); }
+    $("d"+i).addEventListener("input",upd); $("e"+i).addEventListener("input",upd);
+  });
+  $("name").value = state.name||""; $("squad").value = state.squad||"";
+  refresh();
+}
+function refresh(){
+  var n=LEVELS[0].items.length, done=0;
+  for(var i=0;i<n;i++){ var ok=isDone(0,i); if(ok) done++; $("t"+i).classList.toggle("done",ok); }
+  var pct=Math.round(done/n*100);
+  $("plabel").textContent="Level 1 · "+done+" of "+n+" terms done";
+  $("ppct").textContent=pct+"%"; $("pbar").style.width=pct+"%";
+}
+function curPage(){ return state.page||"L1"; }
+function show(p){
+  var ids=["L1","V1","L2","L3","L4","G4","L5","L6","L7","L8","send"];
+  if(p==="G2") p="L2";
+  if(ids.indexOf(p)<0) p="L1";
+  var n=parseInt(p.slice(1),10); if(p!=="send" && n>state.unlocked) p="L"+state.unlocked;
+  state.page=p; save();
+  ids.forEach(function(id){ var el=$("p-"+id); if(el){ el.hidden=(id!==p); if(id===p){ el.style.animation="none"; void el.offsetWidth; el.style.animation=""; } } });
+  renderNav(); window.scrollTo({top:0,behavior:"smooth"});
+}
+var SUBS={L1:[["L1","Terms"],["V1","Vocab Vault"]],L4:[["L4","Ethics worksheet"],["G4","What Would You Do?"]]};
+function parentLevel(p){ return p==="V1"?"L1":p==="G4"?"L4":p; }
+function renderSub(){
+  var sn=$("subnav"), par=parentLevel(curPage()), subs=SUBS[par]; sn.innerHTML=""; sn.hidden=!subs; if(!subs) return;
+  subs.forEach(function(x){ var b=document.createElement("button"); b.textContent=x[1]; if(curPage()===x[0]) b.className="cur"; b.addEventListener("click",function(){ show(x[0]); }); sn.appendChild(b); }); }
+function renderNav(){ renderSub(); for(var q=3;q<=8;q++){ if($("lvl-"+q)) lvRefresh(q); } l2Refresh();
+  var nav=$("nav"); nav.innerHTML="";
+  for(var i=1;i<=8;i++){ (function(i){
+    var b=document.createElement("button"); var locked=i>state.unlocked;
+    b.textContent=locked?"\ud83d\udd12 L"+i:"L"+i; b.disabled=locked; b.title=META[i-1][0]+(locked?" (locked)":"");
+    if(parentLevel(curPage())==="L"+i) b.className="cur"; b.addEventListener("click",function(){ show("L"+i); }); nav.appendChild(b);
+  })(i); }
+  var s=document.createElement("button"); s.textContent="Send & save"; if(curPage()==="send") s.className="cur";
+  s.addEventListener("click",function(){ show("send"); }); nav.appendChild(s);
+}
+function codeBox(n){
+  var d=document.createElement("div"); d.className="codebox"; d.id="cb"+n;
+  var next = n<8 ? "Level "+(n+1) : "the final transmission";
+  d.innerHTML='<h2>'+(n<8?'Enter the access code to unlock '+next:'Enter the full code word')+'</h2>'+
+    '<p class="hint">'+(n<8?'Type every code letter you have so far, in order. Your counselor reveals the next letter when the squad clears this level.':'Type the whole MIRAGE access code to shut it down.')+'</p>'+
+    '<div class="row"><input type="text" id="ci'+n+'" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" placeholder="'+(n<8?new Array(n+1).join("_ "):"_ _ _ _ _ _ _ _")+'">'+
+    '<button class="primary" id="cg'+n+'">'+(n<8?'Unlock':'Shut it down')+'</button></div><div class="msg" id="cm'+n+'"></div>';
+  return d;
+}
+function tryUnlock(n){
+  var inp=$("ci"+n), m=$("cm"+n), v=inp.value.replace(/[^a-z]/gi,"").toUpperCase();
+  if(n<state.unlocked || (n===8 && state.won)){ m.textContent="Already cleared."; m.className="msg ok"; return; }
+  var miss=lvMissing(n); if(miss.length){ m.textContent="Finish the required items first: "+miss.join(", ")+"."; m.className="msg err"; return; }
+  if((hash("aira:"+v)===HASHES[n-1] && v.length===n) || (n<8 && v.length===1 && hash("aira1:"+v)===SINGLES[n-1])){
+    if(n<8){ state.unlocked=n+1; save(); m.textContent="ACCESS GRANTED"; m.className="msg ok"; setTimeout(function(){ show("L"+(n+1)); },700); }
+    else { state.won=true; save(); m.textContent="ACCESS GRANTED"; m.className="msg ok"; renderL8win(); }
+  } else {
+    m.textContent="ACCESS DENIED. Type the code letters you have so far, in order (for example V then VE)."; m.className="msg err"; inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake");
+  }
+  renderNav();
+}
+function renderL8win(){
+  var w=$("win8"); if(!w) return; w.hidden=!state.won;
+}
+var L2SEC=[["life","2a \u00b7 AI in everyday life","Ten examples. Think home, phone, car, games, shopping, and around town.",10],
+ ["work","2b \u00b7 AI in the workplace","Five examples of AI helping people do their jobs.",5],
+ ["school","2c \u00b7 AI at school","Five examples of AI that support learning.",5]];
+function newL2(){ return {life:new Array(10).fill(""),work:new Array(5).fill(""),school:new Array(5).fill(""),tl:[0,1,2,3,4,5,6,7].map(function(){return {year:"",text:""};})}; }
+function fixL2(o){
+  var n=newL2(); if(!o||typeof o!=="object") return n;
+  ["life","work","school"].forEach(function(k){ if(Array.isArray(o[k])) o[k].slice(0,n[k].length).forEach(function(v,i){ n[k][i]=String(v||"").slice(0,120); }); });
+  if(Array.isArray(o.tl)) o.tl.slice(0,8).forEach(function(r,i){ n.tl[i]={year:String((r&&r.year)||"").slice(0,5),text:String((r&&r.text)||"").slice(0,160)}; });
+  return n;
+}
+function l2Filled(v){ return String(v||"").trim().length>=3; }
+function tlOk(r){ return /^\d{3,4}$/.test(String(r.year).trim()) && String(r.text).trim().length>=5; }
+function l2Count(){ var d=0,t=0; ["life","work","school"].forEach(function(k){ state.l2[k].forEach(function(v){ t++; if(l2Filled(v)) d++; }); }); var td=0; state.l2.tl.forEach(function(r){ if(tlOk(r)) td++; }); t+=5; d+=Math.min(5,td); t++; if(state.games.ai.best!=null) d++; return [d,t]; }
+function l2Refresh(){
+  var c=l2Count(), pct=Math.round(c[0]/c[1]*100), e=$("l2label"); if(!e) return;
+  e.textContent="Level 2 \u00b7 "+c[0]+" of "+c[1]+" items done"; $("l2pct").textContent=pct+"%"; $("l2bar").style.width=pct+"%";
+  L2SEC.forEach(function(sec){ var k=sec[0],d=0; state.l2[k].forEach(function(v){ if(l2Filled(v)) d++; }); $("l2c-"+k).textContent=d+" of "+sec[3]; });
+  var td=0; state.l2.tl.forEach(function(r){ if(tlOk(r)) td++; }); $("l2c-tl").textContent=Math.min(5,td)+" of 5 required";
+  var best=state.games.ai.best; $("l2ai").textContent=best==null?"Required: play all 10 rounds":"Done. Score: "+best+" / 10";
+}
+function buildL2(pg){
+  state.l2=fixL2(state.l2);
+  var top=el("div","progress"); top.innerHTML='<div class="pl"><span id="l2label"></span><span id="l2pct"></span></div><div class="bar"><i id="l2bar"></i></div>'; pg.appendChild(top);
+  var s1=el("div","stephead"); s1.innerHTML="<b>Step 1 &middot; Lists (required)</b> <span>2a, 2b, 2c. Fill every line. Ask Scoutly if you are stuck.</span>"; pg.appendChild(s1);
+  L2SEC.forEach(function(sec){
+    var k=sec[0], card=el("section","card"); var h=el("h2",null,sec[1]+" "); var cnt=el("span","small"); cnt.id="l2c-"+k; h.appendChild(cnt); card.appendChild(h); card.appendChild(el("p","hint",sec[2]));
+    state.l2[k].forEach(function(v,i){ var row=el("div"); row.style.cssText="display:flex;gap:8px;align-items:center;margin:6px 0"; var n=el("span","n",String(i+1)); var inp=el("input"); inp.type="text"; inp.maxLength=120; inp.value=v; inp.setAttribute("aria-label",sec[1]+" example "+(i+1)); inp.autocomplete="off";
+      inp.addEventListener("input",function(){ state.l2[k][i]=inp.value; l2Refresh(); save(); }); row.appendChild(n); row.appendChild(inp); card.appendChild(row); });
+    card.appendChild(el("p","small","Keep only the examples you can explain. Say how each one uses AI.")); pg.appendChild(card);
+  });
+  var s2=el("div","stephead"); s2.innerHTML="<b>Step 2 &middot; AI or Not? (required)</b> <span>Requirement 2d. Ten rounds. Your squad votes together on one device: is it AI, or just automation following fixed rules? Your counselor leads the talk after each reveal.</span>"; pg.appendChild(s2);
+  var g=el("section","card"); var gh=el("h2",null,"AI or Not? "); var gs=el("span","small"); gs.id="l2ai"; gh.appendChild(gs); g.appendChild(gh);
+  var ad=el("div"); ad.id="aion"; g.appendChild(ad); pg.appendChild(g);
+  var s3=el("div","stephead"); s3.innerHTML="<b>Step 3 &middot; AI timeline (required)</b> <span>Requirement 2e. Your squad puts the 8 milestone cards in order, then each scout writes them down here.</span>"; pg.appendChild(s3);
+  var t=el("section","card"); var th=el("h2",null,"AI timeline "); var tc=el("span","small"); tc.id="l2c-tl"; th.appendChild(tc); t.appendChild(th);
+  t.appendChild(el("p","hint","Write at least 5 of the 8 milestones from your cards, oldest first: the year and a few words about what happened. The answer check on screen shows you if you are right."));
+  var rows=el("div"); t.appendChild(rows);
+  function drawTl(){ rows.innerHTML=""; state.l2.tl.forEach(function(r,i){ var row=el("div"); row.style.cssText="display:grid;grid-template-columns:86px 1fr;gap:8px;margin:6px 0";
+    var y=el("input"); y.type="text"; y.inputMode="numeric"; y.maxLength=5; y.placeholder="Year"; y.value=r.year; y.setAttribute("aria-label","Milestone "+(i+1)+" year");
+    var x=el("input"); x.type="text"; x.maxLength=160; x.placeholder="What happened?"; x.value=r.text; x.setAttribute("aria-label","Milestone "+(i+1)+" event");
+    y.addEventListener("input",function(){ r.year=y.value; l2Refresh(); save(); }); x.addEventListener("input",function(){ r.text=x.value; l2Refresh(); save(); });
+    row.appendChild(y); row.appendChild(x); rows.appendChild(row); }); }
+  drawTl();
+  var sb=el("button","secondary","Sort oldest to newest"); sb.style.marginTop="8px";
+  sb.addEventListener("click",function(){ state.l2.tl.sort(function(a,b){ var A=parseInt(a.year,10),B=parseInt(b.year,10); if(isNaN(A)) A=1e9; if(isNaN(B)) B=1e9; return A-B; }); drawTl(); save(); });
+  t.appendChild(sb); pg.appendChild(t);
+  var s4=el("div","stephead"); s4.innerHTML="<b>Step 4 &middot; Unlock Level 3</b> <span>Finish every required item, then enter the code letter your counselor gives you.</span>"; pg.appendChild(s4);
+  l2Refresh();
+}
+var FIVE=["Be specific","Give context and a role","Show an example","Set the format and limits","Follow up"];
+var LAW=["Trustworthy","Loyal","Helpful","Friendly","Courteous","Kind","Obedient","Cheerful","Thrifty","Brave","Clean","Reverent"];
+var LV={
+3:{secs:[
+ {k:"home",t:"rows",h:"3a \u00b7 Everyday automation",hint:"Ten examples of automation you see every day. Name what starts each one.",n:10,cols:[{k:"v",ph:"Example and its trigger"}]},
+ {k:"work",t:"rows",h:"3b \u00b7 Automation at work",hint:"Five examples of automation helping people at work.",n:5,cols:[{k:"v",ph:"Example"}]},
+ {k:"school",t:"rows",h:"3c \u00b7 Automation at school",hint:"Five ways automation can support school or your education.",n:5,cols:[{k:"v",ph:"Example"}]},
+ {k:"hist",t:"rows",h:"3e \u00b7 Automation timeline",hint:"Five milestones in automation history, oldest first. Check each date with a second source.",n:5,cols:[{k:"y",ph:"Year",w:"86px",num:1},{k:"v",ph:"What happened?"}]}]},
+4:{secs:[
+ {k:"big",t:"form",h:"4a \u00b7 Ethical concerns",hint:"In a sentence or two each, describe the concern.",f:[{k:"bias",label:"Bias",area:1},{k:"priv",label:"Privacy",area:1},{k:"dec",label:"AI decision-making (who is responsible when it is wrong?)",area:1}]},
+ {k:"game",t:"game"},
+ {k:"law",t:"rows",h:"4c \u00b7 My guidelines for using AI",hint:"Three rules for how you will use AI, each tied to a point of the Scout Law.",n:3,cols:[{k:"law",sel:LAW,w:"130px"},{k:"rule",ph:"My rule"}]},
+ {k:"tur",t:"form",h:"4d \u00b7 The Turing test",hint:"",f:[{k:"exp",label:"Explain the Turing test in your own words.",area:1}]}]},
+5:{secs:[
+ {k:"what",t:"form",h:"5a \u00b7 What is a deepfake?",hint:"",f:[{k:"def",label:"What is a deepfake?",area:1},{k:"aff",label:"How can it affect a person?",area:1}]},
+ {k:"act",t:"form",h:"5b \u00b7 If a deepfake targets you or a friend",hint:"Describe the actions to take. It is never the victim\u2019s fault.",f:[{k:"steps",label:"What actions would you take?",area:1}]},
+ {k:"sf",t:"note",h:"Optional \u00b7 Spot the Fake practice",hint:"Your squad tries to tell real from AI images. Nothing to write here.",link:["https://sightengine.com/ai-or-not","Open AI or Not (Sightengine)"]}]},
+6:{secs:[
+ {k:"meth",t:"rows",h:"6b \u00b7 Five ways to communicate with AI",hint:"List five methods.",n:5,cols:[{k:"v",ph:"A method"}]},
+ {k:"why",t:"form",h:"6c \u00b7 Why prompt engineering matters",hint:"",f:[{k:"why",label:"Why does a better prompt give better output?",area:1}]},
+ {k:"pr",t:"rows",h:"6d \u00b7 Three clear instructions for a school task",hint:"Pick a school task: a study plan, essay outline, or math explanation. Write three clear prompts.",n:3,lab:"Prompt ",cols:[{k:"p",ph:"Your prompt"}]}]},
+7:{secs:[
+ {k:"plan",t:"form",h:"7a \u00b7 Plan your AI project",hint:"Choose a project with your counselor. Keep it simple, with no faces or personal data.",f:[{k:"obj",label:"Objectives: what will your AI learn to do?",area:1},{k:"data",label:"Data requirements: what data will you use?",area:1},{k:"eth",label:"Ethical considerations: what could go wrong?",area:1}]},
+ {k:"tm",t:"note",h:"Build it",hint:"Build your model, then test it.",link:["https://teachablemachine.withgoogle.com/","Open Teachable Machine"]},
+ {k:"share",t:"form",h:"7a \u00b7 Share what you did",hint:"",f:[{k:"steps",label:"What steps did you follow?",area:1},{k:"exp",label:"What went wrong, and what would you change?",area:1}]}]},
+8:{secs:[
+ {k:"who",t:"form",h:"8b \u00b7 Interview an AI professional",hint:"Write notes from the press conference.",f:[{k:"role",label:"Who you interviewed (job title)"},{k:"day",label:"Daily work",area:1},{k:"chal",label:"Challenges",area:1},{k:"vis",label:"Vision for the field",area:1},{k:"train",label:"Training, education, certification, experience, and costs",area:1}]}]}
+};
+function lvNew(){ var o={}; Object.keys(LV).forEach(function(n){ o[n]={}; LV[n].secs.forEach(function(s){
+  if(s.t==="game"||s.t==="note") return;
+  if(s.t==="rows") o[n][s.k]=Array.apply(null,Array(s.n)).map(function(){var r={};s.cols.forEach(function(c){r[c.k]="";});return r;});
+  else if(s.t==="form"){ var f={}; s.f.forEach(function(x){f[x.k]="";}); o[n][s.k]=f; }
+  else o[n][s.k]=s.items.map(function(){return false;}); }); }); return o; }
+function fixLv(raw){
+  var o=lvNew(); if(!raw||typeof raw!=="object") return o;
+  Object.keys(LV).forEach(function(n){ var rn=raw[n]; if(!rn||typeof rn!=="object") return; LV[n].secs.forEach(function(s){ if(s.t==="game"||s.t==="note") return; var rs=rn[s.k]; if(rs==null) return;
+    if(s.t==="rows"&&Array.isArray(rs)) rs.slice(0,s.n).forEach(function(r,i){ s.cols.forEach(function(c){ var v=String((r&&r[c.k])||"").slice(0,200); if(c.sel&&c.sel.indexOf(v)<0) v=""; o[n][s.k][i][c.k]=v; }); });
+    else if(s.t==="form"&&typeof rs==="object") s.f.forEach(function(x){ var v=String(rs[x.k]||"").slice(0,500); if(x.sel&&x.sel.indexOf(v)<0) v=""; o[n][s.k][x.k]=v; });
+    else if(s.t==="chk"&&Array.isArray(rs)) rs.slice(0,s.items.length).forEach(function(b,i){ o[n][s.k][i]=b===true; });
+  }); }); return o; }
+function lvOk(v,sel){ v=String(v||"").trim(); return sel? v.length>0 : v.length>=3; }
+function lvSecCount(n,s){ var d=0,t=0; if(s.t==="game"||s.t==="note") return [0,0]; var v=state.lv[n][s.k];
+  if(s.t==="rows"){ t=s.req||s.n; v.forEach(function(r){ if(s.cols.every(function(c){return lvOk(r[c.k],c.sel);})) d++; }); d=Math.min(d,t); }
+  else if(s.t==="form"){ t=s.f.length; s.f.forEach(function(x){ if(lvOk(v[x.k],x.sel)) d++; }); }
+  else { t=s.items.length; v.forEach(function(b){ if(b) d++; }); }
+  return [d,t]; }
+function gameDone(n){ return n===4 ? state.wwyd.length>=5 : false; }
+function lvCount(n){ var d=0,t=0; LV[n].secs.forEach(function(s){ var c=lvSecCount(n,s); d+=c[0]; t+=c[1]; }); if(n===4){ t++; if(gameDone(4)) d++; } return [d,t]; }
+function lvMissing(n){ var m=[];
+  if(n===1){ if(state.vault.best==null) m.push("play the Vocab Vault quiz"); return m; }
+  if(n===2){ var c=l2Count(); if(c[0]<c[1]){ var left=c[1]-c[0]; m.push(left+" item"+(left>1?"s":"")+" on this page (lists, timeline, AI or Not)"); } return m; }
+  LV[n].secs.forEach(function(s){ var c=lvSecCount(n,s); if(c[0]<c[1]) m.push(s.h.replace(/ \u00b7.*$/,"")); });
+  if(n===4 && !gameDone(4)) m.push("finish all five What Would You Do? rounds");
+  return m; }
+function lvRefresh(n){
+  var c=lvCount(n), pct=Math.round(c[0]/c[1]*100);
+  $("lvl-"+n).textContent="Level "+n+" · "+c[0]+" of "+c[1]+" items done"; $("lvp-"+n).textContent=pct+"%"; $("lvb-"+n).style.width=pct+"%";
+  LV[n].secs.forEach(function(s){ var e=$("lvc-"+n+"-"+s.k); if(!e) return; var cc=lvSecCount(n,s); e.textContent=cc[0]+" of "+cc[1]; });
+  if(n===4&&$("wwydst")) $("wwydst").textContent=gameDone(4)?"Done":(state.wwyd.length+" of 5 rounds"); }
+function mkField(n,s,kind,obj,key,def,ph){
+  var e;
+  if(def.sel){ e=el("select"); var o0=el("option","", "Choose..."); o0.value=""; e.appendChild(o0); def.sel.forEach(function(x){ var o=el("option","",x); o.value=x; e.appendChild(o); }); e.value=obj[key]; }
+  else if(def.area){ e=el("textarea"); e.rows=2; e.maxLength=500; e.value=obj[key]; }
+  else { e=el("input"); e.type="text"; e.maxLength=200; e.autocomplete="off"; e.value=obj[key]; if(def.num){ e.inputMode="numeric"; e.maxLength=5; } if(ph) e.placeholder=ph; }
+  e.addEventListener(def.sel?"change":"input",function(){ obj[key]=e.value; lvRefresh(n); save(); }); return e; }
+function buildLv(n,pg){
+  var top=el("div","progress"); top.innerHTML='<div class="pl"><span id="lvl-'+n+'"></span><span id="lvp-'+n+'"></span></div><div class="bar"><i id="lvb-'+n+'"></i></div>'; pg.appendChild(top);
+  LV[n].secs.forEach(function(s){
+    if(s.t==="game"){ var wc=el("section","card"); var wh=el("h2",null,"4b \u00b7 What Would You Do? "); var ws=el("span","small"); ws.id="wwydst"; wh.appendChild(ws); wc.appendChild(wh); wc.appendChild(el("p","hint","Five scenarios. Discuss as a squad, pick a stance, and write your reason. Reasoning earns points, not the right answer. When you finish, come back to the Ethics worksheet tab for Steps 3 and 4 and the unlock.")); var wb=el("button","primary","Open the What Would You Do? tab \u2192"); wb.addEventListener("click",function(){ show("G4"); }); wc.appendChild(wb); pg.appendChild(wc); return; }
+    if(s.t==="note"){ var nc=el("section","card"); nc.appendChild(el("h2",null,s.h)); if(s.hint) nc.appendChild(el("p","hint",s.hint)); if(s.link){ var la=el("a","primary",s.link[1]+" \u2197"); la.href=s.link[0]; la.target="_blank"; la.rel="noopener noreferrer"; la.style.cssText="display:inline-block;text-decoration:none;margin:2px 0 8px;padding:10px 14px;border-radius:8px;font-weight:700"; nc.appendChild(la); } pg.appendChild(nc); return; }
+    var card=el("section","card"), h=el("h2",null,s.h+" "), cnt=el("span","small"); cnt.id="lvc-"+n+"-"+s.k; h.appendChild(cnt); card.appendChild(h);
+    if(s.hint) card.appendChild(el("p","hint",s.hint));
+    if(s.link){ var la=el("a","primary",s.link[1]+" \u2197"); la.href=s.link[0]; la.target="_blank"; la.rel="noopener noreferrer"; la.style.cssText="display:inline-block;text-decoration:none;margin:2px 0 8px;padding:10px 14px;border-radius:8px;font-weight:700"; card.appendChild(la); }
+    var v=state.lv[n][s.k];
+    if(s.t==="rows") v.forEach(function(r,i){ var row=el("div"); row.style.cssText="display:flex;gap:8px;align-items:center;margin:6px 0";
+      row.appendChild(el("span","n",(s.lab!=null?s.lab:"")+(s.lab===""?"":(i+1))||String(i+1)));
+      s.cols.forEach(function(c){ var f=mkField(n,s,"r",r,c.k,c,c.ph); f.setAttribute("aria-label",s.h+" "+(i+1)+" "+c.k); if(c.w){ f.style.flex="0 0 "+c.w; f.style.width=c.w; } else f.style.flex="1"; row.appendChild(f); });
+      card.appendChild(row); });
+    else if(s.t==="form") s.f.forEach(function(x){ var l=el("label",null,x.label); l.style.cssText="display:block;margin:10px 0 4px;font-size:14px"; card.appendChild(l); var f=mkField(n,s,"f",v,x.k,x); f.style.width="100%"; f.setAttribute("aria-label",x.label); card.appendChild(f); });
+    else s.items.forEach(function(it,i){ var l=el("label"); l.style.cssText="display:flex;gap:10px;align-items:center;margin:8px 0;font-size:15px"; var cb=el("input"); cb.type="checkbox"; cb.checked=v[i]; cb.addEventListener("change",function(){ v[i]=cb.checked; lvRefresh(n); save(); }); l.appendChild(cb); l.appendChild(document.createTextNode(it)); card.appendChild(l); });
+    pg.appendChild(card);
+    if(n===3&&s.k==="hist"){ var sb=el("button","secondary","Sort timeline oldest to newest"); sb.addEventListener("click",function(){ v.sort(function(a,b){ var A=parseInt(a.y,10),B=parseInt(b.y,10); if(isNaN(A))A=1e9; if(isNaN(B))B=1e9; return A-B; }); buildPages(); show("L3"); save(); }); card.appendChild(sb); }
+  });
+}
+function buildPages(){
+  var host=$("extraPages"); host.innerHTML="";
+  for(var n=2;n<=8;n++){
+    var pg=document.createElement("div"); pg.className="page"; pg.id="p-L"+n; pg.hidden=true;
+    var c=document.createElement("section"); c.className="card stub";
+    c.innerHTML='<div class="big">'+n+'</div><h2>Level '+n+' &middot; '+META[n-1][0]+'</h2><p class="hint">Operation: '+META[n-1][1]+' &middot; '+META[n-1][2]+'</p>'+
+      '<p>Your mission worksheet for this level will appear here. For now, follow along in class.</p>';
+    if(n===2){ c.className='card'; c.innerHTML='<h2>Level 2 &middot; AI Basics</h2><p class="hint">Operation: SLEEPER CELL &middot; Requirement 2. Work down the page, Step 1 to Step 4, the same order as the slides. Everything saves on this device.</p>'; pg.appendChild(c); buildL2(pg); }
+    else { c.className='card'; c.innerHTML='<h2>Level '+n+' &middot; '+META[n-1][0]+'</h2><p class="hint">Operation: '+META[n-1][1]+' &middot; '+META[n-1][2]+'. Work down the page in order, the same as the slides. Everything saves on this device.</p>'; pg.appendChild(c); buildLv(n,pg); }
+    if(n===8){ var w=document.createElement("section"); w.className="card win"; w.id="win8"; w.hidden=true; w.innerHTML='<h2>MIRAGE SHUT DOWN</h2><p>Code word cracked. Tell your counselor, then head to <b>Send &amp; save</b> to email your log.</p>'; pg.appendChild(w); }
+    host.appendChild(pg); if(n>=3) lvRefresh(n);
+  }
+  // unlock boxes: after level n content (L1 page is static, others are stubs)
+  var oldCb=$("cb1"); if(oldCb) oldCb.remove();
+  for(var k=1;k<=8;k++){ var box=codeBox(k); (k===1?$("p-V1"):$("p-L"+k)).appendChild(box); }
+  for(var j=1;j<=8;j++){ (function(j){ $("cg"+j).addEventListener("click",function(){ tryUnlock(j); });
+    $("ci"+j).addEventListener("keydown",function(e){ if(e.key==="Enter") tryUnlock(j); }); })(j); }
+  renderL8win();
+  l2Refresh();
+}
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+var quiz={qs:[],i:0,score:0,locked:false};
+function startQuiz(){
+  var picks=shuffle(DEFS).slice(0,QN);
+  quiz={qs:picks.map(function(d){ var wrong=shuffle(DEFS.filter(function(x){return x[0]!==d[0];})).slice(0,3).map(function(x){return x[0];});
+    return {def:d[1],ans:d[0],opts:shuffle(wrong.concat([d[0]]))}; }),i:0,score:0,locked:false};
+  renderQ();
+}
+function renderQ(){
+  var host=$("quiz"), q=quiz.qs[quiz.i];
+  if(!q){
+    state.vault={best:Math.max(state.vault.best==null?0:state.vault.best,quiz.score),last:quiz.score}; save();
+    host.innerHTML='<div class="score">'+quiz.score+' / '+QN+'</div><p style="text-align:center">Show this screen to your counselor to log your Boss Challenge result.</p><div class="actions" style="justify-content:center"><button class="secondary" id="qAgain">Play again</button></div>';
+    $("qAgain").addEventListener("click",startQuiz); return;
+  }
+  host.innerHTML='<div class="small">Question '+(quiz.i+1)+' of '+QN+' &middot; Score '+quiz.score+'</div><div class="qq" id="qt"></div><div id="qo"></div><div class="fb" id="qf"></div><div class="actions"><button class="primary" id="qNext" hidden>Next</button></div>';
+  $("qt").textContent="Which term means: \u201c"+q.def+"\u201d";
+  q.opts.forEach(function(o){ var b=document.createElement("button"); b.className="opt"; b.textContent=o;
+    b.addEventListener("click",function(){ if(quiz.locked) return; quiz.locked=true;
+      var ok=(o===q.ans); if(ok) quiz.score++;
+      [].forEach.call($("qo").children,function(x){ if(x.textContent===q.ans) x.classList.add("right"); else if(x===b) x.classList.add("wrong"); });
+      $("qf").textContent=ok?"Correct!":"Not quite. The answer is "+q.ans+".";
+      var n=$("qNext"); n.hidden=false; n.textContent=(quiz.i+1===QN)?"See score":"Next"; n.focus(); });
+    $("qo").appendChild(b); });
+  $("qNext").addEventListener("click",function(){ quiz.i++; quiz.locked=false; renderQ(); });
+}
+var ai={qs:[],i:0,score:0,locked:false};
+function startAion(){
+  var a=shuffle(AION.filter(function(x){return x[2];})).slice(0,5), b=shuffle(AION.filter(function(x){return !x[2];})).slice(0,5);
+  ai={qs:shuffle(a.concat(b)),i:0,score:0,locked:false}; renderAion();
+}
+function el(tag,cls,txt){ var e=document.createElement(tag); if(cls) e.className=cls; if(txt!=null) e.textContent=txt; return e; }
+function renderAion(){
+  var h=$("aion"); h.innerHTML=""; var q=ai.qs[ai.i];
+  if(!q){
+    state.games.ai={best:Math.max(state.games.ai.best==null?0:state.games.ai.best,ai.score),last:ai.score}; save(); l2Refresh();
+    h.appendChild(el("div","score",ai.score+" / 10")); var p=el("p",null,"Show this screen to your counselor to log your Boss Challenge result."); p.style.textAlign="center"; h.appendChild(p);
+    var b=el("button","secondary","Play again"); b.addEventListener("click",startAion); var w=el("div","actions"); w.style.justifyContent="center"; w.appendChild(b); h.appendChild(w); return;
+  }
+  h.appendChild(el("div","small","Round "+(ai.i+1)+" of 10 \u00b7 Score "+ai.score));
+  var card=el("div","sc"); card.appendChild(el("h3",null,q[0])); card.appendChild(el("div",null,q[1])); h.appendChild(card);
+  var vote=el("div","vote"), fb=el("div","fb"), more=el("div"), nx=el("button","primary"); nx.hidden=true;
+  [["AI",true],["Not AI",false]].forEach(function(o){ var b=el("button","opt",o[0]); b.style.textAlign="center";
+    b.addEventListener("click",function(){ if(ai.locked) return; ai.locked=true; var ok=(o[1]===q[2]); if(ok) ai.score++;
+      [].forEach.call(vote.children,function(x){ var isAi=x.textContent==="AI"; if(isAi===q[2]) x.classList.add("right"); else if(x===b) x.classList.add("wrong"); });
+      fb.textContent=(ok?"Correct! ":"Not quite. ")+"It is "+(q[2]?"AI":"not AI")+". "+q[3];
+      var qs=q[5].split("|"); var box=el("div","sc"); if(q[4]) box.appendChild(el("div","small","Scout connection: "+q[4]));
+      box.appendChild(el("div",null,"Discuss:")); var ul=el("ul"); qs.forEach(function(t){ ul.appendChild(el("li",null,t)); }); box.appendChild(ul); more.appendChild(box);
+      nx.hidden=false; nx.textContent=(ai.i+1===10)?"See score":"Next round"; nx.focus(); });
+    vote.appendChild(b); });
+  h.appendChild(vote); h.appendChild(fb); h.appendChild(more); var a=el("div","actions"); a.appendChild(nx); h.appendChild(a);
+  nx.addEventListener("click",function(){ ai.i++; ai.locked=false; renderAion(); });
+}
+var wq={qs:[],i:0,choice:"",rounds:[]};
+var STANCES=["Use it, with a human reviewing every decision","Use it, but only to help a person decide","Do not use AI for this"];
+function renderWwyd0(){ wq={qs:shuffle(WWYD).slice(0,5),i:0,choice:"",rounds:[]}; renderWwyd(); }
+function startWwyd(){ wq={qs:shuffle(WWYD).slice(0,5),i:0,choice:"",rounds:[]}; state.wwyd=[]; save(); renderWwyd(); }
+function renderWwyd(){
+  var h=$("wwyd"); h.innerHTML=""; var q=wq.qs[wq.i];
+  if(!q){ h.appendChild(el("div","score","Done!")); var p=el("p",null,"Five scenarios finished. Your reasons are saved in your log and PDF. Show your counselor."); p.style.textAlign="center"; h.appendChild(p);
+    var b=el("button","secondary","Play again"); b.addEventListener("click",startWwyd); var w=el("div","actions"); w.style.justifyContent="center"; w.appendChild(b); h.appendChild(w); return; }
+  h.appendChild(el("div","small","Scenario "+(wq.i+1)+" of 5"));
+  var card=el("div","sc"); card.appendChild(el("h3",null,q[0])); card.appendChild(el("div",null,q[1])); h.appendChild(card);
+  h.appendChild(el("label",null,"Your squad's stance")); var st=el("div","stance");
+  STANCES.forEach(function(t){ var b=el("button","secondary",t); b.addEventListener("click",function(){ wq.choice=t; [].forEach.call(st.children,function(x){x.classList.toggle("sel",x===b);}); }); st.appendChild(b); }); h.appendChild(st);
+  var l=el("label",null,"Why? Use a Scout Law point."); l.setAttribute("for","wwhy"); h.appendChild(l); var ta=el("textarea"); ta.id="wwhy"; ta.maxLength=400; h.appendChild(ta);
+  var fb=el("div","fb"); h.appendChild(fb); var go=el("button","primary","Lock in and reveal"); var a=el("div","actions"); a.appendChild(go); h.appendChild(a);
+  var more=el("div"); h.appendChild(more);
+  go.addEventListener("click",function(){
+    if(!wq.choice){ fb.textContent="Pick a stance first."; fb.className="fb err"; return; }
+    if(ta.value.trim().length<8){ fb.textContent="Write your reason (a sentence)."; fb.className="fb err"; return; }
+    state.wwyd.push({n:q[0],choice:wq.choice,why:ta.value.trim()}); save(); go.hidden=true; ta.disabled=true; fb.textContent="Locked in. Reveal and defend your choice.";fb.className="fb ok";
+    var box=el("div","sc"); box.appendChild(el("div","small","Think about")); box.appendChild(el("div",null,q[2]));
+    box.appendChild(el("div","small","Scout Law connections")); box.appendChild(el("div",null,q[3]));
+    box.appendChild(el("div","small","Discuss")); var ul=el("ul"); q[4].split("|").forEach(function(t){ ul.appendChild(el("li",null,t)); }); box.appendChild(ul); more.appendChild(box);
+    var nx=el("button","primary",(wq.i+1===5)?"Finish":"Next scenario"); nx.style.marginTop="10px"; nx.addEventListener("click",function(){ wq.i++; wq.choice=""; renderWwyd(); }); more.appendChild(nx); });
+}
+var bTick=null;
+function bonusNext(){ var t=DEFS[Math.floor(Math.random()*DEFS.length)][0]; $("bTerm").textContent=t; $("bClock").textContent=""; if(bTick){clearInterval(bTick);bTick=null;} }
+function bonusTimer(){
+  if(bTick){clearInterval(bTick);} var n=45; $("bClock").textContent=n+"s";
+  bTick=setInterval(function(){ n--; $("bClock").textContent=n>0?n+"s":"Time!"; if(n<=0){clearInterval(bTick);bTick=null;} },1000);
+}
+function msg(t,cls){ var m=$("msg"); m.textContent=t||""; m.className="msg"+(cls?" "+cls:""); }
+function slug(s){ return (s||"agent").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"agent"; }
+function needName(){
+  if(!state.name.trim()){ msg("Add your agent name first.","err"); $("name").focus(); return true; }
+  return false;
+}
+
+function makePdf(){
+  var J = window.jspdf && window.jspdf.jsPDF;
+  if(!J){ throw new Error("PDF tool did not load. Check your Wi-Fi and reload."); }
+  var doc = new J({unit:"pt",format:"letter"}), W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
+  var M=48, y=0, maxW=W-2*M;
+  function header(){
+    doc.setFillColor(22,53,43); doc.rect(0,0,W,64,"F");
+    doc.setTextColor(242,169,0); doc.setFont("helvetica","bold"); doc.setFontSize(20); doc.text("A.I.R.A. FIELD LOG",M,40);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(255,255,255); doc.text("Mission: AI Ready  |  Artificial Intelligence merit badge",W-M,40,{align:"right"});
+    doc.setTextColor(20,20,20); y=88;
+  }
+  function need(h){ if(y+h>H-48){ doc.addPage(); header(); } }
+  function wrap(text,size,style,indent){
+    doc.setFont("helvetica",style||"normal"); doc.setFontSize(size);
+    var lines = doc.splitTextToSize(text, maxW-(indent||0));
+    lines.forEach(function(l){ need(size+4); doc.text(l,M+(indent||0),y); y+=size+3; });
+  }
+  header();
+  doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.text("Agent: "+state.name.trim(),M,y);
+  doc.text("Squad: "+(state.squad.trim()||"-"),W/2,y); y+=16;
+  doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(90,90,90);
+  doc.text("Created: "+new Date().toLocaleString()+"   |   Levels unlocked: "+state.unlocked+" of 8"+(state.won?"   |   MIRAGE shut down":""),M,y); y+=14;
+  doc.text("Vocab Vault best: "+(state.vault.best==null?"not taken":state.vault.best+" / "+QN)+"   |   AI or Not best: "+(state.games.ai.best==null?"not played":state.games.ai.best+" / 10"),M,y); y+=22; doc.setTextColor(20,20,20);
+
+  LEVELS.forEach(function(L,li){
+    var done=0; L.items.forEach(function(_,i){ if(isDone(li,i)) done++; });
+    need(40); doc.setFillColor(232,240,234); doc.rect(M-6,y-14,maxW+12,22,"F");
+    doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(22,53,43);
+    doc.text(L.title+"  ("+L.req+")",M,y); doc.setFont("helvetica","normal"); doc.setFontSize(10);
+    doc.text(done+" of "+L.items.length+" done",W-M,y,{align:"right"}); doc.setTextColor(20,20,20); y+=22;
+    L.items.forEach(function(term,i){
+      var a=state.answers[key(li,i)]||{def:"",ex:""};
+      need(60);
+      doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text((i+1)+". "+term,M,y);
+      doc.setFont("helvetica","bold"); doc.setFontSize(9); if(isDone(li,i)) doc.setTextColor(30,130,80); else doc.setTextColor(170,60,60);
+      doc.text(isDone(li,i)?"DONE":"INCOMPLETE",W-M,y,{align:"right"}); doc.setTextColor(20,20,20); y+=14;
+      wrap("My words: "+(a.def.trim()||"(blank)"),10,"normal",12);
+      wrap("Example: "+(a.ex.trim()||"(blank)"),10,"normal",12);
+      y+=8;
+    });
+  });
+  (function(){
+    var c=l2Count(); need(40); doc.setFillColor(232,240,234); doc.rect(M-6,y-14,maxW+12,22,"F"); doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(22,53,43);
+    doc.text("Level 2 - AI Basics (Requirement 2)",M,y); doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.text(c[0]+" of "+c[1]+" done",W-M,y,{align:"right"}); doc.setTextColor(20,20,20); y+=22;
+    L2SEC.forEach(function(sec){ need(30); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text(sec[1],M,y); y+=14;
+      state.l2[sec[0]].forEach(function(v,i){ wrap((i+1)+". "+(v.trim()||"(blank)"),10,"normal",12); }); y+=6; });
+    need(30); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text("AI timeline",M,y); y+=14;
+    state.l2.tl.forEach(function(r,i){ wrap((i+1)+". "+(r.year.trim()||"----")+": "+(r.text.trim()||"(blank)"),10,"normal",12); }); y+=6;
+    wrap("AI or Not best score: "+(state.games.ai.best==null?"not played":state.games.ai.best+" / 10"),10,"normal",0); y+=8;
+  })();
+  if(state.wwyd.length){
+    need(40); doc.setFillColor(232,240,234); doc.rect(M-6,y-14,maxW+12,22,"F"); doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(22,53,43);
+    doc.text("Level 4 - What Would You Do? (Requirement 4b)",M,y); doc.setTextColor(20,20,20); y+=22;
+    state.wwyd.forEach(function(r,i){ need(60); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text((i+1)+". "+r.n,M,y); y+=14;
+      wrap("Stance: "+r.choice,10,"normal",12); wrap("Reason: "+r.why,10,"normal",12); y+=8; });
+  }
+  Object.keys(LV).forEach(function(n){
+    var c=lvCount(n); need(40); doc.setFillColor(232,240,234); doc.rect(M-6,y-14,maxW+12,22,"F"); doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(22,53,43);
+    doc.text("Level "+n+" - "+META[n-1][0]+" ("+META[n-1][2]+")",M,y); doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.text(c[0]+" of "+c[1]+" done",W-M,y,{align:"right"}); doc.setTextColor(20,20,20); y+=22;
+    LV[n].secs.forEach(function(sc){ var v=state.lv[n][sc.k]; need(30); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text(sc.h.replace(/^Step \d \u00b7 /,"").replace(/\u00b7/g,"-"),M,y); y+=14;
+      if(sc.t==="rows") v.forEach(function(r,i){ wrap((i+1)+". "+sc.cols.map(function(cc){ return r[cc.k].trim(); }).filter(Boolean).join(" - ")||((i+1)+". (blank)"),10,"normal",12); });
+      else if(sc.t==="form") sc.f.forEach(function(x){ wrap(x.label.replace(/\u2019/g,"'")+": "+(v[x.k].trim()||"(blank)"),10,"normal",12); });
+      else sc.items.forEach(function(it,i){ wrap((v[i]?"[x] ":"[ ] ")+it,10,"normal",12); });
+      y+=6; }); });
+  need(70); y+=10; doc.setDrawColor(120,120,120); doc.setLineWidth(0.6);
+  doc.setFont("helvetica","bold"); doc.setFontSize(10); doc.text("Counselor initials:",M,y+18); doc.line(M+100,y+20,M+200,y+20);
+  doc.text("Date:",M+230,y+18); doc.line(M+262,y+20,M+360,y+20);
+  return doc;
+}
+function filename(){ return "AIRA-Field-Log-"+slug(state.name)+".pdf"; }
+
+function download(){
+  if(needName()) return;
+  try { var doc=makePdf(); doc.save(filename()); msg("PDF downloaded: "+filename()+". Now tap Email to counselor.","ok"); }
+  catch(e){ msg(e.message,"err"); }
+}
+function mail(){
+  if(needName()) return;
+  var doc; try{ doc=makePdf(); }catch(e){ msg(e.message,"err"); return; }
+  var blob=doc.output("blob"), file=new File([blob],filename(),{type:"application/pdf"});
+  var subject="AI merit badge field log - "+state.name.trim()+(state.squad.trim()?" ("+state.squad.trim()+")":"");
+  var body="Counselor,\n\nMy A.I.R.A. field log is attached.\n\nAgent: "+state.name.trim()+"\nSquad: "+(state.squad.trim()||"-");
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:subject,text:body}).then(function(){ msg("Choose your email app and send it to "+COUNSELOR_EMAIL+".","ok"); })
+      .catch(function(e){ if(e && e.name!=="AbortError") fallback(doc,subject,body); });
+  } else fallback(doc,subject,body);
+}
+function fallback(doc,subject,body){
+  doc.save(filename());
+  location.href="mailto:"+COUNSELOR_EMAIL+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body+"\n\n(Attach the PDF "+filename()+" that just downloaded.)");
+  msg("PDF downloaded. In the email that opened, attach "+filename()+" and send.","ok");
+}
+function saveJson(){
+  if(needName()) return;
+  var data={app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,l2:state.l2,lv:state.lv};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="AIRA-Field-Log-"+slug(state.name)+".json";
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+  msg("Progress saved to "+a.download+". Keep it somewhere you can find it.","ok");
+}
+function loadJson(f){
+  if(!f) return;
+  if(f.size>1000000){ msg("That file is too big to be a field log.","err"); return; }
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var d=JSON.parse(r.result);
+      if(!d || d.app!=="aira-field-log" || typeof d.answers!=="object" || d.answers===null) throw new Error("bad");
+      var clean={}, max=LEVELS[0].items.length;
+      Object.keys(d.answers).forEach(function(k){
+        var m=/^L1\|(\d+)$/.exec(k), v=d.answers[k];
+        if(m && +m[1]<max && v && typeof v==="object") clean[k]={def:String(v.def||"").slice(0,400),ex:String(v.ex||"").slice(0,300)};
+      });
+      state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
+      try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}
+      buildPages(); build(); renderL8win(); show("L1"); msg("Loaded "+f.name+". Your work is back.","ok");
+    }catch(e){ msg("That doesn't look like an A.I.R.A. field log file.","err"); }
+  };
+  r.onerror=function(){ msg("Couldn't read that file.","err"); };
+  r.readAsText(f);
+}
+function clearAll(){
+  if(!confirm("Erase everything on this device and start over?")) return;
+  state={name:"",squad:"",answers:{},unlocked:1,won:false,page:"L1",vault:{best:null,last:null},games:{ai:{best:null,last:null}},wwyd:[],l2:null}; try{localStorage.removeItem(STORE_KEY);}catch(e){}
+  location.reload();
+}
+$("name").addEventListener("input",function(){ state.name=this.value; save(); });
+$("squad").addEventListener("input",function(){ state.squad=this.value; save(); });
+$("btnSave").addEventListener("click",saveJson);
+$("btnLoad").addEventListener("click",function(){ $("fileIn").click(); });
+$("fileIn").addEventListener("change",function(){ loadJson(this.files && this.files[0]); this.value=""; });
+$("btnPdf").addEventListener("click",download);
+$("btnMail").addEventListener("click",mail);
+$("btnClear").addEventListener("click",clearAll);
+$("goVault").addEventListener("click",function(){ show("V1"); });
+$("bNext").addEventListener("click",bonusNext); $("bTimer").addEventListener("click",bonusTimer);
+(function(){ var h=$("tools"); TOOLS.forEach(function(t){ if(!t.url) return; var a=document.createElement("a"); a.href=t.url; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=t.label+" \u2197"; if(t.alt) a.className="alt"; h.appendChild(a); });
+  if(!h.children.length) $("toolsCard").hidden=true; })();
+load(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page);
+})();
+</script>
+</body>
+</html>

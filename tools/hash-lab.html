@@ -1,0 +1,61 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hash Lab</title>
+<style>
+:root{--ink:#17112B;--teal:#7A1E3A;--gold:#F4B63F;--red:#D9482B;--grn:#5FAE6B;--bg:#F5F8F7;--card:#fff;--mut:#5E7482}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--ink);color:#fff;padding:14px 20px}header h1{margin:0;font-size:22px}header p{margin:2px 0 0;color:#cfe3de;font-size:13px}
+nav{display:flex;gap:6px;padding:12px 20px 0;flex-wrap:wrap}nav button{border:0;background:#dfe9e6;color:var(--ink);font-weight:700;padding:10px 16px;border-radius:10px 10px 0 0;font-size:15px;cursor:pointer}nav button.on{background:var(--teal);color:#fff}
+main{padding:0 20px 24px}.panel{display:none;background:var(--card);border:2px solid var(--teal);border-radius:0 12px 12px 12px;padding:16px}.panel.on{display:block}
+label{font-weight:700;font-size:14px;display:block;margin:10px 0 4px}textarea,input[type=text]{width:100%;font-size:18px;padding:10px;border:2px solid #b8c7cc;border-radius:8px;font-family:'Courier New',monospace}
+textarea{min-height:80px}.hash{font-family:'Courier New',monospace;font-weight:700;font-size:20px;word-break:break-all;background:#F3E9CC;border-radius:8px;padding:10px;margin-top:6px}
+.hash .f8{background:var(--gold);padding:1px 2px;border-radius:3px}.meta{color:var(--mut);font-size:13px;margin-top:4px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:700px){.cols{grid-template-columns:1fr}}
+.diff{background:#fdd;color:var(--red)}.big{font-size:20px;font-weight:800;margin-top:10px;padding:10px;border-radius:8px;text-align:center}.ok{background:#dff3e2;color:#1f6b33}.bad{background:#fde1db;color:#a02c14}.wait{background:#eef2f3;color:var(--mut)}
+.hint{background:#fff7e0;border-left:5px solid var(--gold);padding:8px 12px;margin-top:12px;font-size:14px;border-radius:4px}
+button.act{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:10px 16px;font-weight:700;font-size:15px;cursor:pointer;margin-top:8px}
+</style></head><body>
+<header><h1>Hash Lab</h1><p>A SHA-256 fingerprint tool. Works offline in any browser. Nothing you type leaves this device.</p></header>
+<nav><button class="on" data-t="p1">1. Hash it</button><button data-t="p2">2. Seal and compare</button><button data-t="p3">3. Case file check</button><button data-t="p4">4. Hash a file</button></nav>
+<main>
+<section class="panel on" id="p1"><label for="t1">Type any text</label><textarea id="t1" spellcheck="false">Warden</textarea><div class="meta" id="m1"></div><div class="hash" id="h1"></div>
+<div class="hint">Try "Warden", then "warden", then "Warden!" Notice that a tiny change makes a completely different fingerprint. The yellow part is the first 8 characters: the short version we compare in class.</div></section>
+
+<section class="panel" id="p2"><div class="cols"><div><label for="o">A. Original message</label><textarea id="o" spellcheck="false">Meet at the flagpole at noon.</textarea><div class="hash" id="oh"></div></div>
+<div><label for="c">B. Changed message (change just one thing)</label><textarea id="c" spellcheck="false">Meet at the flagpole at noon!</textarea><div class="hash" id="ch"></div></div></div>
+<div class="big wait" id="cmp"></div><div class="meta" id="diffmeta"></div>
+<div class="hint">File integrity check: if the two fingerprints match, the message was not changed. If they differ (red characters), it was changed.</div></section>
+
+<section class="panel" id="p3"><label for="t3">Type the document exactly as printed</label><textarea id="t3" spellcheck="false" placeholder="Type the line from your case file here..."></textarea>
+<div class="meta" id="m3"></div><div class="hash" id="h3"></div>
+<label for="e3">Posted checksum (first 8 characters from your case file)</label><input type="text" id="e3" maxlength="8" spellcheck="false" placeholder="e.g. a1b2c3d4" autocomplete="off">
+<div class="big wait" id="r3">Type the text and the posted checksum</div>
+<div class="hint">Match means untouched. No match could mean the document was tampered with, or you made a typo. Check the character count against your card, then decide.</div></section>
+
+<section class="panel" id="p4"><label for="f4">Choose any file on this device</label><input type="file" id="f4"><div class="meta" id="m4"></div><div class="hash" id="h4"></div>
+<div class="hint">Make a copy of a file, change one thing in the copy, hash both, and compare. Same file, same fingerprint.</div></section>
+</main>
+<script>
+function sha256(msg){var K=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298];
+var H=[1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225];
+var l=msg.length,bl=l*8,nl=((l+9+63)>>6)<<6,b=new Uint8Array(nl);b.set(msg);b[l]=128;var dv=new DataView(b.buffer);dv.setUint32(nl-8,Math.floor(bl/4294967296));dv.setUint32(nl-4,bl>>>0);
+var w=new Uint32Array(64);function r(x,n){return(x>>>n)|(x<<(32-n))}
+for(var o=0;o<nl;o+=64){for(var i=0;i<16;i++)w[i]=dv.getUint32(o+i*4);for(i=16;i<64;i++){var s0=r(w[i-15],7)^r(w[i-15],18)^(w[i-15]>>>3),s1=r(w[i-2],17)^r(w[i-2],19)^(w[i-2]>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0}
+var a=H[0],bb=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+for(i=0;i<64;i++){var S1=r(e,6)^r(e,11)^r(e,25),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[i]+w[i])>>>0,S0=r(a,2)^r(a,13)^r(a,22),mj=(a&bb)^(a&c)^(bb&c),t2=(S0+mj)>>>0;h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=bb;bb=a;a=(t1+t2)>>>0}
+H[0]=(H[0]+a)>>>0;H[1]=(H[1]+bb)>>>0;H[2]=(H[2]+c)>>>0;H[3]=(H[3]+d)>>>0;H[4]=(H[4]+e)>>>0;H[5]=(H[5]+f)>>>0;H[6]=(H[6]+g)>>>0;H[7]=(H[7]+h)>>>0}
+return H.map(function(x){return('00000000'+x.toString(16)).slice(-8)}).join('')}
+function hx(s){return sha256(new TextEncoder().encode(s))}
+if(typeof module!=='undefined')module.exports={sha256,hx};
+if(typeof document!=='undefined'){
+var $=function(i){return document.getElementById(i)};
+function show(el,hash){el.innerHTML='<span class="f8">'+hash.slice(0,8)+'</span>'+hash.slice(8)}
+function p1(){var t=$('t1').value,h=hx(t);show($('h1'),h);$('m1').textContent=t.length+' characters'}
+function p2(){var a=hx($('o').value),b=hx($('c').value);show($('oh'),a);var out='',n=0;for(var i=0;i<64;i++){if(a[i]!==b[i]){n++;out+='<span class="diff">'+b[i]+'</span>'}else out+=b[i]}$('ch').innerHTML=out;
+var x=$('cmp');if(a===b){x.className='big ok';x.textContent='MATCH. The message was not changed.'}else{x.className='big bad';x.textContent='NO MATCH. The message was changed.'}$('diffmeta').textContent=n+' of 64 characters are different (red).'}
+function p3(){var t=$('t3').value,e=$('e3').value.trim().toLowerCase();var r=$('r3');if(!t){$('h3').innerHTML='';$('m3').textContent='';r.className='big wait';r.textContent='Type the text and the posted checksum';return}
+var h=hx(t);show($('h3'),h);$('m3').textContent=t.length+' characters (compare with the number on your card)';if(e.length<8){r.className='big wait';r.textContent='Now type the 8-character posted checksum';return}
+if(h.slice(0,8)===e){r.className='big ok';r.textContent='MATCH. This document is untouched.'}else{r.className='big bad';r.textContent='NO MATCH. Check for typos, then flag it as tampered.'}}
+['t1'].forEach(function(i){$(i).addEventListener('input',p1)});['o','c'].forEach(function(i){$(i).addEventListener('input',p2)});['t3','e3'].forEach(function(i){$(i).addEventListener('input',p3)});
+$('f4').addEventListener('change',function(ev){var f=ev.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){var h=sha256(new Uint8Array(rd.result));show($('h4'),h);$('m4').textContent=f.name+' ('+f.size+' bytes). Full SHA-256 below.'};rd.readAsArrayBuffer(f)});
+document.querySelectorAll('nav button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('nav button').forEach(function(x){x.classList.remove('on')});document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on')});b.classList.add('on');$(b.dataset.t).classList.add('on')})});
+p1();p2();p3();}
+</script></body></html>

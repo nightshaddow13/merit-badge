@@ -1,0 +1,22 @@
+{
+  "routes": [
+    {
+      "route": "/counselor/*",
+      "headers": { "X-Robots-Tag": "noindex, nofollow" }
+    },
+    {
+      "route": "/files/*",
+      "headers": { "X-Robots-Tag": "noindex" }
+    }
+  ],
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  },
+  "mimeTypes": {
+    ".m4a": "audio/mp4"
+  },
+  "responseOverrides": {
+    "404": { "rewrite": "/index.html", "statusCode": 404 }
+  }
+}
