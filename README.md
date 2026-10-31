@@ -76,8 +76,10 @@ Each device scores a practice passphrase locally with zxcvbn (bundled into the p
 - Updating zxcvbn: `npm i zxcvbn@<version>` somewhere, copy `node_modules/zxcvbn/dist/zxcvbn.js` over `cybersecurity/passphrase-forge/build/zxcvbn.js`, then run `node cybersecurity/passphrase-forge/build/build.js` and commit the regenerated `index.html`. Edit the page in `build/template.html`, not `index.html`.
 - Tests: `node api/test-forge.js`.
 
-## Two-Key Rite code check (scorekeepers only)
+## Two-Key Rite code check (public)
 
-`/cybersecurity/scoreboard/two-key-check.html` checks a 6-digit code against a lodge's practice authenticator secret (current, previous and next 30-second window). It is gated by the `scorekeeper` role, like the score edit pages. The code display (`/counselor/tools/two-key-rite-display.html`) opens for either the `counselor` or the `scorekeeper` role. The secrets are practice-only, but they are in the files, so keep the repo private.
+`/cybersecurity/two-key-rite/` is open to everyone: each lodge picks itself and types the 6 digits from its authenticator. Codes are verified **on the server** (`POST /api/twokey/check`), so the secrets are not in the page. A lodge finishes after 2 valid codes from 2 different 30-second windows. Points by order of finishing: 1st = 3, 2nd = 2, every later lodge = 1, written automatically to the "Two-Key Rite (MFA)" row of the Cybersecurity scoreboard. Wrong guesses are limited to 10 per lodge per minute. **Reset scorecard** (scorekeepers only) clears the codes and removes those points.
 
-Each valid code is recorded on a shared scorecard (`/api/twokey`, scorekeepers only, table partition `twokey`). A lodge completes after 2 valid codes from different 30-second windows. Points by order of completion: 1st = 3, 2nd = 2, every later lodge = 1, written automatically to the "Two-Key Rite (MFA)" row of the Cybersecurity scoreboard. **Reset scorecard** clears the codes and removes those points. Tests: `node api/test-twokey.js`.
+**Setup, one time:** in Azure, open the Static Web App, then Environment variables, and add `TWOKEY_SECRETS` = the seven practice secrets from `counselor/tools/two-key-rite-display.html`, comma separated, in lodge order (Lodge 1 first; the spare is the 7th). Until it is set the page says the check is not set up.
+
+The code display (`/counselor/tools/two-key-rite-display.html`) opens for either the `counselor` or the `scorekeeper` role. The secrets are practice-only but sit in that file, so keep the repo private (the kids could otherwise read them on GitHub and generate codes). Tests: `node api/test-twokey.js`.
