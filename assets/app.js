@@ -39,6 +39,11 @@
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (j) {
       var p = j && j.clientPrincipal;
+      // Show links marked data-roles="a b" only to signed-in users holding one of those roles.
+      var mine = (p && p.userRoles) || [];
+      Array.prototype.forEach.call(document.querySelectorAll("[data-roles]"), function (n) {
+        if (n.getAttribute("data-roles").split(" ").some(function (r) { return mine.indexOf(r) !== -1; })) n.hidden = false;
+      });
       if (p) {
         var roles = (p.userRoles || []).filter(function (r) { return r !== "anonymous" && r !== "authenticated"; });
         box.appendChild(document.createTextNode("Signed in as "));
