@@ -38,6 +38,8 @@ app.http("twokey", {
         let body;
         try { body = JSON.parse(text); } catch (e) { return { status: 400, headers: HEADERS, jsonBody: { error: "Send valid JSON." } }; }
         const secrets = (process.env.TWOKEY_SECRETS || "").split(",").map((x) => x.trim()).filter(Boolean);
+        if (!secrets.length) return { status: 503, headers: HEADERS, jsonBody: { error: "Code check is not set up yet: the TWOKEY_SECRETS setting is missing or empty on the server." } };
+        if (secrets.length < 6) return { status: 503, headers: HEADERS, jsonBody: { error: "Code check is not set up yet: TWOKEY_SECRETS has " + secrets.length + " secret(s), it needs at least 6 separated by commas." } };
         result = await tk.check(body, secrets, sb);
       } else if (action === "reset" || action === "apply") {
         if (!hasRole(request.headers.get("x-ms-client-principal"), "scorekeeper")) {
