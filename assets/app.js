@@ -4,7 +4,7 @@
   if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   var target = el.getAttribute("data-text");
   var glyphs = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&";
-  var frame = 0, total = 28;
+  var frame = 0, total = 70;
   el.setAttribute("aria-label", target);
   var timer = setInterval(function () {
     frame++;
@@ -16,5 +16,5 @@
     }
     el.textContent = out;
     if (frame >= total) { clearInterval(timer); el.textContent = target; el.removeAttribute("aria-label"); }
-  }, 40);
+  }, 70);
 })();
