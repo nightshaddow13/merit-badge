@@ -37,8 +37,14 @@ app.http("twokey", {
         if (text.length > 1024) return { status: 413, headers: HEADERS, jsonBody: { error: "Too large." } };
         let body;
         try { body = JSON.parse(text); } catch (e) { return { status: 400, headers: HEADERS, jsonBody: { error: "Send valid JSON." } }; }
-        const secrets = (process.env.TWOKEY_SECRETS || "").split(",").map((x) => x.trim()).filter(Boolean);
-        if (!secrets.length) return { status: 503, headers: HEADERS, jsonBody: { error: "Code check is not set up yet: the TWOKEY_SECRETS setting is missing or empty on the server." } };
+        // Tolerate case or stray spaces in the setting name.
+        const key = Object.keys(process.env).find((k) => k.trim().toUpperCase() === "TWOKEY_SECRETS");
+        const secrets = (key ? process.env[key] : "").split(",").map((x) => x.trim().replace(/^["']|["']$/g, "")).filter(Boolean);
+        if (!secrets.length) {
+          // Names only, never values, to help spot a misnamed setting.
+          const similar = Object.keys(process.env).filter((k) => /two|key|secret/i.test(k) && !/^(AzureWebJobs|FUNCTIONS_|WEBSITE_)/i.test(k));
+          return { status: 503, headers: HEADERS, jsonBody: { error: "Code check is not set up yet: " + (key ? "TWOKEY_SECRETS is present but empty." : "the server does not see a TWOKEY_SECRETS setting.") + " Storage setting present: " + (process.env.STORAGE_CONNECTION_STRING ? "yes" : "no") + ". Similar setting names the server can see: " + (similar.length ? similar.join(", ") : "none") + "." } };
+        }
         if (secrets.length < 6) return { status: 503, headers: HEADERS, jsonBody: { error: "Code check is not set up yet: TWOKEY_SECRETS has " + secrets.length + " secret(s), it needs at least 6 separated by commas." } };
         result = await tk.check(body, secrets, sb);
       } else if (action === "reset" || action === "apply") {
