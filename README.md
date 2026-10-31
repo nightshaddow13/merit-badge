@@ -21,15 +21,26 @@ Total size is about 15 MB, well under the Free plan's 250 MB limit.
 | Path | What it is |
 | --- | --- |
 | `index.html`, `cybersecurity/`, `ai/` | Scout-facing pages |
-| `counselor/` | Print packs, answer keys, trackers, class audio (`noindex`) |
+| `counselor/` | **Locked** to the `counselor` role: print packs, answer keys, trackers, class audio, class tools |
 | `tools/` | Interactive tools: A.I.R.A. Field Log, Hash Lab, Two-Key Rite display |
-| `files/`, `audio/` | PDFs, spreadsheets and class audio |
+| `files/` | Public downloads only (career worksheet, permission slip, Scout Passport) |
 | `staticwebapp.config.json` | Azure routing and headers |
-| `staticwebapp.config.protected.json` | Optional: sign-in required for counselor content (see the file's `_comment`) |
+| `access-denied.html` | Shown to signed-in users who lack the needed role |
 
-## Heads-up
+## Counselor lock-down
 
-The counselor page and its files include answer keys. They are hidden from search engines but are **not secret**; anyone with the link can open them. To require sign-in, use the protected config.
+Everything under `counselor/` (the page, answer keys, print packs, trackers, class audio and the Two-Key Rite code display) requires the `counselor` role. Put any new adults-only file under `counselor/` and it is protected automatically. Files anywhere else are public.
+
+Roles (Static Web App > Settings > Role management > Invite; several roles can be entered separated by commas):
+
+| Role | Can do |
+| --- | --- |
+| `counselor` | Open `/counselor/` and everything in it |
+| `scorekeeper` | See the Edit scores button, open the scorekeeper pages and save scores |
+
+To sign in, open `/counselor/`; you are sent to GitHub and back. A signed-in user without the role sees the "No access" page.
+
+**Keep the GitHub repo private.** The site lock does not hide files in a public repo: anyone can read the answer keys on GitHub. Repo > Settings > General > Danger Zone > Change visibility > Private. Static Web Apps deploys private repos normally.
 
 The A.I.R.A. Field Log loads jsPDF from cdnjs and the Google Fonts stylesheet loads from Google, so Scouts need internet access to use them fully.
 
@@ -52,4 +63,4 @@ One-time setup:
 1. **Storage account.** Azure portal > Create a resource > Storage account (primary service: Other (tables and queues); Standard, LRS). Open it > Security + networking > Access keys > copy a **Connection string**.
 2. **App setting.** Static Web App > Settings > Environment variables > add `STORAGE_CONNECTION_STRING` with that value. Save.
 3. **Scorekeeper role.** Static Web App > Settings > Role management > Invite. Provider GitHub, the person's GitHub username, role `scorekeeper`. They open the link once to accept.
-4. **Sign in** on each device at `/counselor/` (the "sign in with GitHub" link). The Edit scores button then shows on both scoreboards.
+4. **Sign in** on each device by opening `/counselor/` once. The Edit scores button then shows on both scoreboards for users with the `scorekeeper` role.

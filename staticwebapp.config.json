@@ -41,9 +41,25 @@
       "statusCode": 301
     },
     {
+      "route": "/counselor",
+      "allowedRoles": [
+        "counselor"
+      ]
+    },
+    {
+      "route": "/counselor/",
+      "allowedRoles": [
+        "counselor"
+      ]
+    },
+    {
       "route": "/counselor/*",
+      "allowedRoles": [
+        "counselor"
+      ],
       "headers": {
-        "X-Robots-Tag": "noindex, nofollow"
+        "X-Robots-Tag": "noindex, nofollow",
+        "Cache-Control": "private"
       }
     },
     {
@@ -68,6 +84,10 @@
     "401": {
       "redirect": "/.auth/login/github?post_login_redirect_uri=.referrer",
       "statusCode": 302
+    },
+    "403": {
+      "rewrite": "/access-denied.html",
+      "statusCode": 403
     }
   },
   "platform": {

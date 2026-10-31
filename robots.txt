@@ -1,4 +1,3 @@
 User-agent: *
 Disallow: /counselor/
-Disallow: /files/
-Disallow: /audio/
+Disallow: /access-denied.html
