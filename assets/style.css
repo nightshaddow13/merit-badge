@@ -133,3 +133,7 @@ button.btn:disabled{opacity:.6;cursor:wait}
 .codeblock{padding-bottom:0}
 .code-line{margin:0;font:900 clamp(26px,5vw,44px)/1.1 var(--display);letter-spacing:.06em;white-space:pre-wrap}
 .code-sub{margin:4px 0 0;color:var(--mut)}
+
+.top .who{flex-basis:100%;font-size:14px;color:#C9D2CD;padding-top:2px}
+.top .who a{color:#F4B63F}
+.top .who strong{color:#fff}

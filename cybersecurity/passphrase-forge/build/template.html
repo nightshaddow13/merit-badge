@@ -75,7 +75,7 @@ footer{padding:20px 16px 40px;font:14px/1.4 system-ui,Arial,sans-serif;color:var
 </style>
 </head>
 <body>
-<div class="top"><a href="/cybersecurity/">&larr; Cybersecurity</a><a href="/cybersecurity/scoreboard/">Scoreboard</a></div>
+<div class="top"><a href="/cybersecurity/">&larr; Cybersecurity</a><a href="/cybersecurity/scoreboard/">Scoreboard</a><span id="who" role="status" style="color:#CFC8E0"></span></div>
 <header class="hero"><div class="wrap">
   <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 28v-6a12 12 0 0 1 24 0v6" fill="none" stroke="#D4A843" stroke-width="6"/><rect x="12" y="28" width="40" height="28" rx="5" fill="#D4A843"/><circle cx="32" cy="41" r="4" fill="#7A1E3A"/><rect x="30" y="43" width="4" height="8" fill="#7A1E3A"/></svg>
   <div><h1>Passphrase Forge</h1><p class="tag">Forge your passphrase, Warden.</p></div>
@@ -429,6 +429,17 @@ footer{padding:20px 16px 40px;font:14px/1.4 system-ui,Arial,sans-serif;color:var
     var p = j && j.clientPrincipal;
     isKeeper = !!(p && p.userRoles && p.userRoles.indexOf("scorekeeper") !== -1);
     $("skpanel").hidden = !isKeeper;
+    var who = $("who"), here = encodeURIComponent(location.pathname);
+    who.textContent = "";
+    function wl(t, h) { var a = el("a", { href: h, text: t }); a.style.marginRight = "0"; return a; }
+    if (p) {
+      var rl = (p.userRoles || []).filter(function (x) { return x !== "anonymous" && x !== "authenticated"; });
+      who.appendChild(document.createTextNode("Signed in as " + (p.userDetails || "you") + " (" + (rl.length ? rl.join(", ") : "no special roles") + ") \u00b7 "));
+      who.appendChild(wl("Sign out", "/.auth/logout?post_logout_redirect_uri=" + here));
+    } else {
+      who.appendChild(document.createTextNode("Not signed in \u00b7 "));
+      who.appendChild(wl("Sign in", "/.auth/login/github?post_login_redirect_uri=" + here));
+    }
     if (isKeeper && state.round) renderRound();
   }).catch(function () {});
 

@@ -18,3 +18,39 @@
     if (frame >= total) { clearInterval(timer); el.textContent = target; el.removeAttribute("aria-label"); }
   }, 70);
 })();
+
+// Sign-in status in the top bar: who is signed in and with which roles.
+(function () {
+  var bar = document.querySelector("header.top");
+  if (!bar) return;
+  var box = document.createElement("div");
+  box.className = "who";
+  box.setAttribute("role", "status");
+  bar.appendChild(box);
+  var here = encodeURIComponent(location.pathname + location.search);
+
+  function link(text, href) {
+    var a = document.createElement("a");
+    a.textContent = text;
+    a.href = href;
+    return a;
+  }
+  fetch("/.auth/me", { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) {
+      var p = j && j.clientPrincipal;
+      if (p) {
+        var roles = (p.userRoles || []).filter(function (r) { return r !== "anonymous" && r !== "authenticated"; });
+        box.appendChild(document.createTextNode("Signed in as "));
+        var b = document.createElement("strong");
+        b.textContent = p.userDetails || "you";
+        box.appendChild(b);
+        box.appendChild(document.createTextNode(" (" + (roles.length ? roles.join(", ") : "no special roles") + ") · "));
+        box.appendChild(link("Sign out", "/.auth/logout?post_logout_redirect_uri=" + here));
+      } else {
+        box.appendChild(document.createTextNode("Not signed in · "));
+        box.appendChild(link("Sign in", "/.auth/login/github?post_login_redirect_uri=" + here));
+      }
+    })
+    .catch(function () { box.remove(); });
+})();
