@@ -2,11 +2,10 @@
 
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
-const { emptyData, hasRole, validate } = require("../lib/scores");
+const { emptyData, hasRole, validate, getBoard } = require("../lib/scores");
 
 const TABLE = "cup";
 const PARTITION = "cup";
-const ROW = "current";
 const HEADERS = { "Content-Type": "application/json", "Cache-Control": "no-store" };
 
 function table() {
@@ -15,11 +14,17 @@ function table() {
   return TableClient.fromConnectionString(conn, TABLE);
 }
 
+// GET  /api/scores/{board}  anyone      (board: cybersecurity | ai; defaults to cybersecurity)
+// POST /api/scores/{board}  scorekeepers only
 app.http("scores", {
   methods: ["GET", "POST"],
   authLevel: "anonymous",
-  route: "scores",
+  route: "scores/{board?}",
   handler: async (request, context) => {
+    const boardId = request.params.board || "cybersecurity";
+    const board = getBoard(boardId);
+    if (!board) return { status: 404, headers: HEADERS, jsonBody: { error: "Unknown scoreboard." } };
+
     const client = table();
     if (!client) {
       return { status: 503, headers: HEADERS, jsonBody: { error: "Score storage is not set up yet." } };
@@ -28,16 +33,16 @@ app.http("scores", {
     try {
       if (request.method === "GET") {
         try {
-          const entity = await client.getEntity(PARTITION, ROW);
+          const entity = await client.getEntity(PARTITION, board.rowKey);
           return { status: 200, headers: HEADERS, body: entity.data };
         } catch (e) {
-          if (e.statusCode === 404) return { status: 200, headers: HEADERS, jsonBody: emptyData() };
+          if (e.statusCode === 404) return { status: 200, headers: HEADERS, jsonBody: emptyData(boardId) };
           throw e;
         }
       }
 
-      // POST: only scorekeepers. The route rule in staticwebapp.config.json
-      // enforces this too; this check keeps the API safe if that rule changes.
+      // POST: the route rule in staticwebapp.config.json enforces this too;
+      // this check keeps the API safe if that rule ever changes.
       if (!hasRole(request.headers.get("x-ms-client-principal"), "scorekeeper")) {
         return { status: 403, headers: HEADERS, jsonBody: { error: "Only scorekeepers can save scores." } };
       }
@@ -47,12 +52,12 @@ app.http("scores", {
       } catch (e) {
         return { status: 400, headers: HEADERS, jsonBody: { error: "Send valid JSON." } };
       }
-      const result = validate(body);
+      const result = validate(boardId, body);
       if (!result.ok) return { status: 400, headers: HEADERS, jsonBody: { error: result.error } };
 
       const saved = Object.assign({}, result.value, { updated: new Date().toISOString() });
       await client.createTable(); // no-op if it already exists
-      await client.upsertEntity({ partitionKey: PARTITION, rowKey: ROW, data: JSON.stringify(saved) }, "Replace");
+      await client.upsertEntity({ partitionKey: PARTITION, rowKey: board.rowKey, data: JSON.stringify(saved) }, "Replace");
       return { status: 200, headers: HEADERS, jsonBody: saved };
     } catch (e) {
       context.error("scores failed", e);

@@ -1,6 +1,15 @@
 {
   "routes": [
     {
+      "route": "/api/scores/*",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/api/scores",
       "methods": [
         "POST"
@@ -10,10 +19,26 @@
       ]
     },
     {
-      "route": "/scoreboard/edit.html",
+      "route": "/cybersecurity/scoreboard/edit.html",
       "allowedRoles": [
         "scorekeeper"
       ]
+    },
+    {
+      "route": "/ai/scoreboard/edit.html",
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/scoreboard",
+      "redirect": "/cybersecurity/scoreboard/",
+      "statusCode": 301
+    },
+    {
+      "route": "/scoreboard/*",
+      "redirect": "/cybersecurity/scoreboard/",
+      "statusCode": 301
     },
     {
       "route": "/counselor/*",

@@ -2,6 +2,15 @@
   "_comment": "OPTIONAL. To require sign-in for the counselor page and its files, rename this file to staticwebapp.config.json (replacing the current one), commit, and invite your counselors under Static Web App > Role management in the Azure portal. Free plan supports the built-in GitHub / Microsoft Entra sign-in.",
   "routes": [
     {
+      "route": "/api/scores/*",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/api/scores",
       "methods": [
         "POST"
@@ -11,10 +20,26 @@
       ]
     },
     {
-      "route": "/scoreboard/edit.html",
+      "route": "/cybersecurity/scoreboard/edit.html",
       "allowedRoles": [
         "scorekeeper"
       ]
+    },
+    {
+      "route": "/ai/scoreboard/edit.html",
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/scoreboard",
+      "redirect": "/cybersecurity/scoreboard/",
+      "statusCode": 301
+    },
+    {
+      "route": "/scoreboard/*",
+      "redirect": "/cybersecurity/scoreboard/",
+      "statusCode": 301
     },
     {
       "route": "/counselor/*",

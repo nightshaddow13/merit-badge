@@ -33,18 +33,23 @@ The counselor page and its files include answer keys. They are hidden from searc
 
 The A.I.R.A. Field Log loads jsPDF from cdnjs and the Google Fonts stylesheet loads from Google, so Scouts need internet access to use them fully.
 
-## Live scoreboard (Cup of the Silver Padlock)
+## Live scoreboards
 
-- `/scoreboard/` is the public leaderboard. It refreshes every 10 seconds.
-- `/scoreboard/edit.html` is the scorekeeper page. It requires sign-in and the `scorekeeper` role.
-- `api/` is an Azure Functions API (managed by Static Web Apps) that stores scores in Azure Table Storage.
-- Until storage is connected, the public page shows the snapshot in `data/scoreboard.json`.
+Two separate boards, one per badge:
+
+| Board | Public page | Scorekeeper page (sign-in) |
+| --- | --- | --- |
+| Cybersecurity: Cup of the Silver Padlock (6 lodges) | `/cybersecurity/scoreboard/` | `/cybersecurity/scoreboard/edit.html` |
+| Artificial Intelligence: A.I.R.A. (4 squads) | `/ai/scoreboard/` | `/ai/scoreboard/edit.html` |
+
+- Anyone can view a scoreboard. The **Edit scores** button appears only for signed-in users with the `scorekeeper` role.
+- `api/` is an Azure Functions API (managed by Static Web Apps) that stores scores in Azure Table Storage: `GET /api/scores/{board}` for anyone, `POST` for scorekeepers only.
+- Until storage is connected, each public page shows the snapshot in `data/scoreboard-<board>.json`.
+- The rows on each board come from `<badge>/scoreboard/rows.json`. If you change a row id or its limits, change `api/src/lib/boards.js` too; `cd api && node test.js` checks that they match.
 
 One-time setup:
 
-1. **Storage account.** Azure portal > Create a resource > Storage account (Standard, locally redundant is fine). Open it > Security + networking > Access keys > copy a **Connection string**.
-2. **App setting.** Open the Static Web App > Settings > Environment variables > add `STORAGE_CONNECTION_STRING` with that value (Production). Save.
-3. **Scorekeeper role.** Static Web App > Settings > Role management > Invite. Pick GitHub, enter the person's GitHub username, set the role to `scorekeeper`, and send the link. They open the link once to accept.
-4. Open `/scoreboard/edit.html`, name the lodges, enter points and press **Save scores**.
-
-Test the API logic locally with `cd api && node test.js`.
+1. **Storage account.** Azure portal > Create a resource > Storage account (primary service: Other (tables and queues); Standard, LRS). Open it > Security + networking > Access keys > copy a **Connection string**.
+2. **App setting.** Static Web App > Settings > Environment variables > add `STORAGE_CONNECTION_STRING` with that value. Save.
+3. **Scorekeeper role.** Static Web App > Settings > Role management > Invite. Provider GitHub, the person's GitHub username, role `scorekeeper`. They open the link once to accept.
+4. **Sign in** on each device at `/counselor/` (the "sign in with GitHub" link). The Edit scores button then shows on both scoreboards.

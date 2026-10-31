@@ -1,8 +1,9 @@
 (function () {
-  var C = window.Cup, el = C.el, SLOTS = C.SLOTS;
-  var acts = [], data = null, dirty = false, clearArmed = false;
+  var C = window.Cup, B = C.B, el = C.el, SLOTS = B.slots;
+  var rows = [], data = null, dirty = false, clearArmed = false;
   var lodgeBox = document.getElementById("lodges");
   var gridBox = document.getElementById("grid");
+  var levelsBox = document.getElementById("levels");
   var msg = document.getElementById("msg");
   var saveBtn = document.getElementById("save");
   var clearBtn = document.getElementById("clear");
@@ -10,6 +11,7 @@
 
   function say(text, kind) { msg.textContent = text; msg.className = "msg" + (kind ? " " + kind : ""); }
   function markDirty() { dirty = true; say("Unsaved changes. Press Save scores.", ""); }
+  function label(i) { return data.lodges[i] || B.entity + " " + (i + 1); }
 
   function build() {
     lodgeBox.textContent = "";
@@ -17,24 +19,35 @@
       (function (i) {
         var input = el("input", { type: "text", maxlength: "30", id: "lodge" + i, autocomplete: "off", value: data.lodges[i] });
         input.addEventListener("input", function () { data.lodges[i] = input.value; markDirty(); updateTotals(); });
-        lodgeBox.appendChild(el("label", { "for": "lodge" + i }, [el("span", { text: "Lodge " + (i + 1) + " name" }), input]));
+        lodgeBox.appendChild(el("label", { "for": "lodge" + i }, [el("span", { text: B.entity + " " + (i + 1) + " name" }), input]));
       })(i);
+    }
+
+    if (levelsBox) {
+      levelsBox.textContent = "";
+      var lv = el("input", { type: "number", inputmode: "numeric", step: "1", min: "0", max: "8", id: "levelsIn", value: String(data.levels) });
+      lv.addEventListener("input", function () {
+        var n = parseInt(lv.value, 10);
+        data.levels = isNaN(n) ? 0 : Math.max(0, Math.min(8, n));
+        markDirty();
+      });
+      levelsBox.appendChild(el("label", { "for": "levelsIn" }, [el("span", { text: "Levels completed (0 to 8)" }), lv]));
     }
 
     gridBox.textContent = "";
     var head = el("tr", {}, [el("th", { scope: "col", text: "Activity" })]);
-    for (var h = 0; h < SLOTS; h++) head.appendChild(el("th", { scope: "col", id: "h" + h, text: data.lodges[h] || "Lodge " + (h + 1) }));
+    for (var h = 0; h < SLOTS; h++) head.appendChild(el("th", { scope: "col", id: "h" + h, text: label(h) }));
     var body = el("tbody");
-    acts.forEach(function (a) {
+    rows.forEach(function (a) {
       var th = el("th", { scope: "row" }, [el("span", { "class": "an", text: a.name }), el("span", { "class": "how", text: a.how })]);
       var tr = el("tr", {}, [th]);
       for (var i = 0; i < SLOTS; i++) {
         (function (i) {
           var cur = C.cellValue(data, a.id, i);
-          var input = el("input", { type: "number", inputmode: "numeric", step: "1", min: "-50", max: "100",
-            "aria-label": a.name + ", lodge " + (i + 1), value: cur === null ? "" : String(cur) });
+          var input = el("input", { type: "number", inputmode: "numeric", step: "1", min: String(a.min), max: String(a.max),
+            "aria-label": a.name + ", " + B.entity.toLowerCase() + " " + (i + 1), value: cur === null ? "" : String(cur) });
           input.addEventListener("input", function () {
-            var row = data.scores[a.id] || (data.scores[a.id] = [null, null, null, null, null, null]);
+            var row = data.scores[a.id] || (data.scores[a.id] = Array(SLOTS).fill(null));
             row[i] = input.value === "" ? null : parseInt(input.value, 10);
             markDirty(); updateTotals();
           });
@@ -53,10 +66,10 @@
   }
 
   function updateTotals() {
-    var t = C.totals(data, acts);
+    var t = C.totals(data, rows);
     for (var i = 0; i < SLOTS; i++) {
       document.getElementById("t" + i).textContent = String(t[i]);
-      document.getElementById("h" + i).textContent = data.lodges[i] || "Lodge " + (i + 1);
+      document.getElementById("h" + i).textContent = label(i);
     }
   }
 
@@ -70,7 +83,9 @@
 
   function save() {
     saveBtn.disabled = true; say("Saving…", "");
-    fetch("/api/scores", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lodges: data.lodges, scores: data.scores }) })
+    var payload = { lodges: data.lodges, scores: data.scores };
+    if (levelsBox) payload.levels = data.levels;
+    fetch("/api/scores/" + B.id, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); })
       .then(function (res) {
         if (!res.ok) throw new Error(res.body && res.body.error ? res.body.error : "Save failed (" + res.status + ").");
@@ -88,10 +103,10 @@
   clearBtn.addEventListener("click", function () {
     if (!clearArmed) { clearArmed = true; clearBtn.textContent = "Clear all scores? Press again"; return; }
     clearArmed = false; clearBtn.textContent = "Clear all scores";
-    data.scores = {}; build(); markDirty(); say("Scores cleared on this page. Press Save scores to apply.", "");
+    data.scores = {}; data.levels = 0; build(); markDirty(); say("Scores cleared on this page. Press Save scores to apply.", "");
   });
   window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 
-  C.loadActivities().then(function (a) { acts = a; return load(); })
+  C.loadRows().then(function (r) { rows = r; return load(); })
     .catch(function () { say("Can't load the scorekeeper. Check your connection and reload.", "err"); });
 })();

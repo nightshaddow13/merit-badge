@@ -1,13 +1,19 @@
 "use strict";
 
-const SLOTS = 6;
-const MAX_ACTIVITIES = 40;
-const MAX_NAME = 30;
-const MIN_POINTS = -50;
-const MAX_POINTS = 100;
+const { BOARDS } = require("./boards");
 
-function emptyData() {
-  return { lodges: Array(SLOTS).fill(""), scores: {}, updated: null };
+const MAX_ROWS = 40;
+const MAX_NAME = 30;
+
+function getBoard(id) {
+  return Object.prototype.hasOwnProperty.call(BOARDS, id) ? BOARDS[id] : null;
+}
+
+function emptyData(boardId) {
+  const b = getBoard(boardId);
+  const d = { lodges: Array(b.slots).fill(""), scores: {}, updated: null };
+  if (b.levels) d.levels = 0;
+  return d;
 }
 
 // Azure Static Web Apps passes the signed-in user in this header (base64 JSON).
@@ -22,42 +28,53 @@ function hasRole(header, role) {
 }
 
 // Returns { ok: true, value } or { ok: false, error }.
-function validate(body) {
+function validate(boardId, body) {
+  const b = getBoard(boardId);
+  if (!b) return { ok: false, error: "Unknown scoreboard." };
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return { ok: false, error: "Send a JSON object with lodges and scores." };
   }
   const { lodges, scores } = body;
-  if (!Array.isArray(lodges) || lodges.length !== SLOTS) {
-    return { ok: false, error: "lodges must be a list of exactly " + SLOTS + " names (use empty text for unused lodges)." };
+  if (!Array.isArray(lodges) || lodges.length !== b.slots) {
+    return { ok: false, error: "names must be a list of exactly " + b.slots + " entries (use empty text for unused ones)." };
   }
   const cleanLodges = [];
   for (const name of lodges) {
-    if (typeof name !== "string") return { ok: false, error: "Each lodge name must be text." };
+    if (typeof name !== "string") return { ok: false, error: "Each name must be text." };
     const trimmed = name.trim();
-    if (trimmed.length > MAX_NAME) return { ok: false, error: "Lodge names can be at most " + MAX_NAME + " characters." };
+    if (trimmed.length > MAX_NAME) return { ok: false, error: "Names can be at most " + MAX_NAME + " characters." };
     cleanLodges.push(trimmed);
   }
   if (!scores || typeof scores !== "object" || Array.isArray(scores)) {
-    return { ok: false, error: "scores must be an object keyed by activity." };
+    return { ok: false, error: "scores must be an object keyed by row." };
   }
   const ids = Object.keys(scores);
-  if (ids.length > MAX_ACTIVITIES) return { ok: false, error: "Too many activities." };
+  if (ids.length > MAX_ROWS) return { ok: false, error: "Too many rows." };
   const cleanScores = {};
   for (const id of ids) {
-    if (!/^[a-z0-9-]{1,50}$/.test(id)) return { ok: false, error: "Unknown activity id: " + id.slice(0, 20) };
+    const range = b.rule(id);
+    if (!range) return { ok: false, error: "Unknown row: " + id.slice(0, 20) };
     const row = scores[id];
-    if (!Array.isArray(row) || row.length !== SLOTS) return { ok: false, error: "Each activity needs " + SLOTS + " score slots." };
+    if (!Array.isArray(row) || row.length !== b.slots) return { ok: false, error: "Each row needs " + b.slots + " score slots." };
     const cleanRow = [];
     for (const v of row) {
       if (v === null || v === "") { cleanRow.push(null); continue; }
-      if (typeof v !== "number" || !Number.isInteger(v) || v < MIN_POINTS || v > MAX_POINTS) {
-        return { ok: false, error: "Points must be whole numbers from " + MIN_POINTS + " to " + MAX_POINTS + "." };
+      if (typeof v !== "number" || !Number.isInteger(v) || v < range.min || v > range.max) {
+        return { ok: false, error: "Points for " + id + " must be whole numbers from " + range.min + " to " + range.max + "." };
       }
       cleanRow.push(v);
     }
     if (cleanRow.some((v) => v !== null)) cleanScores[id] = cleanRow;
   }
-  return { ok: true, value: { lodges: cleanLodges, scores: cleanScores } };
+  const value = { lodges: cleanLodges, scores: cleanScores };
+  if (b.levels) {
+    const lv = body.levels === undefined || body.levels === null ? 0 : body.levels;
+    if (typeof lv !== "number" || !Number.isInteger(lv) || lv < 0 || lv > 8) {
+      return { ok: false, error: "Levels completed must be a whole number from 0 to 8." };
+    }
+    value.levels = lv;
+  }
+  return { ok: true, value };
 }
 
-module.exports = { SLOTS, emptyData, hasRole, validate };
+module.exports = { emptyData, hasRole, validate, getBoard };

@@ -4,22 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cup of the Silver Padlock scoreboard</title>
-<meta name="description" content="Live standings for the Cybersecurity merit badge class.">
-
-<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<meta name="description" content="Live standings.">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="top"><a class="brand" href="../index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="../index.html">Home</a><a href="../cybersecurity/" aria-current="page">Cybersecurity</a><a href="../ai/">Artificial Intelligence</a><a href="../counselor/">Counselors</a></nav></header>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/" aria-current="page">Cybersecurity</a><a href="/ai/">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
 <main id="main">
 <section class="band"><div class="wrap">
   <p class="crumb">Cybersecurity merit badge</p>
   <h1>Cup of the Silver Padlock</h1>
   <p class="lead">Live standings for the lodges. Every activity adds points.</p>
+  <p class="jump"><a id="editlink" href="/cybersecurity/scoreboard/edit.html" hidden>Edit scores</a></p>
 </div></section>
 <div class="wrap">
   <section><div id="board" aria-live="polite"><p class="empty">Loading standings…</p></div></section>
@@ -29,8 +29,9 @@
 </div>
 </main>
 <footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
-<script src="common.js"></script>
-<script src="board.js" defer></script>
-<script src="../assets/app.js" defer></script>
+<script>window.BOARD={"id": "cybersecurity", "entity": "Lodge", "slots": 6, "rowsUrl": "/cybersecurity/scoreboard/rows.json", "snapshotUrl": "/data/scoreboard-cybersecurity.json", "unit": "points"};</script>
+<script src="/assets/scoreboard/common.js"></script>
+<script src="/assets/scoreboard/board.js" defer></script>
+<script src="/assets/app.js" defer></script>
 </body>
 </html>

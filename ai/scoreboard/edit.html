@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en" class="ai">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scorekeeper: A.I.R.A. Scoreboard</title>
+<meta name="description" content="Enter scores.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/">Cybersecurity</a><a href="/ai/" aria-current="page">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">For counselors</p>
+  <h1>Scorekeeper</h1>
+  <p class="lead">Name the squads, type the XP each squad earned, and set how many levels the class has finished. Press Save scores and the public scoreboard updates.</p>
+  <p class="jump"><a href="/ai/scoreboard/">View the scoreboard</a></p>
+</div></section>
+<div class="wrap">
+  <section><h2>Squads</h2><p>Leave a name empty to leave that squad off the scoreboard.</p><div id="lodges" class="lodges"></div></section>
+  <section><h2>Progress</h2><div id="levels" class="lodges"></div></section>
+  <section><h2>XP</h2><div id="grid"></div></section>
+  <div class="savebar">
+    <button id="save" class="btn" type="button">Save scores</button>
+    <button id="reload" class="btn ghost" type="button">Reload from server</button>
+    <button id="clear" class="btn ghost" type="button">Clear all scores</button>
+    <p id="msg" class="msg" role="status"></p>
+  </div>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<script>window.BOARD={"id": "ai", "entity": "Squad", "slots": 4, "rowsUrl": "/ai/scoreboard/rows.json", "snapshotUrl": "/data/scoreboard-ai.json", "unit": "XP"};</script>
+<script src="/assets/scoreboard/common.js"></script>
+<script src="/assets/scoreboard/edit.js" defer></script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

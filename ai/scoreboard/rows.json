@@ -1,0 +1,128 @@
+[
+ {
+  "id": "l1-boss",
+  "name": "Level 1 boss challenge",
+  "how": "0 to 50 XP",
+  "min": 0,
+  "max": 50
+ },
+ {
+  "id": "l1-style",
+  "name": "Level 1 style points",
+  "how": "0 to 10 XP",
+  "min": 0,
+  "max": 10
+ },
+ {
+  "id": "l2-boss",
+  "name": "Level 2 boss challenge",
+  "how": "0 to 50 XP",
+  "min": 0,
+  "max": 50
+ },
+ {
+  "id": "l2-style",
+  "name": "Level 2 style points",
+  "how": "0 to 10 XP",
+  "min": 0,
+  "max": 10
+ },
+ {
+  "id": "l3-boss",
+  "name": "Level 3 boss challenge",
+  "how": "0 to 50 XP",
+  "min": 0,
+  "max": 50
+ },
+ {
+  "id": "l3-style",
+  "name": "Level 3 style points",
+  "how": "0 to 10 XP",
+  "min": 0,
+  "max": 10
+ },
+ {
+  "id": "l4-boss",
+  "name": "Level 4 boss challenge",
+  "how": "0 to 50 XP",
+  "min": 0,
+  "max": 50
+ },
+ {
+  "id": "l4-style",
+  "name": "Level 4 style points",
+  "how": "0 to 10 XP",
+  "min": 0,
+  "max": 10
+ },
+ {
+  "id": "l5-boss",
+  "name": "Level 5 boss challenge",
+  "how": "0 to 50 XP",
+  "min": 0,
+  "max": 50
+ },
+ {
+  "id": "l5-style",
+  "name": "Level 5 style points",
+  "how": "0 to 10 XP",
+  "min": 0,
+  "max": 10
+ },
+ {
+  "id": "l6-boss",
+  "name": "Level 6 boss challenge",
+  "how": "0 to 50 XP",
+  "min": 0,
+  "max": 50
+ },
+ {
+  "id": "l6-style",
+  "name": "Level 6 style points",
+  "how": "0 to 10 XP",
+  "min": 0,
+  "max": 10
+ },
+ {
+  "id": "l7-boss",
+  "name": "Level 7 boss challenge",
+  "how": "0 to 100 XP",
+  "min": 0,
+  "max": 100
+ },
+ {
+  "id": "l7-style",
+  "name": "Level 7 style points",
+  "how": "0 to 10 XP",
+  "min": 0,
+  "max": 10
+ },
+ {
+  "id": "l8-boss",
+  "name": "Level 8 boss challenge",
+  "how": "0 to 50 XP",
+  "min": 0,
+  "max": 50
+ },
+ {
+  "id": "l8-style",
+  "name": "Level 8 style points",
+  "how": "0 to 10 XP",
+  "min": 0,
+  "max": 10
+ },
+ {
+  "id": "side-bonus",
+  "name": "Side bonus",
+  "how": "Races, Example Rush and Press Conference topics (5 XP per required topic). Decide race values in class.",
+  "min": 0,
+  "max": 200
+ },
+ {
+  "id": "code-word-bonus",
+  "name": "Code-word bonus",
+  "how": "First squad to say VERIFIED earns 10 XP",
+  "min": 0,
+  "max": 10
+ }
+]

@@ -3,28 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scorekeeper</title>
-<meta name="description" content="Enter lodge scores for the Cup of the Silver Padlock.">
-
+<title>Scorekeeper: Cup of the Silver Padlock</title>
+<meta name="description" content="Enter scores.">
 <meta name="robots" content="noindex, nofollow">
-<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../assets/style.css">
+<link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="top"><a class="brand" href="../index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="../index.html">Home</a><a href="../cybersecurity/" aria-current="page">Cybersecurity</a><a href="../ai/">Artificial Intelligence</a><a href="../counselor/">Counselors</a></nav></header>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/" aria-current="page">Cybersecurity</a><a href="/ai/">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
 <main id="main">
 <section class="band"><div class="wrap">
   <p class="crumb">For counselors</p>
   <h1>Scorekeeper</h1>
   <p class="lead">Name the lodges, then type the points each lodge earned after every activity. Press Save scores and the public scoreboard updates.</p>
-  <p class="jump"><a href="/scoreboard/">View the scoreboard</a></p>
+  <p class="jump"><a href="/cybersecurity/scoreboard/">View the scoreboard</a></p>
 </div></section>
 <div class="wrap">
-  <section><h2>Lodges</h2><p>Leave a lodge name empty to leave it off the scoreboard.</p><div id="lodges" class="lodges"></div></section>
+  <section><h2>Lodges</h2><p>Leave a name empty to leave that lodge off the scoreboard.</p><div id="lodges" class="lodges"></div></section>
   <section><h2>Points</h2><div id="grid"></div></section>
   <div class="savebar">
     <button id="save" class="btn" type="button">Save scores</button>
@@ -35,8 +34,9 @@
 </div>
 </main>
 <footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
-<script src="common.js"></script>
-<script src="edit.js" defer></script>
-<script src="../assets/app.js" defer></script>
+<script>window.BOARD={"id": "cybersecurity", "entity": "Lodge", "slots": 6, "rowsUrl": "/cybersecurity/scoreboard/rows.json", "snapshotUrl": "/data/scoreboard-cybersecurity.json", "unit": "points"};</script>
+<script src="/assets/scoreboard/common.js"></script>
+<script src="/assets/scoreboard/edit.js" defer></script>
+<script src="/assets/app.js" defer></script>
 </body>
 </html>

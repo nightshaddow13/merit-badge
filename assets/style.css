@@ -129,3 +129,7 @@ button.btn:disabled{opacity:.6;cursor:wait}
 .msg{margin:0;flex:1 1 260px;color:var(--mut)}
 .msg.ok{color:#1B6B3A}.msg.err{color:#A3262F}
 @media (prefers-color-scheme:dark){.msg.ok{color:#6FD39A}.msg.err{color:#FF9AA2}}
+[hidden]{display:none!important}
+.codeblock{padding-bottom:0}
+.code-line{margin:0;font:900 clamp(26px,5vw,44px)/1.1 var(--display);letter-spacing:.06em;white-space:pre-wrap}
+.code-sub{margin:4px 0 0;color:var(--mut)}
