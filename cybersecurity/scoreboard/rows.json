@@ -64,10 +64,18 @@
   "max": 100
  },
  {
-  "id": "passphrase-forge",
-  "name": "Passphrase Forge",
+  "id": "passphrase-forge-placing",
+  "name": "Passphrase Forge: placing",
   "time": "1:23",
-  "how": "+2 longest random passphrase; +1 names a password rule",
+  "how": "Added automatically from the Forge dashboard: 1st +2, 2nd +1",
+  "min": -50,
+  "max": 100
+ },
+ {
+  "id": "passphrase-forge",
+  "name": "Passphrase Forge: rule bonus",
+  "time": "1:23",
+  "how": "+1 names a password rule",
   "min": -50,
   "max": 100
  },

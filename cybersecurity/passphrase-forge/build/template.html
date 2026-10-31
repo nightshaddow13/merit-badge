@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="color-scheme" content="light">
+<title>Passphrase Forge</title>
+<meta name="description" content="Forge a passphrase, score it on your own device and compare lodges on a shared dashboard.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%237A1E3A'/%3E%3Cpath d='M10 14v-3a6 6 0 0 1 12 0v3' fill='none' stroke='%23D4A843' stroke-width='3'/%3E%3Crect x='7' y='14' width='18' height='12' rx='2' fill='%23D4A843'/%3E%3C/svg%3E">
+<style>
+:root{--parch:#F4ECD8;--card:#FBF6E8;--wine:#7A1E3A;--gold:#D4A843;--navy:#17112B;--mut:#4A4160;--line:#CDBF9C;--ok:#1F6B3A;--bad:#9A1B1B}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--parch);color:var(--navy);font:18px/1.55 Georgia,"Times New Roman",serif}
+:focus-visible{outline:3px solid var(--wine);outline-offset:3px}
+[hidden]{display:none!important}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+.top{background:var(--navy);color:var(--parch);padding:10px 16px;font:16px/1.3 system-ui,Segoe UI,Arial,sans-serif}
+.top a{color:var(--gold);margin-right:18px}
+header.hero{background:var(--wine);color:var(--parch);padding:22px 0 20px;border-bottom:6px solid var(--gold)}
+.hero .wrap{display:flex;gap:16px;align-items:center}
+.hero svg{flex:none;width:64px;height:64px}
+h1{margin:0;font-size:clamp(26px,5vw,42px);line-height:1.1}
+.tag{margin:4px 0 0;color:#F1DFA8;font-style:italic}
+h2{font-size:24px;margin:0 0 10px;color:var(--wine)}
+h3{font-size:18px;margin:14px 0 6px}
+section.card{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:16px;margin:16px 0}
+.notice{background:var(--navy);color:var(--parch);border-left:8px solid var(--gold);border-radius:8px;padding:12px 16px;margin:16px 0 0;font:700 17px/1.4 system-ui,Segoe UI,Arial,sans-serif}
+label,.lab{display:block;font:700 16px/1.3 system-ui,Segoe UI,Arial,sans-serif;margin:12px 0 6px}
+input[type=text],input[type=password],select,textarea{width:100%;font:20px/1.3 system-ui,Segoe UI,Arial,sans-serif;padding:12px;border:2px solid var(--navy);border-radius:8px;background:#fff;color:var(--navy);min-height:48px}
+textarea{min-height:84px;font-size:17px}
+.row{display:flex;gap:10px;align-items:stretch}
+.row>input{flex:1;min-width:0}
+button,.btn{font:700 17px/1.2 system-ui,Segoe UI,Arial,sans-serif;min-height:48px;padding:10px 16px;border-radius:8px;border:2px solid var(--wine);background:var(--wine);color:var(--parch);cursor:pointer}
+button.alt{background:var(--card);color:var(--wine)}
+button.gold{background:var(--gold);border-color:var(--navy);color:var(--navy)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.help{font:15px/1.4 system-ui,Segoe UI,Arial,sans-serif;color:var(--mut);margin:4px 0 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.stat{border:2px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+.stat .k{font:700 14px/1.2 system-ui,Arial,sans-serif;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.stat .v{font-size:26px;font-weight:700;line-height:1.2}
+.meter{display:flex;gap:6px;margin:8px 0}
+.seg{flex:1;height:22px;border:2px solid var(--navy);border-radius:5px;background:#fff}
+.seg.on{background:repeating-linear-gradient(45deg,var(--wine),var(--wine) 6px,#9d3453 6px,#9d3453 12px)}
+.seg.on.top{background:var(--navy)}
+.big{font-size:28px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{border:2px solid var(--navy);border-radius:8px;padding:4px 8px;background:#fff;font:600 17px/1.3 ui-monospace,Consolas,monospace;text-align:center}
+.chip small{display:block;font:700 12px/1.2 system-ui,Arial,sans-serif;text-transform:uppercase}
+.chip.p-dictionary{border-style:solid;background:#F8E3E8}
+.chip.p-spatial{border-style:dashed;background:#E6EEF8}
+.chip.p-repeat{border-style:dotted;border-width:3px;background:#EDE6F8}
+.chip.p-sequence{border-style:double;border-width:4px;background:#FFF1CC}
+.chip.p-date,.chip.p-regex{border-style:dashed;border-width:3px;background:#E1F3E6}
+.chip.p-bruteforce{border-style:solid;background:#fff}
+.legend{font:14px/1.5 system-ui,Arial,sans-serif;color:var(--mut)}
+.weak{background:#fff;border-left:8px solid var(--wine);border-radius:6px;padding:10px 12px;margin-top:8px}
+.msg{font:700 16px/1.4 system-ui,Arial,sans-serif;margin-top:10px;min-height:1.4em}
+.msg.ok{color:var(--ok)}.msg.err{color:var(--bad)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font:16px/1.4 system-ui,Arial,sans-serif;background:#fff}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;white-space:nowrap}
+th{background:var(--navy);color:var(--parch)}
+td.num{text-align:right}
+.mono{font-family:ui-monospace,Consolas,monospace}
+.status{font:700 16px/1.4 system-ui,Arial,sans-serif}
+.pill{display:inline-block;border:2px solid var(--navy);border-radius:99px;padding:2px 10px;margin:0 6px 6px 0;font:700 14px/1.4 system-ui,Arial,sans-serif;background:#fff}
+.sk{border:3px double var(--wine)}
+.skbox{margin-top:14px;padding-top:6px;border-top:1px dashed var(--line)}
+footer{padding:20px 16px 40px;font:14px/1.4 system-ui,Arial,sans-serif;color:var(--mut);text-align:center}
+@media (max-width:520px){.row{flex-direction:column}}
+
+</style>
+</head>
+<body>
+<div class="top"><a href="/cybersecurity/">&larr; Cybersecurity</a><a href="/cybersecurity/scoreboard/">Scoreboard</a></div>
+<header class="hero"><div class="wrap">
+  <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M20 28v-6a12 12 0 0 1 24 0v6" fill="none" stroke="#D4A843" stroke-width="6"/><rect x="12" y="28" width="40" height="28" rx="5" fill="#D4A843"/><circle cx="32" cy="41" r="4" fill="#7A1E3A"/><rect x="30" y="43" width="4" height="8" fill="#7A1E3A"/></svg>
+  <div><h1>Passphrase Forge</h1><p class="tag">Forge your passphrase, Warden.</p></div>
+</div></header>
+
+<main class="wrap">
+<p class="notice" id="notice">Practice passwords only. Never type a real password here.</p>
+
+<section class="card" aria-labelledby="forge-h">
+  <h2 id="forge-h">1. Forge it</h2>
+  <label for="pw">Your practice passphrase</label>
+  <div class="row">
+    <input id="pw" type="password" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="128" aria-describedby="pw-help">
+    <button id="toggle" type="button" class="alt" aria-pressed="false">Show</button>
+  </div>
+  <p class="help" id="pw-help">Scored right here on your device. The passphrase is never sent anywhere or saved. Only the score numbers and the first letter are shared when you submit.</p>
+
+  <div id="roundbanned" class="help" hidden></div>
+  <label for="extra">Extra banned words (optional, only on this device)</label>
+  <textarea id="extra" autocomplete="off" spellcheck="false" aria-describedby="extra-help"></textarea>
+  <p class="help" id="extra-help">One per line or separated by commas. Words here count against you, like a name or team everyone could guess.</p>
+</section>
+
+<section class="card" aria-labelledby="live-h">
+  <h2 id="live-h">2. The forge reads your work</h2>
+  <p id="empty" class="help">Type something above to see how strong it is.</p>
+  <div id="live" hidden>
+    <div class="grid2">
+      <div class="stat"><div class="k">Strength</div><div class="big" id="label"></div>
+        <div class="meter" id="meter" aria-hidden="true"><span class="seg"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span></div>
+        <div class="help">Score <span id="score"></span> of 4</div></div>
+      <div class="stat"><div class="k">Competition number</div><div class="v mono" id="log10"></div><div class="help">guesses_log10. Higher is better. Every +1 means 10 times more guesses.</div></div>
+      <div class="stat"><div class="k">Length &amp; words</div><div class="v" id="lw"></div><div class="help">Longer beats clever.</div></div>
+      <div class="stat"><div class="k">Time for a thief to crack it</div>
+        <div><b>Slow lock</b> (careful systems): <span id="slow"></span></div>
+        <div><b>Fast lock</b> (cheap, old systems): <span id="fast"></span></div>
+        <div class="help">Rough estimates for the classroom, not promises.</div></div>
+    </div>
+    <h3>Weakest link</h3>
+    <div class="weak" id="weak"></div>
+    <h3>Pattern breakdown</h3>
+    <div class="chips" id="chips"></div>
+    <p class="legend">Solid = common word or name &middot; Dashed blue = keyboard pattern &middot; Dotted = repeat &middot; Double = counting run &middot; Dashed green = date or year &middot; Plain = random characters (good). Each chip is also named in words.</p>
+  </div>
+</section>
+
+<section class="card" aria-labelledby="sub-h">
+  <h2 id="sub-h">3. Submit to the scoreboard</h2>
+  <div id="roundinfo" class="status" role="status"></div>
+  <label for="lodge">Your lodge</label>
+  <select id="lodge"></select>
+  <div style="margin-top:12px"><button id="submit" type="button" class="gold" disabled>Submit to scoreboard</button></div>
+  <div class="msg" id="submsg" role="status" aria-live="polite"></div>
+  <p class="help">Submitting again replaces your lodge's earlier entry. After you submit, the box above is cleared.</p>
+</section>
+
+<section class="card" aria-labelledby="dash-h">
+  <h2 id="dash-h">4. Dashboard</h2>
+  <div id="starter" class="status" hidden></div>
+  <div class="tablewrap" tabindex="0" role="region" aria-label="Lodge comparison">
+    <table>
+      <thead><tr><th scope="col">Rank</th><th scope="col">Lodge</th><th scope="col">Preview</th><th scope="col">Strength</th><th scope="col" id="numhead">Number</th><th scope="col">Length</th><th scope="col">Patterns</th><th scope="col">Points</th></tr></thead>
+      <tbody id="dash"><tr><td colspan="8">Loading&hellip;</td></tr></tbody>
+    </table>
+  </div>
+  <p class="help" id="dashnote">Ranked by the competition number, then length, then fewer patterns. 1st place earns 2 points and 2nd earns 1 on the Cup scoreboard. Updates by itself every few seconds.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+    <button type="button" class="alt" id="copytxt">Copy as text</button>
+    <button type="button" class="alt" id="copycsv">Copy as CSV</button>
+  </div>
+  <div class="msg" id="exmsg" role="status"></div>
+</section>
+
+<section class="card sk" id="skpanel" aria-labelledby="sk-h" hidden>
+  <h2 id="sk-h">Scorekeeper controls</h2>
+  <div class="skbox" style="border:0;margin:0;padding:0">
+    <button type="button" id="award" class="gold">Award points to the Cup scoreboard (1st +2, 2nd +1)</button>
+    <p class="help">Safe to press again: it replaces the Forge placing points with the current ranking.</p>
+  </div>
+  <div class="skbox">
+    <div class="lab">Submissions</div>
+    <button type="button" id="openclose" class="alt"></button>
+  </div>
+  <div class="skbox">
+    <div class="lab">Round type</div>
+    <button type="button" id="mstd" class="alt">Standard round</button>
+    <button type="button" id="mbreak" class="alt">Break the weak one: use my typed passphrase as the starter</button>
+    <p class="help">In Break the weak one, everyone improves the same weak starter and the biggest gain wins. Type the weak starter in the box at the top first.</p>
+  </div>
+  <div class="skbox">
+    <label for="banned">Banned words for everyone</label>
+    <textarea id="banned" spellcheck="false"></textarea>
+    <button type="button" id="savebanned" class="alt">Save banned words</button>
+  </div>
+  <div class="skbox">
+    <button type="button" id="reset">Reset round</button>
+    <p class="help">Clears every entry and starts a new round. Banned words stay.</p>
+  </div>
+  <div class="msg" id="skmsg" role="status" aria-live="polite"></div>
+</section>
+</main>
+<footer>An unofficial unit resource. Not affiliated with or endorsed by Scouting America. Scoring uses zxcvbn (MIT License) built into this page; nothing is loaded from other websites.</footer>
+
+<script>
+/*ZXCVBN*/
+</script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var LABELS = ["Weak", "Shaky", "Fair", "Strong", "Mighty"];
+  var MAXLEN = 128;
+
+  var state = { round: null, entries: [], live: false };
+  var names = [];
+  var current = null;   // stats for what is typed right now (never the text itself)
+  var isKeeper = false;
+  var resetArmed = false;
+
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) { if (k === "text") n.textContent = attrs[k]; else n.setAttribute(k, attrs[k]); });
+    (kids || []).forEach(function (c) { n.appendChild(c); });
+    return n;
+  }
+  function lodgeName(i) { return names[i - 1] || "Lodge " + i; }
+  function say(node, text, kind) { node.textContent = text; node.className = "msg" + (kind ? " " + kind : ""); }
+  function words(s) { return s.split(/[\s\-_.,;:]+/).filter(Boolean).length; }
+  function parseList(text) { return text.split(/[\n,]+/).map(function (w) { return w.trim().toLowerCase(); }).filter(Boolean); }
+
+  // ---------- scoring (all on this device)
+  function bannedList() {
+    var round = state.round ? state.round.banned : [];
+    return round.concat(parseList($("extra").value));
+  }
+
+  var KIND = {
+    dictionary: "common word or name", spatial: "keyboard pattern", repeat: "repeated chunk",
+    sequence: "counting or alphabet run", regex: "year or date-like", date: "date", bruteforce: "random characters"
+  };
+  function kindOf(m) {
+    if (m.pattern === "dictionary") {
+      if (m.dictionary_name === "passwords") return "common password";
+      if (m.dictionary_name === "user_inputs") return "banned word";
+      if (/names/.test(m.dictionary_name)) return "common name";
+      return "common word";
+    }
+    return KIND[m.pattern] || m.pattern;
+  }
+  function weakText(m) {
+    var tricks = m.l33t ? " Swapping letters for symbols (like a for @) is a trick everyone already knows." : "";
+    var rev = m.reversed ? " Writing it backwards does not hide it." : "";
+    switch (m.pattern) {
+      case "dictionary":
+        if (m.dictionary_name === "user_inputs") return "A banned word is in your passphrase. A thief would try it first." + tricks;
+        if (m.dictionary_name === "passwords") return "One chunk is a very common password. Thieves try these first." + tricks + rev;
+        if (/names/.test(m.dictionary_name)) return "One chunk is a common name. Names are easy to guess." + tricks + rev;
+        return "One chunk is a common word. A thief's list already has it." + tricks + rev;
+      case "spatial": return "One chunk follows keys that sit next to each other on the keyboard. Thieves try those runs.";
+      case "repeat": return "One chunk is a repeat of an earlier piece. Repeats add almost nothing.";
+      case "sequence": return "One chunk counts up or down in order, like abc or 123. Easy to guess.";
+      case "date": case "regex": return "One chunk looks like a year or date. Those are some of the first things thieves try.";
+      default: return "No weak chunk found. Your random characters are doing the work. Making it longer would help even more.";
+    }
+  }
+
+  function analyze() {
+    var pw = $("pw").value;
+    var len = Array.from(pw).length;
+    if (!pw) { current = null; $("live").hidden = true; $("empty").hidden = false; $("submit").disabled = true; return; }
+    if (len > MAXLEN) { current = null; $("live").hidden = true; $("empty").hidden = false; $("empty").textContent = "Keep it to " + MAXLEN + " characters or fewer."; $("submit").disabled = true; return; }
+    $("empty").textContent = "Type something above to see how strong it is.";
+    var r = zxcvbn(pw, bannedList());
+    var log10 = Math.round(r.guesses_log10 * 10) / 10;
+    var chars = Array.from(pw);
+    current = {
+      score: r.score, log10: log10, length: len, patterns: r.sequence.length,
+      preview: chars[0] + "*".repeat(Math.min(len, 25) - 1)
+    };
+    $("empty").hidden = true; $("live").hidden = false;
+    $("label").textContent = LABELS[r.score];
+    $("score").textContent = String(r.score);
+    var segs = $("meter").children;
+    for (var i = 0; i < 4; i++) segs[i].className = "seg" + (r.score > i ? " on" + (r.score === 4 ? " top" : "") : "");
+    $("log10").textContent = log10.toFixed(1);
+    $("lw").textContent = len + " characters, " + words(pw) + (words(pw) === 1 ? " word" : " words");
+    $("slow").textContent = r.crack_times_display.offline_slow_hashing_1e4_per_second;
+    $("fast").textContent = r.crack_times_display.offline_fast_hashing_1e10_per_second;
+
+    var weakest = r.sequence.reduce(function (a, b) { return a === null || b.guesses_log10 < a.guesses_log10 ? b : a; }, null);
+    var w = $("weak"); w.textContent = "";
+    var fb = r.feedback;
+    if (fb.warning) w.appendChild(el("div", { text: fb.warning + "." }));
+    if (weakest) w.appendChild(el("div", { text: weakText(weakest) }));
+    (fb.suggestions || []).forEach(function (s) { w.appendChild(el("div", { text: "Tip: " + s })); });
+
+    var show = $("toggle").getAttribute("aria-pressed") === "true";
+    var chips = $("chips"); chips.textContent = "";
+    r.sequence.forEach(function (m) {
+      var tok = show ? m.token : "•".repeat(Math.min(Array.from(m.token).length, 12));
+      chips.appendChild(el("div", { "class": "chip p-" + m.pattern }, [el("span", { text: tok }), el("small", { text: kindOf(m) })]));
+    });
+    $("submit").disabled = !(state.live && state.round && state.round.open && $("lodge").value);
+  }
+
+  // ---------- shared dashboard
+  function api(path, opts) {
+    return fetch(path, Object.assign({ cache: "no-store" }, opts || {})).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok) { var e = new Error(j.error || "Request failed (" + r.status + ")"); e.status = r.status; throw e; }
+        return j;
+      });
+    });
+  }
+  function post(path, body) {
+    return api(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body || {}) });
+  }
+
+  function rank(entries) {
+    var r = state.round, base = r && r.mode === "break" && r.starter ? r.starter.log10 : 0;
+    return entries.slice().sort(function (a, b) {
+      return (b.log10 - base) - (a.log10 - base) || b.length - a.length || a.patterns - b.patterns || a.lodge - b.lodge;
+    });
+  }
+
+  function renderRound() {
+    var r = state.round;
+    var info = $("roundinfo");
+    if (!state.live) { info.textContent = "Practice mode: the shared dashboard is not connected, so you can score here but not submit."; }
+    else {
+      info.textContent = "";
+      info.appendChild(el("span", { "class": "pill", text: r.open ? "Submissions open" : "Submissions closed" }));
+      info.appendChild(el("span", { "class": "pill", text: r.mode === "break" ? "Break the weak one" : "Standard round" }));
+    }
+    var rb = $("roundbanned");
+    if (r && r.banned.length) { rb.hidden = false; rb.textContent = "Banned this round: " + r.banned.join(", "); } else rb.hidden = true;
+    var st = $("starter");
+    if (r && r.mode === "break" && r.starter) {
+      st.hidden = false; st.textContent = "The weak starter: " + r.starter.preview + " • number " + r.starter.log10.toFixed(1) + ". Beat it by the biggest gain.";
+    } else if (r && r.mode === "break") { st.hidden = false; st.textContent = "Waiting for the facilitator to set the weak starter."; }
+    else st.hidden = true;
+    $("numhead").textContent = r && r.mode === "break" && r.starter ? "Gain over starter" : "Number";
+    if (isKeeper) {
+      $("openclose").textContent = r.open ? "Close submissions" : "Open submissions";
+      if (document.activeElement !== $("banned")) $("banned").value = r.banned.join("\n");
+    }
+    $("submit").disabled = !(current && state.live && r && r.open && $("lodge").value);
+  }
+
+  function renderDash() {
+    var body = $("dash"); body.textContent = "";
+    if (!state.live) { body.appendChild(el("tr", {}, [el("td", { colspan: "8", text: "Dashboard unavailable in practice mode." })])); return; }
+    var ranked = rank(state.entries);
+    if (!ranked.length) { body.appendChild(el("tr", {}, [el("td", { colspan: "8", text: "No entries yet. Be the first to submit." })])); return; }
+    var r = state.round, base = r.mode === "break" && r.starter ? r.starter.log10 : null;
+    ranked.forEach(function (e, i) {
+      var num = base === null ? e.log10.toFixed(1) : (e.log10 - base >= 0 ? "+" : "") + (e.log10 - base).toFixed(1);
+      var pts = i === 0 ? "+2" : i === 1 ? "+1" : "—";
+      body.appendChild(el("tr", {}, [
+        el("td", { text: ["1st", "2nd", "3rd", "4th", "5th", "6th"][i] }),
+        el("th", { scope: "row", text: lodgeName(e.lodge), style: "background:#fff;color:inherit" }),
+        el("td", { "class": "mono", text: e.preview }),
+        el("td", { text: LABELS[e.score] + " (" + e.score + ")" }),
+        el("td", { "class": "num mono", text: num }),
+        el("td", { "class": "num", text: String(e.length) }),
+        el("td", { "class": "num", text: String(e.patterns) }),
+        el("td", { text: pts })
+      ]));
+    });
+  }
+
+  function refresh() {
+    return api("/api/forge").then(function (j) {
+      state.live = true; state.round = j.round; state.entries = j.entries;
+    }).catch(function () {
+      state.live = false; state.round = state.round || { roundId: "", open: false, mode: "standard", starter: null, banned: [] }; state.entries = [];
+    }).then(function () { renderRound(); renderDash(); });
+  }
+
+  function loadNames() {
+    function use(d) {
+      names = (d.lodges || []).map(String);
+      var sel = $("lodge"), prev = sel.value;
+      sel.textContent = "";
+      sel.appendChild(el("option", { value: "", text: "Choose your lodge" }));
+      for (var i = 1; i <= 6; i++) sel.appendChild(el("option", { value: String(i), text: names[i - 1] ? names[i - 1] : "Lodge " + i }));
+      sel.value = prev;
+    }
+    return api("/api/scores/cybersecurity").then(use).catch(function () {
+      return api("/data/scoreboard-cybersecurity.json").then(use).catch(function () { use({ lodges: [] }); });
+    });
+  }
+
+  // ---------- submit
+  $("submit").addEventListener("click", function () {
+    if (!current) return;
+    var lodge = parseInt($("lodge").value, 10);
+    if (!lodge) { say($("submsg"), "Choose your lodge first.", "err"); return; }
+    var payload = { lodge: lodge, roundId: state.round.roundId, log10: current.log10, length: current.length, patterns: current.patterns, preview: current.preview };
+    $("submit").disabled = true; say($("submsg"), "Submitting…", "");
+    post("/api/forge", payload).then(function () {
+      $("pw").value = ""; analyze();
+      say($("submsg"), "Submitted for " + lodgeName(lodge) + ". Check the dashboard.", "ok");
+      return refresh();
+    }).catch(function (e) {
+      say($("submsg"), e.message, "err");
+      return refresh();
+    });
+  });
+
+  // ---------- show / hide
+  $("toggle").addEventListener("click", function () {
+    var show = $("pw").type === "password";
+    $("pw").type = show ? "text" : "password";
+    $("toggle").textContent = show ? "Hide" : "Show";
+    $("toggle").setAttribute("aria-pressed", show ? "true" : "false");
+    analyze();
+  });
+  $("pw").addEventListener("input", analyze);
+  $("extra").addEventListener("input", analyze);
+
+  // ---------- export
+  function exportRows() {
+    var ranked = rank(state.entries), r = state.round, base = r.mode === "break" && r.starter ? r.starter.log10 : null;
+    return ranked.map(function (e, i) {
+      return [i + 1, lodgeName(e.lodge), e.preview, LABELS[e.score], base === null ? e.log10.toFixed(1) : (e.log10 - base).toFixed(1), e.length, e.patterns, i === 0 ? 2 : i === 1 ? 1 : 0];
+    });
+  }
+  function copy(text, ok) {
+    function fallback() {
+      var t = el("textarea", { "aria-hidden": "true" }); t.value = text; document.body.appendChild(t); t.select();
+      try { document.execCommand("copy"); say($("exmsg"), ok, "ok"); } catch (e) { say($("exmsg"), "Copy failed. Select the table and copy it by hand.", "err"); }
+      document.body.removeChild(t);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { say($("exmsg"), ok, "ok"); }, fallback); else fallback();
+  }
+  $("copytxt").addEventListener("click", function () {
+    var rows = exportRows(); if (!rows.length) { say($("exmsg"), "Nothing to copy yet.", "err"); return; }
+    copy("Passphrase Forge\n" + rows.map(function (r) { return r[0] + ". " + r[1] + " | " + r[2] + " | " + r[3] + " | number " + r[4] + " | " + r[5] + " chars | " + r[7] + " pts"; }).join("\n"), "Copied as text.");
+  });
+  $("copycsv").addEventListener("click", function () {
+    var rows = exportRows(); if (!rows.length) { say($("exmsg"), "Nothing to copy yet.", "err"); return; }
+    function q(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }
+    copy(["Rank,Lodge,Preview,Strength,Number,Length,Patterns,Points"].concat(rows.map(function (r) { return r.map(q).join(","); })).join("\n"), "Copied as CSV.");
+  });
+
+  // ---------- scorekeeper
+  function keeper(promise, okText) {
+    return promise.then(function (j) { say($("skmsg"), okText(j), "ok"); return refresh(); })
+      .catch(function (e) { say($("skmsg"), e.message, "err"); });
+  }
+  $("award").addEventListener("click", function () {
+    keeper(post("/api/forge/award"), function (j) {
+      return "Added to the Cup scoreboard: " + j.awarded.map(function (a) { return lodgeName(a.lodge) + " +" + a.points; }).join(", ") + ".";
+    });
+  });
+  $("openclose").addEventListener("click", function () { keeper(post("/api/forge/round", { open: !state.round.open }), function () { return "Updated."; }); });
+  $("mstd").addEventListener("click", function () { keeper(post("/api/forge/round", { mode: "standard" }), function () { return "Standard round."; }); });
+  $("mbreak").addEventListener("click", function () {
+    if (!current) { say($("skmsg"), "Type the weak starter passphrase in the top box first.", "err"); return; }
+    var s = { log10: current.log10, length: current.length, preview: current.preview };
+    keeper(post("/api/forge/round", { starter: s }), function () { $("pw").value = ""; analyze(); return "Starter set. Break the weak one is on."; });
+  });
+  $("savebanned").addEventListener("click", function () {
+    keeper(post("/api/forge/round", { banned: parseList($("banned").value) }), function () { analyze(); return "Banned words saved."; });
+  });
+  $("reset").addEventListener("click", function () {
+    var b = $("reset");
+    if (!resetArmed) { resetArmed = true; b.textContent = "Clear everything? Press again"; setTimeout(function () { resetArmed = false; b.textContent = "Reset round"; }, 5000); return; }
+    resetArmed = false; b.textContent = "Reset round";
+    keeper(post("/api/forge/reset"), function () { return "New round started. The dashboard is empty."; });
+  });
+
+  fetch("/.auth/me", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+    var p = j && j.clientPrincipal;
+    isKeeper = !!(p && p.userRoles && p.userRoles.indexOf("scorekeeper") !== -1);
+    $("skpanel").hidden = !isKeeper;
+    if (isKeeper && state.round) renderRound();
+  }).catch(function () {});
+
+  $("lodge").addEventListener("change", function () { $("submit").disabled = !(current && state.live && state.round && state.round.open && $("lodge").value); });
+  loadNames().then(refresh).then(analyze);
+  setInterval(function () { if (!document.hidden) refresh(); }, 5000);
+  setInterval(loadNames, 60000);
+})();
+</script>
+</body>
+</html>

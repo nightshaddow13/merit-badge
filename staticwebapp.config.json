@@ -19,6 +19,39 @@
       ]
     },
     {
+      "route": "/api/forge/round",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/forge/reset",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/forge/award",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/cybersecurity/scoreboard/two-key-check.html",
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/cybersecurity/scoreboard/edit.html",
       "allowedRoles": [
         "scorekeeper"
