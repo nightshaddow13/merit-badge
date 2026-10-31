@@ -19,6 +19,18 @@
       ]
     },
     {
+      "route": "/api/twokey/*",
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/twokey",
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/api/forge/round",
       "methods": [
         "POST"

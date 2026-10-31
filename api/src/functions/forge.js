@@ -5,67 +5,12 @@ const { TableClient } = require("@azure/data-tables");
 const { createForge } = require("../lib/forge");
 const { hasRole, emptyData } = require("../lib/scores");
 const { BOARDS } = require("../lib/boards");
+const { tableStore, scoreboardAdapter } = require("../lib/tablestore");
 
 const TABLE = "cup";
 const PARTITION = "forge";
 const HEADERS = { "Content-Type": "application/json", "Cache-Control": "no-store" };
 const MAX_BODY = 4096;
-
-function tableStore(client) {
-  return {
-    async get(rowKey) {
-      try {
-        const e = await client.getEntity(PARTITION, rowKey);
-        return JSON.parse(e.data);
-      } catch (e) {
-        if (e.statusCode === 404) return null;
-        throw e;
-      }
-    },
-    async put(rowKey, obj) {
-      await client.createTable(); // no-op if it already exists
-      await client.upsertEntity({ partitionKey: PARTITION, rowKey, data: JSON.stringify(obj) }, "Replace");
-    },
-    async list() {
-      const rows = [];
-      try {
-        for await (const e of client.listEntities({ queryOptions: { filter: "PartitionKey eq '" + PARTITION + "'" } })) {
-          rows.push({ rowKey: e.rowKey, data: JSON.parse(e.data) });
-        }
-      } catch (e) {
-        if (e.statusCode !== 404) throw e; // table not created yet
-      }
-      return rows;
-    },
-    async remove(rowKey) {
-      try { await client.deleteEntity(PARTITION, rowKey); } catch (e) { if (e.statusCode !== 404) throw e; }
-    },
-  };
-}
-
-// The Cybersecurity scoreboard lives in the same table (partition "cup").
-function scoreboardAdapter(client) {
-  const board = BOARDS.cybersecurity;
-  return {
-    async load() {
-      try {
-        const e = await client.getEntity("cup", board.rowKey);
-        const d = JSON.parse(e.data);
-        d.scores = d.scores || {};
-        return d;
-      } catch (e) {
-        if (e.statusCode === 404) return emptyData("cybersecurity");
-        throw e;
-      }
-    },
-    async save(data) {
-      const saved = Object.assign({}, data, { updated: new Date().toISOString() });
-      await client.createTable();
-      await client.upsertEntity({ partitionKey: "cup", rowKey: board.rowKey, data: JSON.stringify(saved) }, "Replace");
-      return saved;
-    },
-  };
-}
 
 // GET  /api/forge          anyone: current round + entries
 // POST /api/forge          anyone: submit stats for a lodge (never a password)
@@ -79,7 +24,7 @@ app.http("forge", {
   handler: async (request, context) => {
     const conn = process.env.STORAGE_CONNECTION_STRING;
     if (!conn) return { status: 503, headers: HEADERS, jsonBody: { error: "Shared scoreboard is not set up yet." } };
-    const forge = createForge(tableStore(TableClient.fromConnectionString(conn, TABLE)));
+    const forge = createForge(tableStore(TableClient.fromConnectionString(conn, TABLE), PARTITION));
     const action = request.params.action || "";
 
     try {
@@ -100,7 +45,7 @@ app.http("forge", {
           }
           if (action === "round") result = await forge.setRound(body);
           else if (action === "reset") result = await forge.reset();
-          else result = await forge.award(scoreboardAdapter(TableClient.fromConnectionString(conn, TABLE)));
+          else result = await forge.award(scoreboardAdapter(TableClient.fromConnectionString(conn, TABLE), BOARDS.cybersecurity, emptyData));
         } else return { status: 404, headers: HEADERS, jsonBody: { error: "Not found." } };
       }
       return { status: result.status, headers: HEADERS, jsonBody: result.body };

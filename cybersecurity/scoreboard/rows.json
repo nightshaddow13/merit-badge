@@ -83,7 +83,7 @@
   "id": "two-key-rite-mfa",
   "name": "Two-Key Rite (MFA)",
   "time": "1:28",
-  "how": "+2 first lodge fully verified; +1 second",
+  "how": "Added automatically from the code check: 1st lodge with 2 correct codes +3, 2nd +2, every other lodge that completes +1",
   "min": -50,
   "max": 100
  },

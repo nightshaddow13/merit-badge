@@ -78,4 +78,6 @@ Each device scores a practice passphrase locally with zxcvbn (bundled into the p
 
 ## Two-Key Rite code check (scorekeepers only)
 
-`/cybersecurity/scoreboard/two-key-check.html` checks a 6-digit code against a lodge's practice authenticator secret (current, previous and next 30-second window). It is gated by the `scorekeeper` role, like the score edit pages. The code display (`/counselor/tools/two-key-rite-display.html`) opens for either the `counselor` or the `scorekeeper` role. The secrets are practice-only, but they are in the file, so keep the repo private.
+`/cybersecurity/scoreboard/two-key-check.html` checks a 6-digit code against a lodge's practice authenticator secret (current, previous and next 30-second window). It is gated by the `scorekeeper` role, like the score edit pages. The code display (`/counselor/tools/two-key-rite-display.html`) opens for either the `counselor` or the `scorekeeper` role. The secrets are practice-only, but they are in the files, so keep the repo private.
+
+Each valid code is recorded on a shared scorecard (`/api/twokey`, scorekeepers only, table partition `twokey`). A lodge completes after 2 valid codes from different 30-second windows. Points by order of completion: 1st = 3, 2nd = 2, every later lodge = 1, written automatically to the "Two-Key Rite (MFA)" row of the Cybersecurity scoreboard. **Reset scorecard** clears the codes and removes those points. Tests: `node api/test-twokey.js`.
