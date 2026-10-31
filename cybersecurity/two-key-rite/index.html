@@ -35,7 +35,11 @@ button.alt{background:transparent;color:var(--text);border:2px solid #2B4B60;wid
 <div class="tablewrap"><table><thead><tr><th scope="col">Lodge</th><th scope="col">Codes</th><th scope="col">Status</th><th scope="col">Points</th></tr></thead><tbody id="sc"><tr><td colspan="4">Loading&hellip;</td></tr></tbody></table></div>
 <div id="upd" style="color:var(--mut);font-size:14px;margin-top:8px"></div>
 <div id="sm" role="status" aria-live="polite"></div>
-<div id="skbtns" hidden><button type="button" class="alt" id="apply">Apply points to scoreboard (1st +3, 2nd +2, others +1)</button> <button type="button" class="alt" id="reset">Reset scorecard</button></div></div>
+<div id="skbtns" hidden>
+<p id="cfg" style="color:var(--mut);font-size:15px;margin:12px 0 6px"></p>
+<label for="sec" style="font-size:15px">Set up codes (scorekeepers): paste the lodge secrets, one per line or comma separated, Lodge 1 first</label>
+<textarea id="sec" rows="3" autocomplete="off" spellcheck="false" style="width:100%;font:15px Consolas,monospace;padding:10px;border-radius:8px;border:2px solid #2B4B60;background:#0F1F2B;color:var(--text)"></textarea>
+<button type="button" class="alt" id="savesec">Save secrets</button><br><button type="button" class="alt" id="apply">Apply points to scoreboard (1st +3, 2nd +2, others +1)</button> <button type="button" class="alt" id="reset">Reset scorecard</button></div></div>
 <p><a href="/cybersecurity/">Back to Cybersecurity</a> &middot; <a href="/cybersecurity/scoreboard/">Cup scoreboard</a></p>
 <script>
 let names=[];
@@ -61,7 +65,7 @@ function paint(entries){
   cell(e.place?'+'+e.points:'—','n');b.appendChild(tr)})}
 let note='';
 function stamp(t){document.getElementById('upd').textContent=t}
-async function refresh(){try{const j=await api('/api/twokey');paint(j.entries);stamp('Updated '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})+' \u00b7 refreshes by itself')}catch(err){stamp('Scorecard unavailable ('+err.message+'). Trying again\u2026')}}
+async function refresh(){try{const j=await api('/api/twokey');paint(j.entries);cfg(j.configured);stamp('Updated '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})+' \u00b7 refreshes by itself')}catch(err){stamp('Scorecard unavailable ('+err.message+'). Trying again\u2026')}}
 async function loadNames(){try{const d=await (await fetch('/api/scores/cybersecurity',{cache:'no-store'})).json();names=(d.lodges||[]).map(String);
  document.querySelectorAll('#lodge option').forEach((o,k)=>{o.textContent=lname(k+1)})}catch(e){}}
 
@@ -78,6 +82,10 @@ document.getElementById('f').addEventListener('submit',async e=>{e.preventDefaul
  go.disabled=false});
 
 let armed=false;const rb=document.getElementById('reset');
+function cfg(ok){document.getElementById('cfg').textContent=ok?'Code check is set up.':'Code check is NOT set up yet. Paste the secrets below.'}
+document.getElementById('savesec').addEventListener('click',async()=>{
+ const list=document.getElementById('sec').value.split(/[\s,]+/).filter(Boolean);
+ try{await api('/api/twokey/secrets',{secrets:list});document.getElementById('sec').value='';cfg(true);document.getElementById('sm').textContent='Secrets saved. They are stored on the server and never shown again.'}catch(err){document.getElementById('sm').textContent=err.message}});
 document.getElementById('apply').addEventListener('click',async()=>{
  try{const j=await api('/api/twokey/apply',{});document.getElementById('sm').textContent='Added to the Cup scoreboard: '+j.awarded.map(a=>lname(a.lodge)+' +'+a.points).join(', ')+'.'}catch(err){document.getElementById('sm').textContent=err.message}});
 rb.addEventListener('click',async()=>{

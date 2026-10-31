@@ -19,6 +19,15 @@
       ]
     },
     {
+      "route": "/api/twokey/secrets",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/api/twokey/apply",
       "methods": [
         "POST"
