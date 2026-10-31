@@ -107,6 +107,14 @@ function createTwoKey(store) {
     return { status: 200, body: { result, needed: CODES_NEEDED, entry: entries[body.lodge - 1], entries } };
   }
 
+  // Scorekeepers only. Writes the current standings onto the scoreboard (safe to repeat).
+  async function apply(sb) {
+    const entries = summarize(await rows());
+    if (!entries.some((e) => e.place)) return { status: 409, body: { error: "No lodge has finished yet." } };
+    const saved = await writeAward(sb, entries);
+    return { status: 200, body: { awarded: entries.filter((e) => e.place).sort((a, b) => a.place - b.place).map((e) => ({ lodge: e.lodge, place: e.place, points: e.points })), updated: saved.updated } };
+  }
+
   // Clears the scorecard and removes the points it put on the Cup scoreboard.
   async function reset(sb) {
     for (const r of await store.list()) if (/^lodge[1-6]$/.test(r.rowKey)) await store.remove(r.rowKey);
@@ -114,7 +122,7 @@ function createTwoKey(store) {
     return { status: 200, body: { needed: CODES_NEEDED, entries: summarize([]) } };
   }
 
-  return { getState, check, reset };
+  return { getState, check, apply, reset };
 }
 
 module.exports = { createTwoKey, AWARD_ROW, LODGES, CODES_NEEDED };

@@ -447,6 +447,9 @@ footer{padding:20px 16px 40px;font:14px/1.4 system-ui,Arial,sans-serif;color:var
   loadNames().then(refresh).then(analyze);
   setInterval(function () { if (!document.hidden) refresh(); }, 5000);
   setInterval(loadNames, 60000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { loadNames().then(refresh); } });
+  window.addEventListener("focus", function () { refresh(); });
+  window.addEventListener("online", function () { refresh(); });
 })();
 </script>
 </body>

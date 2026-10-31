@@ -33,8 +33,9 @@ button.alt{background:transparent;color:var(--text);border:2px solid #2B4B60;wid
 <div id="res" role="status" aria-live="polite" hidden></div></form></div>
 <div class="card" id="card"><h2>Scorecard</h2>
 <div class="tablewrap"><table><thead><tr><th scope="col">Lodge</th><th scope="col">Codes</th><th scope="col">Status</th><th scope="col">Points</th></tr></thead><tbody id="sc"><tr><td colspan="4">Loading&hellip;</td></tr></tbody></table></div>
+<div id="upd" style="color:var(--mut);font-size:14px;margin-top:8px"></div>
 <div id="sm" role="status" aria-live="polite"></div>
-<button type="button" class="alt" id="reset" hidden>Reset scorecard</button></div>
+<div id="skbtns" hidden><button type="button" class="alt" id="apply">Apply points to scoreboard (1st +3, 2nd +2, others +1)</button> <button type="button" class="alt" id="reset">Reset scorecard</button></div></div>
 <p><a href="/cybersecurity/">Back to Cybersecurity</a> &middot; <a href="/cybersecurity/scoreboard/">Cup scoreboard</a></p>
 <script>
 let names=[];
@@ -58,7 +59,9 @@ function paint(entries){
   cell(lname(e.lodge));cell(e.codes+' of 2','n');
   cell(e.place?'Complete: '+ORD[e.place-1]:(e.codes?'In progress':'Not started'),e.place?'done':'');
   cell(e.place?'+'+e.points:'—','n');b.appendChild(tr)})}
-async function refresh(){try{const j=await api('/api/twokey');paint(j.entries);document.getElementById('sm').textContent=''}catch(err){document.getElementById('sm').textContent='Scorecard unavailable: '+err.message}}
+let note='';
+function stamp(t){document.getElementById('upd').textContent=t}
+async function refresh(){try{const j=await api('/api/twokey');paint(j.entries);stamp('Updated '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})+' \u00b7 refreshes by itself')}catch(err){stamp('Scorecard unavailable ('+err.message+'). Trying again\u2026')}}
 async function loadNames(){try{const d=await (await fetch('/api/scores/cybersecurity',{cache:'no-store'})).json();names=(d.lodges||[]).map(String);
  document.querySelectorAll('#lodge option').forEach((o,k)=>{o.textContent=lname(k+1)})}catch(e){}}
 
@@ -75,11 +78,19 @@ document.getElementById('f').addEventListener('submit',async e=>{e.preventDefaul
  go.disabled=false});
 
 let armed=false;const rb=document.getElementById('reset');
+document.getElementById('apply').addEventListener('click',async()=>{
+ try{const j=await api('/api/twokey/apply',{});document.getElementById('sm').textContent='Added to the Cup scoreboard: '+j.awarded.map(a=>lname(a.lodge)+' +'+a.points).join(', ')+'.'}catch(err){document.getElementById('sm').textContent=err.message}});
 rb.addEventListener('click',async()=>{
  if(!armed){armed=true;rb.textContent='Clear all codes and points? Press again';setTimeout(()=>{armed=false;rb.textContent='Reset scorecard'},5000);return}
  armed=false;rb.textContent='Reset scorecard';
  try{const j=await api('/api/twokey/reset',{});paint(j.entries);document.getElementById('sm').textContent='Scorecard cleared and its points removed from the scoreboard.'}catch(err){document.getElementById('sm').textContent=err.message}});
 // Only scorekeepers see the reset button (the server enforces it too).
-fetch('/.auth/me',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{const p=j&&j.clientPrincipal;rb.hidden=!(p&&(p.userRoles||[]).includes('scorekeeper'))}).catch(()=>{});
-loadNames().then(refresh);setInterval(()=>{if(!document.hidden)refresh()},5000);
+fetch('/.auth/me',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{const p=j&&j.clientPrincipal;document.getElementById('skbtns').hidden=!(p&&(p.userRoles||[]).includes('scorekeeper'))}).catch(()=>{});
+function reload(){return loadNames().then(refresh)}
+reload();
+setInterval(()=>{if(!document.hidden)refresh()},5000);
+setInterval(()=>{if(!document.hidden)loadNames().then(refresh)},60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)reload()});
+window.addEventListener('focus',reload);
+window.addEventListener('online',reload);
 </script></main></body></html>

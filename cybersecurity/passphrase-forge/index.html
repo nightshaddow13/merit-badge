@@ -475,6 +475,9 @@ var time_estimates;time_estimates={estimate_attack_times:function(e){var t,n,s,o
   loadNames().then(refresh).then(analyze);
   setInterval(function () { if (!document.hidden) refresh(); }, 5000);
   setInterval(loadNames, 60000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { loadNames().then(refresh); } });
+  window.addEventListener("focus", function () { refresh(); });
+  window.addEventListener("online", function () { refresh(); });
 })();
 </script>
 </body>

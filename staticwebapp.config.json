@@ -19,6 +19,15 @@
       ]
     },
     {
+      "route": "/api/twokey/apply",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/api/twokey/reset",
       "methods": [
         "POST"

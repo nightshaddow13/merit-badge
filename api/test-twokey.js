@@ -74,6 +74,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   assert.deepStrictEqual(s.body.entries.map((e) => e.place), [3, 1, null, null, 2, 4]);
   assert.strictEqual(s.body.entries[2].codes, 1);
 
+  // apply re-writes the points (e.g. after someone cleared the row by hand)
+  delete board.scores[AWARD_ROW];
+  r = await tk.apply(sb);
+  assert.strictEqual(r.status, 200);
+  assert.deepStrictEqual(r.body.awarded, [{ lodge: 2, place: 1, points: 3 }, { lodge: 5, place: 2, points: 2 }, { lodge: 1, place: 3, points: 1 }, { lodge: 6, place: 4, points: 1 }]);
+  assert.deepStrictEqual(board.scores[AWARD_ROW], [1, 3, null, null, 2, 1]);
+  assert.strictEqual((await createTwoKey(memoryStore()).apply(sb)).status, 409, "nothing to apply yet");
+
   // the stored scorecard never contains a secret or a typed code
   assert.ok(!SECRETS.some((x) => store.dump().includes(x)));
 
