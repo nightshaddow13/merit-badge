@@ -74,6 +74,17 @@
       "statusCode": 301
     },
     {
+      "route": "/counselor/tools/two-key-rite-display.html",
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ],
+      "headers": {
+        "X-Robots-Tag": "noindex",
+        "Cache-Control": "private, no-store"
+      }
+    },
+    {
       "route": "/counselor/",
       "allowedRoles": [
         "counselor"

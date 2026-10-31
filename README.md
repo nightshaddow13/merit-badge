@@ -78,4 +78,4 @@ Each device scores a practice passphrase locally with zxcvbn (bundled into the p
 
 ## Two-Key Rite code check (scorekeepers only)
 
-`/cybersecurity/scoreboard/two-key-check.html` checks a 6-digit code against a lodge's practice authenticator secret (current, previous and next 30-second window). It is gated by the `scorekeeper` role, like the score edit pages. The secrets are practice-only, but they are in the file, so keep the repo private.
+`/cybersecurity/scoreboard/two-key-check.html` checks a 6-digit code against a lodge's practice authenticator secret (current, previous and next 30-second window). It is gated by the `scorekeeper` role, like the score edit pages. The code display (`/counselor/tools/two-key-rite-display.html`) opens for either the `counselor` or the `scorekeeper` role. The secrets are practice-only, but they are in the file, so keep the repo private.
