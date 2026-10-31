@@ -74,12 +74,6 @@
       "statusCode": 301
     },
     {
-      "route": "/counselor",
-      "allowedRoles": [
-        "counselor"
-      ]
-    },
-    {
       "route": "/counselor/",
       "allowedRoles": [
         "counselor"
