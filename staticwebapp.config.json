@@ -1,12 +1,31 @@
 {
   "routes": [
     {
+      "route": "/api/scores",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/scoreboard/edit.html",
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/counselor/*",
-      "headers": { "X-Robots-Tag": "noindex, nofollow" }
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow"
+      }
     },
     {
       "route": "/files/*",
-      "headers": { "X-Robots-Tag": "noindex" }
+      "headers": {
+        "X-Robots-Tag": "noindex"
+      }
     }
   ],
   "globalHeaders": {
@@ -17,6 +36,16 @@
     ".m4a": "audio/mp4"
   },
   "responseOverrides": {
-    "404": { "rewrite": "/index.html", "statusCode": 404 }
+    "404": {
+      "rewrite": "/index.html",
+      "statusCode": 404
+    },
+    "401": {
+      "redirect": "/.auth/login/github?post_login_redirect_uri=.referrer",
+      "statusCode": 302
+    }
+  },
+  "platform": {
+    "apiRuntime": "node:20"
   }
 }

@@ -99,3 +99,33 @@ audio{width:100%;max-width:460px;height:40px}
   .res-act{width:100%;justify-content:space-between}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* scoreboard */
+.empty{color:var(--mut);font-size:20px}
+.standings{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+.stand{position:relative;display:grid;grid-template-columns:minmax(3.4ch,max-content) 1fr auto;align-items:baseline;gap:4px 24px;padding:18px 0 22px;border-bottom:1px solid var(--line)}
+.place{min-width:2.4ch;font:900 clamp(28px,5vw,44px)/1 var(--display);color:var(--a)}
+.lname{font:900 clamp(30px,6vw,56px)/1 var(--display);text-transform:uppercase;overflow-wrap:anywhere}
+.pts{font:900 clamp(34px,7vw,64px)/1 var(--display);font-variant-numeric:tabular-nums}
+.bar{position:absolute;left:0;bottom:8px;height:6px;border-radius:3px;background:var(--a);opacity:.85;transition:width .6s ease}
+.stand.lead-row .bar{background:var(--hi);opacity:1}
+.stand.lead-row .place{color:var(--ink)}
+@media (prefers-color-scheme:dark){.place{color:var(--hi)}}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--white)}
+.grid{border-collapse:collapse;width:100%;min-width:560px;font-size:17px}
+.grid th,.grid td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:center}
+.grid thead th{position:sticky;top:0;background:var(--a);color:var(--on-a);font-weight:700}
+.grid tbody th{text-align:left;font-weight:700}
+.grid .how{display:block;font-weight:400;color:var(--mut);font-size:14px;max-width:46ch}
+.grid .total-row th,.grid .total-row td{font-weight:700;border-top:2px solid var(--ink);font-size:19px}
+.edit .grid input{width:5.2ch;min-height:40px;font:inherit;text-align:center;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:6px}
+.lodges{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+.lodges label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:15px}
+.lodges input{font:inherit;font-weight:400;min-height:44px;padding:6px 10px;background:var(--white);color:var(--ink);border:1px solid var(--line);border-radius:6px}
+.savebar{position:sticky;bottom:0;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:14px 0;margin-top:16px;background:var(--paper);border-top:2px solid var(--ink)}
+button.btn{border:0;font:inherit;font-weight:700;cursor:pointer}
+button.btn:disabled{opacity:.6;cursor:wait}
+.btn.ghost{background:transparent!important;color:var(--ink)!important;border:2px solid var(--line)}
+.msg{margin:0;flex:1 1 260px;color:var(--mut)}
+.msg.ok{color:#1B6B3A}.msg.err{color:#A3262F}
+@media (prefers-color-scheme:dark){.msg.ok{color:#6FD39A}.msg.err{color:#FF9AA2}}

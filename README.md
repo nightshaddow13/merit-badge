@@ -32,3 +32,19 @@ Total size is about 15 MB, well under the Free plan's 250 MB limit.
 The counselor page and its files include answer keys. They are hidden from search engines but are **not secret**; anyone with the link can open them. To require sign-in, use the protected config.
 
 The A.I.R.A. Field Log loads jsPDF from cdnjs and the Google Fonts stylesheet loads from Google, so Scouts need internet access to use them fully.
+
+## Live scoreboard (Cup of the Silver Padlock)
+
+- `/scoreboard/` is the public leaderboard. It refreshes every 10 seconds.
+- `/scoreboard/edit.html` is the scorekeeper page. It requires sign-in and the `scorekeeper` role.
+- `api/` is an Azure Functions API (managed by Static Web Apps) that stores scores in Azure Table Storage.
+- Until storage is connected, the public page shows the snapshot in `data/scoreboard.json`.
+
+One-time setup:
+
+1. **Storage account.** Azure portal > Create a resource > Storage account (Standard, locally redundant is fine). Open it > Security + networking > Access keys > copy a **Connection string**.
+2. **App setting.** Open the Static Web App > Settings > Environment variables > add `STORAGE_CONNECTION_STRING` with that value (Production). Save.
+3. **Scorekeeper role.** Static Web App > Settings > Role management > Invite. Pick GitHub, enter the person's GitHub username, set the role to `scorekeeper`, and send the link. They open the link once to accept.
+4. Open `/scoreboard/edit.html`, name the lodges, enter points and press **Save scores**.
+
+Test the API logic locally with `cd api && node test.js`.

@@ -1,0 +1,98 @@
+[
+ {
+  "id": "line-of-oaths",
+  "name": "Line of Oaths",
+  "time": "0:02",
+  "how": "+1 per Warden who gives a clear reason; +1 teamwork"
+ },
+ {
+  "id": "hunt-for-hidden-doors",
+  "name": "Hunt for Hidden Doors",
+  "time": "0:06",
+  "how": "+2 first lodge to show the setting; +1 other lodges within 30 sec"
+ },
+ {
+  "id": "three-pillars-trial",
+  "name": "Three Pillars trial",
+  "time": "0:22",
+  "how": "+1 per Warden in the right corner"
+ },
+ {
+  "id": "locked-vault",
+  "name": "Locked Vault",
+  "time": "0:33",
+  "how": "+2 restore from backup; +1 ask for help; 0 pay"
+ },
+ {
+  "id": "wireshark-demo",
+  "name": "Wireshark demo",
+  "time": "0:39",
+  "how": "+1 for explaining the difference; +2 catching your mistake"
+ },
+ {
+  "id": "masked-messengers",
+  "name": "Masked Messengers",
+  "time": "0:48",
+  "how": "+1 per right call; +1 for naming the clue"
+ },
+ {
+  "id": "count-the-open-gates",
+  "name": "Count the Open Gates",
+  "time": "0:55",
+  "how": "+2 first bingo; +1 each extra bingo"
+ },
+ {
+  "id": "herald-dispatch",
+  "name": "Herald Dispatch",
+  "time": "0:57",
+  "how": "+2 winning reporter; +1 correct cause"
+ },
+ {
+  "id": "passphrase-forge",
+  "name": "Passphrase Forge",
+  "time": "1:23",
+  "how": "+2 longest random passphrase; +1 names a password rule"
+ },
+ {
+  "id": "two-key-rite-mfa",
+  "name": "Two-Key Rite (MFA)",
+  "time": "1:28",
+  "how": "+2 first lodge fully verified; +1 second"
+ },
+ {
+  "id": "shadow-watch",
+  "name": "Shadow Watch",
+  "time": "1:37",
+  "how": "+1 per clue answered first"
+ },
+ {
+  "id": "sealed-scroll-match-up",
+  "name": "Sealed Scroll match-up",
+  "time": "1:41",
+  "how": "+1 per correct pair and type"
+ },
+ {
+  "id": "hashing-press-the-seal",
+  "name": "Hashing: Press the Seal",
+  "time": "2:02",
+  "how": "+2 worksheet complete; +3 first to find the tampered document; +1 each other lodge; +1 hash vs encryption"
+ },
+ {
+  "id": "cyber-threat-defender",
+  "name": "Cyber Threat Defender",
+  "time": "2:14",
+  "how": "1st +5; 2nd +3; 3rd +1; +1 per Warden who explains a defense card"
+ },
+ {
+  "id": "connected-device-draft",
+  "name": "Connected Device Draft",
+  "time": "2:44",
+  "how": "+3 longest unique list; +1 per Warden with four devices"
+ },
+ {
+  "id": "bonus-teamwork-and-catch-up",
+  "name": "Bonus: teamwork and catch-up",
+  "time": "any time",
+  "how": "Instructor's choice. Use a small bonus to help a lodge that is far behind"
+ }
+]
