@@ -36,7 +36,7 @@ Roles (Static Web App > Settings > Role management > Invite; several roles can b
 | Role | Can do |
 | --- | --- |
 | `counselor` | Open `/counselor/` and everything in it |
-| `scorekeeper` | See the Edit scores button, open the scorekeeper pages, save scores, and run the Passphrase Forge controls (reset, banned words, award points) |
+| `scorekeeper` | See the Edit scores button, open the scorekeeper pages, save scores, and run the Passphrase Forge controls (reset, round type, award points) |
 
 To sign in, open `/counselor/`; you are sent to GitHub and back. A signed-in user without the role sees the "No access" page.
 
@@ -70,7 +70,7 @@ One-time setup:
 Each device scores a practice passphrase locally with zxcvbn (bundled into the page, no CDN). Submitting sends only the lodge, `guesses_log10`, length, pattern count and a masked preview (first character plus asterisks). The passphrase never leaves the device. The page's Content-Security-Policy only allows requests to this site.
 
 - `GET /api/forge` shows the round and entries; `POST /api/forge` submits (anyone, validated server-side).
-- Scorekeeper only: `POST /api/forge/round` (open/close, round type, starter, banned words), `/api/forge/reset` (new round) and `/api/forge/award` (1st = 2 points, 2nd = 1 point, written to the "Passphrase Forge: placing" row of the Cybersecurity scoreboard; pressing it again replaces the row).
+- Scorekeeper only: `POST /api/forge/round` (open/close, round type, starter), `/api/forge/reset` (new round) and `/api/forge/award` (1st = 2 points, 2nd = 1 point, written to the "Passphrase Forge: placing" row of the Cybersecurity scoreboard; pressing it again replaces the row).
 - The lodge dropdown uses the lodge names saved on the scoreboard. Data lives in the same `cup` table (partition `forge`), so no new Azure setup is needed.
 - Anonymous submissions can be faked by a determined student; the server checks every value, but this is a classroom game, not a secure vote.
 - Updating zxcvbn: `npm i zxcvbn@<version>` somewhere, copy `node_modules/zxcvbn/dist/zxcvbn.js` over `cybersecurity/passphrase-forge/build/zxcvbn.js`, then run `node cybersecurity/passphrase-forge/build/build.js` and commit the regenerated `index.html`. Edit the page in `build/template.html`, not `index.html`.

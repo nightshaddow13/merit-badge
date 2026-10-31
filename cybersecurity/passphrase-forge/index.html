@@ -93,10 +93,6 @@ footer{padding:20px 16px 40px;font:14px/1.4 system-ui,Arial,sans-serif;color:var
   </div>
   <p class="help" id="pw-help">Scored right here on your device. The passphrase is never sent anywhere or saved. Only the score numbers and the first letter are shared when you submit.</p>
 
-  <div id="roundbanned" class="help" hidden></div>
-  <label for="extra">Extra banned words (optional, only on this device)</label>
-  <textarea id="extra" autocomplete="off" spellcheck="false" aria-describedby="extra-help"></textarea>
-  <p class="help" id="extra-help">One per line or separated by commas. Words here count against you, like a name or team everyone could guess.</p>
 </section>
 
 <section class="card" aria-labelledby="live-h">
@@ -166,13 +162,8 @@ footer{padding:20px 16px 40px;font:14px/1.4 system-ui,Arial,sans-serif;color:var
     <p class="help">In Break the weak one, everyone improves the same weak starter and the biggest gain wins. Type the weak starter in the box at the top first.</p>
   </div>
   <div class="skbox">
-    <label for="banned">Banned words for everyone</label>
-    <textarea id="banned" spellcheck="false"></textarea>
-    <button type="button" id="savebanned" class="alt">Save banned words</button>
-  </div>
-  <div class="skbox">
     <button type="button" id="reset">Reset round</button>
-    <p class="help">Clears every entry and starts a new round. Banned words stay.</p>
+    <p class="help">Clears every entry and starts a new round.</p>
   </div>
   <div class="msg" id="skmsg" role="status" aria-live="polite"></div>
 </section>
@@ -232,14 +223,8 @@ var time_estimates;time_estimates={estimate_attack_times:function(e){var t,n,s,o
   function lodgeName(i) { return names[i - 1] || "Lodge " + i; }
   function say(node, text, kind) { node.textContent = text; node.className = "msg" + (kind ? " " + kind : ""); }
   function words(s) { return s.split(/[\s\-_.,;:]+/).filter(Boolean).length; }
-  function parseList(text) { return text.split(/[\n,]+/).map(function (w) { return w.trim().toLowerCase(); }).filter(Boolean); }
 
   // ---------- scoring (all on this device)
-  function bannedList() {
-    var round = state.round ? state.round.banned : [];
-    return round.concat(parseList($("extra").value));
-  }
-
   var KIND = {
     dictionary: "common word or name", spatial: "keyboard pattern", repeat: "repeated chunk",
     sequence: "counting or alphabet run", regex: "year or date-like", date: "date", bruteforce: "random characters"
@@ -247,7 +232,6 @@ var time_estimates;time_estimates={estimate_attack_times:function(e){var t,n,s,o
   function kindOf(m) {
     if (m.pattern === "dictionary") {
       if (m.dictionary_name === "passwords") return "common password";
-      if (m.dictionary_name === "user_inputs") return "banned word";
       if (/names/.test(m.dictionary_name)) return "common name";
       return "common word";
     }
@@ -258,7 +242,6 @@ var time_estimates;time_estimates={estimate_attack_times:function(e){var t,n,s,o
     var rev = m.reversed ? " Writing it backwards does not hide it." : "";
     switch (m.pattern) {
       case "dictionary":
-        if (m.dictionary_name === "user_inputs") return "A banned word is in your passphrase. A thief would try it first." + tricks;
         if (m.dictionary_name === "passwords") return "One chunk is a very common password. Thieves try these first." + tricks + rev;
         if (/names/.test(m.dictionary_name)) return "One chunk is a common name. Names are easy to guess." + tricks + rev;
         return "One chunk is a common word. A thief's list already has it." + tricks + rev;
@@ -276,7 +259,7 @@ var time_estimates;time_estimates={estimate_attack_times:function(e){var t,n,s,o
     if (!pw) { current = null; $("live").hidden = true; $("empty").hidden = false; $("submit").disabled = true; return; }
     if (len > MAXLEN) { current = null; $("live").hidden = true; $("empty").hidden = false; $("empty").textContent = "Keep it to " + MAXLEN + " characters or fewer."; $("submit").disabled = true; return; }
     $("empty").textContent = "Type something above to see how strong it is.";
-    var r = zxcvbn(pw, bannedList());
+    var r = zxcvbn(pw);
     var log10 = Math.round(r.guesses_log10 * 10) / 10;
     var chars = Array.from(pw);
     current = {
@@ -338,8 +321,6 @@ var time_estimates;time_estimates={estimate_attack_times:function(e){var t,n,s,o
       info.appendChild(el("span", { "class": "pill", text: r.open ? "Submissions open" : "Submissions closed" }));
       info.appendChild(el("span", { "class": "pill", text: r.mode === "break" ? "Break the weak one" : "Standard round" }));
     }
-    var rb = $("roundbanned");
-    if (r && r.banned.length) { rb.hidden = false; rb.textContent = "Banned this round: " + r.banned.join(", "); } else rb.hidden = true;
     var st = $("starter");
     if (r && r.mode === "break" && r.starter) {
       st.hidden = false; st.textContent = "The weak starter: " + r.starter.preview + " • number " + r.starter.log10.toFixed(1) + ". Beat it by the biggest gain.";
@@ -348,7 +329,6 @@ var time_estimates;time_estimates={estimate_attack_times:function(e){var t,n,s,o
     $("numhead").textContent = r && r.mode === "break" && r.starter ? "Gain over starter" : "Number";
     if (isKeeper) {
       $("openclose").textContent = r.open ? "Close submissions" : "Open submissions";
-      if (document.activeElement !== $("banned")) $("banned").value = r.banned.join("\n");
     }
     $("submit").disabled = !(current && state.live && r && r.open && $("lodge").value);
   }
@@ -423,7 +403,6 @@ var time_estimates;time_estimates={estimate_attack_times:function(e){var t,n,s,o
     analyze();
   });
   $("pw").addEventListener("input", analyze);
-  $("extra").addEventListener("input", analyze);
 
   // ---------- export
   function exportRows() {
@@ -466,9 +445,6 @@ var time_estimates;time_estimates={estimate_attack_times:function(e){var t,n,s,o
     if (!current) { say($("skmsg"), "Type the weak starter passphrase in the top box first.", "err"); return; }
     var s = { log10: current.log10, length: current.length, preview: current.preview };
     keeper(post("/api/forge/round", { starter: s }), function () { $("pw").value = ""; analyze(); return "Starter set. Break the weak one is on."; });
-  });
-  $("savebanned").addEventListener("click", function () {
-    keeper(post("/api/forge/round", { banned: parseList($("banned").value) }), function () { analyze(); return "Banned words saved."; });
   });
   $("reset").addEventListener("click", function () {
     var b = $("reset");
