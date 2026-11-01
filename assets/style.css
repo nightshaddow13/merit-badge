@@ -184,3 +184,9 @@ button.btn:disabled{opacity:.6;cursor:wait}
 .hunt .claims li{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;background:var(--paper)}
 .hunt .claims b{font-family:var(--display);font-size:22px;margin-right:8px}
 .hunt .whisper{color:var(--mut);font-size:15px}
+
+.hunt .mailbox{border-top:2px dashed var(--line);margin-top:16px;padding-top:12px}
+.hunt .mailbox h3{margin:0 0 4px;font:700 20px/1.2 var(--body)}
+.hunt .mailbox input{width:100%;max-width:360px;min-height:48px;font:20px/1.2 var(--body);padding:8px 12px;border:2px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
+.hunt .mailbox label{display:block;font-weight:700;margin:10px 0 4px}
+.hunt .mailtext{white-space:pre-wrap;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;font:15px/1.4 ui-monospace,Consolas,monospace}

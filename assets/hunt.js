@@ -44,6 +44,33 @@
       var box = document.getElementById(cfg.rewardId);
       box.querySelector(".phrase").textContent = out;
       box.hidden = false;
+      mailStep(box, out);
+    }
+
+    // Last step: the Scout emails the phrase to the leader. The address is not written out in the
+    // page source; it is only assembled here once the hunt is finished.
+    function mailStep(box, phrase) {
+      if (!cfg.mail || box.querySelector(".mailbox")) return;
+      var to = atob(cfg.mail);
+      var name = el("input", { type: "text", id: cfg.id + "-name", maxlength: "40", autocomplete: "off" });
+      var send = el("a", { "class": "btn", href: "#", text: "Email my code" });
+      var pre = el("pre", { "class": "mailtext" });
+      function build() {
+        var who = name.value.trim() || "(your name)";
+        var subject = cfg.hunt + " complete: " + who;
+        var body = "Hunt: " + cfg.hunt + "\nSecret phrase: " + phrase + "\nScout: " + who + "\n\nSent from the Merit Badge Field Kit.";
+        send.href = "mailto:" + to + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body);
+        pre.textContent = "To: " + to + "\nSubject: " + subject + "\n\n" + body;
+      }
+      name.addEventListener("input", build); build();
+      var box2 = el("div", { "class": "mailbox" }, [
+        el("h3", { text: "Last step: send your code" }),
+        el("p", { text: "Email your secret phrase to your leader so he knows you finished. Ask a parent or leader before you send an email." }),
+        el("label", { "for": name.id, text: "Your name" }), name,
+        el("p", {}, [send]),
+        (function () { var d = el("details", {}, [el("summary", { text: "My email app did not open" }), el("p", { text: "Copy this into a new email yourself:" }), pre]); return d; })()
+      ]);
+      box.appendChild(box2);
     }
 
     cfg.locks.forEach(function (L, i) {
