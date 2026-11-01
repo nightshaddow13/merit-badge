@@ -190,3 +190,5 @@ button.btn:disabled{opacity:.6;cursor:wait}
 .hunt .mailbox input{width:100%;max-width:360px;min-height:48px;font:20px/1.2 var(--body);padding:8px 12px;border:2px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
 .hunt .mailbox label{display:block;font-weight:700;margin:10px 0 4px}
 .hunt .mailtext{white-space:pre-wrap;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;font:15px/1.4 ui-monospace,Consolas,monospace}
+
+.hunt .resetrow{margin:8px 0 0}

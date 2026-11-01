@@ -109,6 +109,21 @@
       if (good) unlock(open[i], true);
     });
     reward();
+
+    // Start over: clears the saved progress on this device (handy on a shared computer).
+    var rst = el("button", { type: "button", "class": "btn ghost", text: "Start over" });
+    var armed = false, timer = null;
+    rst.addEventListener("click", function () {
+      if (!armed) {
+        armed = true; rst.textContent = "Clear all locks on this device? Press again";
+        timer = setTimeout(function () { armed = false; rst.textContent = "Start over"; }, 5000);
+        return;
+      }
+      clearTimeout(timer);
+      try { localStorage.removeItem("hunt:" + cfg.id); } catch (e) {}
+      location.reload();
+    });
+    root.parentNode.insertBefore(el("p", { "class": "resetrow" }, [rst]), root.nextSibling);
   }
   window.Hunt = { init: init, hx: hx };
 })();
