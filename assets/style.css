@@ -137,3 +137,32 @@ button.btn:disabled{opacity:.6;cursor:wait}
 .top .who{flex-basis:100%;font-size:14px;color:#C9D2CD;padding-top:2px}
 .top .who a{color:#F4B63F}
 .top .who strong{color:#fff}
+
+/* Hash Lab */
+.lab{padding-bottom:16px}
+.labtabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:28px}
+.labtabs button{font:700 17px/1.2 var(--body);min-height:48px;padding:10px 18px;border:2px solid var(--a);border-bottom:0;border-radius:10px 10px 0 0;background:var(--white);color:var(--ink);cursor:pointer}
+.labtabs button.on{background:var(--a);color:var(--on-a)}
+.lab .panel{background:var(--white);border:2px solid var(--a);border-radius:0 12px 12px 12px;padding:18px;margin-bottom:8px}
+.lab .panel label{display:block;font-weight:700;margin:12px 0 6px}
+.lab .panel label:first-child{margin-top:0}
+.lab textarea,.lab input[type=text]{width:100%;font:18px/1.4 ui-monospace,Consolas,"Courier New",monospace;padding:10px;border:2px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
+.lab textarea{min-height:88px}
+.lab input[type=file]{font:inherit;max-width:100%}
+.lab .hash{font:700 20px/1.35 ui-monospace,Consolas,"Courier New",monospace;word-break:break-all;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:8px;min-height:2.4em}
+.lab .hash .f8{background:var(--hi);color:#17112B;padding:1px 3px;border-radius:3px}
+.lab .diff{background:#FDE1DB;color:#A3262F}
+.lab .meta{margin-top:6px;white-space:normal}
+.lab .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:700px){.lab .cols{grid-template-columns:1fr}}
+.lab .big{font:700 22px/1.3 var(--body);margin-top:14px;padding:12px;border-radius:8px;text-align:center;border:2px solid var(--line)}
+.lab .big.ok{background:#DFF3E2;color:#17572B;border-color:#2E8B4F}
+.lab .big.bad{background:#FDE1DB;color:#8E2410;border-color:#C0392B}
+.lab .big.wait{background:var(--paper);color:var(--mut)}
+.lab .hint{background:var(--paper);border-left:6px solid var(--hi);padding:10px 14px;margin-top:16px;border-radius:4px;max-width:none}
+@media (prefers-color-scheme:dark){
+  .labtabs button.on{background:var(--hi);color:#111;border-color:var(--hi)}
+  .lab .diff{background:#3A1F22;color:#FF9AA2}
+  .lab .big.ok{background:#16301F;color:#8FE0AE;border-color:#2E8B4F}
+  .lab .big.bad{background:#3A1F22;color:#FFB0B6;border-color:#C0392B}
+}

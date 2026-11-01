@@ -90,6 +90,11 @@
       "statusCode": 301
     },
     {
+      "route": "/tools/hash-lab.html",
+      "redirect": "/cybersecurity/hash-lab/",
+      "statusCode": 301
+    },
+    {
       "route": "/scoreboard",
       "redirect": "/cybersecurity/scoreboard/",
       "statusCode": 301

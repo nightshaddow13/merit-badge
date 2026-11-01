@@ -22,7 +22,7 @@ Total size is about 15 MB, well under the Free plan's 250 MB limit.
 | --- | --- |
 | `index.html`, `cybersecurity/`, `ai/` | Scout-facing pages |
 | `counselor/` | **Locked** to the `counselor` role: print packs, answer keys, trackers, class audio, class tools |
-| `tools/` | Interactive tools: A.I.R.A. Field Log, Hash Lab, Two-Key Rite display |
+| `tools/` | Interactive tools: A.I.R.A. Field Log, Two-Key Rite display |
 | `files/` | Public downloads only (career worksheet, permission slip, Scout Passport) |
 | `staticwebapp.config.json` | Azure routing and headers |
 | `access-denied.html` | Shown to signed-in users who lack the needed role |
