@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" class="cy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>The Silver Vault</title>
+<meta name="description" content="A secret hunt for Wardens.">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/" aria-current="page">Cybersecurity</a><a href="/ai/">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">Cybersecurity merit badge &middot; secret</p>
+  <h1>The Silver Vault</h1>
+  <p class="lead">Four locks. Four rune-words. You will need your eyes, your browser, and a little Roman history.</p>
+</div></section>
+<div class="wrap hunt">
+<section>
+<p class="lead" style="max-width:60ch">You found the door. Four locks guard the Silver Vault, and each rune-word is hidden somewhere a Warden has to look: behind a page, in a file for robots, in a fingerprint, and in plain sight. Open them all and the vault gives you a phrase to tell your counselor.</p>
+<p class="whisper">Stuck? Every lock has two hints. Use the small one first. There is no penalty for hints, but the best Wardens try first.</p>
+<div id="locks"></div>
+<div class="reward" id="reward" hidden role="status"><h2>The Silver Vault is open</h2><p>All four locks are open. Tell your counselor this phrase:</p><p class="phrase"></p><p>Then think about it: which of the four tricks would you use to find hidden things on a website you were defending?</p></div>
+<p class="shadow">The fourth rune-word is: shield</p>
+</section>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<script src="/assets/hunt.js"></script>
+<script>
+Hunt.init({ id: "silver-vault", salt: "silver-vault", root: "locks", rewardId: "reward",
+  cipher: "72e149e9686cedbc7e7c185d2d181ee1c7844d6d18a179967762",
+  locks: [
+ {
+  "title": "The page behind the page",
+  "riddle": "Every web page has a front you see and a back that builds it. The first rune-word is written on the back of the Cybersecurity page, where only curious Wardens look.",
+  "hint1": "Open the Cybersecurity page. Press Ctrl+U (on a Mac, Cmd+Option+U), or right-click and choose View Page Source.",
+  "hint2": "In the source, look for green text starting with \u003c!-- . That is a comment. People can't see it, but it is there. Read it all.",
+  "hash": "48feed191eda0b36e6bc95d1f6cc7f1f4e7d9ddd7a1a8f40fa7120fd6bb2439d",
+  "after": ""
+ },
+ {
+  "title": "What the robots are told",
+  "riddle": "Search robots visit every website. Each site keeps a note for them in a file at the same spot every time. That note has a secret message in a cipher an old Roman would know.",
+  "hint1": "The file is called robots.txt. Put /robots.txt on the end of the site's address.",
+  "hint2": "Caesar's trick moves every letter forward 3 (A becomes D). To read it, move each letter back 3 (D becomes A). Do one word at a time.",
+  "hash": "41a2f63aee4def92ac85cd234ed0064a58ec9251e14f07f1dbfd7ff5a50092c9",
+  "after": ""
+ },
+ {
+  "title": "A fingerprint to match",
+  "riddle": "Rune three is one word from the Scout Law. You can't see the word, but you know its fingerprint: the first 8 characters of its hash. Find the word with that fingerprint.",
+  "hint1": "Open the Hash Lab. Type a Scout Law word in all lowercase and look at the gold part of the hash. Does it match the fingerprint in robots.txt?",
+  "hint2": "There are only 12 words in the Scout Law. Try them one at a time. Lowercase only: a capital letter makes a totally different hash.",
+  "hash": "ca1b49f858fc79d562cf316981b42909ec3717f7720181a42e12875c82ba3155",
+  "after": ""
+ },
+ {
+  "title": "Words the same color as the wall",
+  "riddle": "Some words are written in the same color as their background, so your eyes skip them. Your computer does not. The last rune-word is somewhere on this very page.",
+  "hint1": "How do you highlight everything on a page at once? Try Ctrl+A (Cmd+A on a Mac).",
+  "hint2": "Press Ctrl+A, then scroll down. Look for words that appear when they are highlighted, below the last lock.",
+  "hash": "dbd3e4437e9eff2b8c65e25e9f4f4dda15cdd207f3c50b1b2b507c264df0469b",
+  "after": ""
+ }
+] });
+</script>
+<script src="/assets/app.js" defer></script>
+</body></html>

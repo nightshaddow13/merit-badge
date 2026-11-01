@@ -1,3 +1,14 @@
 User-agent: *
 Disallow: /counselor/
 Disallow: /access-denied.html
+Disallow: /cybersecurity/silver-vault/
+
+# ---- A message from the Order of the Silver Padlock ----
+# You found the second rune's hiding place. Well done, Warden.
+# The message below was scrambled with a Caesar cipher: every letter was moved
+# forward 3 steps (A became D). Move each letter BACK 3 steps to read it.
+#
+# UXQH WZR LV HPEHU. UXQH WKUHH LV RQH ZRUG IURP WKH VFRXW ODZ. ILQG LW LQ WKH KDVK ODE. WKH YDXOW GRRU LV OLVWHG EHORZ.
+#
+# Fingerprint of rune three (first 8 characters of its SHA-256 hash): 6629e9c5
+# (the word is all lowercase. The Hash Lab will tell you when you have it.)

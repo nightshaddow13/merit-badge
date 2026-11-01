@@ -85,3 +85,9 @@ Each device scores a practice passphrase locally with zxcvbn (bundled into the p
 **App setting option:** in Azure, open the Static Web App, then Environment variables, and add `TWOKEY_SECRETS` = the seven practice secrets from `counselor/tools/two-key-rite-display.html`, comma separated, in lodge order (Lodge 1 first; the spare is the 7th). Until it is set the page says the check is not set up.
 
 The code display (`/counselor/tools/two-key-rite-display.html`) opens for either the `counselor` or the `scorekeeper` role. The secrets are practice-only but sit in that file, so keep the repo private (the kids could otherwise read them on GitHub and generate codes). Tests: `node api/test-twokey.js`.
+
+## Secret hunts
+
+- **The Silver Vault** (`/cybersecurity/silver-vault/`, Cybersecurity): hidden, not in the nav, noindex. Trail: a source comment on the Cybersecurity page, then `robots.txt` (Caesar cipher), the Hash Lab (fingerprint match), then text hidden in the page color. Answers are salted SHA-256 hashes in the page and the reward phrase is encrypted, so the page source does not hold them.
+- **Operation Echo** (`/ai/echo/`, AI): kicked off by `/llms.txt`, a briefing written for AI assistants that tells them to start the game with a Scout. The AI page links to it for AI helpers.
+- `assets/hunt.js` is the shared engine. Answers and hints for both are on the counselor-only page `/counselor/files/hunts-key.html`.

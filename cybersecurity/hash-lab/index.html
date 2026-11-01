@@ -30,6 +30,7 @@
   </div>
 
   <section class="panel" id="p1" role="tabpanel" aria-labelledby="tab-p1" tabindex="0"><label for="t1">Type any text</label><textarea id="t1" spellcheck="false">Warden</textarea><div class="meta" id="m1"></div><div class="hash" id="h1" aria-live="polite"></div>
+  <div class="hint" id="rune3" role="status" hidden><strong>Fingerprint match!</strong> The word you just typed is rune three. Write it down. The last rune is on the vault door, in plain sight: <a href="/cybersecurity/silver-vault/">go to the Silver Vault</a>.</div>
   <div class="hint">Try &ldquo;Warden&rdquo;, then &ldquo;warden&rdquo;, then &ldquo;Warden!&rdquo; A tiny change makes a completely different fingerprint. The gold part is the first 8 characters: the short version we compare in class.</div></section>
 
   <section class="panel" id="p2" role="tabpanel" aria-labelledby="tab-p2" tabindex="0" hidden><div class="cols"><div><label for="o">A. Original message</label><textarea id="o" spellcheck="false">Meet at the flagpole at noon.</textarea><div class="hash" id="oh"></div></div>
@@ -63,7 +64,7 @@ if(typeof module!=='undefined')module.exports={sha256,hx};
 if(typeof document!=='undefined'){
 var $=function(i){return document.getElementById(i)};
 function show(el,hash){el.innerHTML='<span class="f8">'+hash.slice(0,8)+'</span>'+hash.slice(8)}
-function p1(){var t=$('t1').value,h=hx(t);show($('h1'),h);$('m1').textContent=t.length+' characters'}
+function p1(){var t=$('t1').value,h=hx(t);show($('h1'),h);$('m1').textContent=t.length+' characters';$('rune3').hidden=h.slice(0,8)!=='6629e9c5'}
 function p2(){var a=hx($('o').value),b=hx($('c').value);show($('oh'),a);var out='',n=0;for(var i=0;i<64;i++){if(a[i]!==b[i]){n++;out+='<span class="diff">'+b[i]+'</span>'}else out+=b[i]}$('ch').innerHTML=out;
 var x=$('cmp');if(a===b){x.className='big ok';x.textContent='MATCH. The message was not changed.'}else{x.className='big bad';x.textContent='NO MATCH. The message was changed.'}$('diffmeta').textContent=n+' of 64 characters are different (red).'}
 function p3(){var t=$('t3').value,e=$('e3').value.trim().toLowerCase();var r=$('r3');if(!t){$('h3').innerHTML='';$('m3').textContent='';r.className='big wait';r.textContent='Type the text and the posted checksum';return}

@@ -166,3 +166,21 @@ button.btn:disabled{opacity:.6;cursor:wait}
   .lab .big.ok{background:#16301F;color:#8FE0AE;border-color:#2E8B4F}
   .lab .big.bad{background:#3A1F22;color:#FFB0B6;border-color:#C0392B}
 }
+
+/* scavenger hunts */
+.hunt .lock{border:2px solid var(--line);border-radius:12px;padding:16px 18px;margin:16px 0;background:var(--white)}
+.hunt .lock h3{margin:0 0 6px;font:700 22px/1.2 var(--body)}
+.hunt .lock.is-open{border-color:#2E8B4F}
+.hunt .lockrow{display:flex;gap:10px;flex-wrap:wrap}
+.hunt .lockrow input{flex:1 1 220px;min-height:48px;font:20px/1.2 ui-monospace,Consolas,monospace;padding:8px 12px;border:2px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
+.hunt .lock label{display:block;font-weight:700;margin:10px 0 4px}
+.hunt .hintrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.hunt .hint{background:var(--paper);border-left:6px solid var(--hi);padding:8px 12px;border-radius:4px;margin:10px 0 0}
+.hunt .btn.ghost{min-height:44px}
+.hunt .reward{border:3px solid var(--hi);border-radius:12px;padding:18px;margin:20px 0;background:var(--white)}
+.hunt .reward .phrase{font:900 clamp(26px,5vw,44px)/1.1 var(--display);text-transform:uppercase;margin:6px 0}
+.hunt .shadow{color:var(--paper);margin:28px 0 0;user-select:text}
+.hunt .claims{list-style:none;padding:0;margin:10px 0}
+.hunt .claims li{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0;background:var(--paper)}
+.hunt .claims b{font-family:var(--display);font-size:22px;margin-right:8px}
+.hunt .whisper{color:var(--mut);font-size:15px}

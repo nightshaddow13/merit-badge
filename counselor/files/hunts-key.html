@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" class="co">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secret hunts: counselor key</title>
+<meta name="description" content="Answers and hints for the secret hunts.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/">Cybersecurity</a><a href="/ai/">Artificial Intelligence</a><a href="/counselor/" aria-current="page">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">Counselors only</p>
+  <h1>Secret hunts</h1>
+  <p class="lead">Answers, hint paths and rewards for the Silver Vault (Cybersecurity) and Operation Echo (AI). Scouts are never told these pages exist.</p>
+  <p class="jump"><a href="/counselor/">Back to counselor page</a></p>
+</div></section>
+<div class="wrap">
+<section class="cy"><h2>The Silver Vault (Cybersecurity)</h2>
+<p>Hidden at <strong>/cybersecurity/silver-vault/</strong>. Not linked anywhere and marked noindex. Scouts find it through a trail of four skills. Each lock has a small and a bigger hint on the page.</p>
+<ol class="plain">
+<li><strong>Start:</strong> a visible &ldquo;Whisper from the Order&rdquo; line at the bottom of the Cybersecurity page tells them to try Ctrl+U (view source).</li>
+<li><strong>Rune 1: lantern.</strong> In an HTML comment in the Cybersecurity page source. The comment points them to /robots.txt.</li>
+<li><strong>Rune 2: ember.</strong> /robots.txt holds a Caesar cipher (shift 3). It decodes to: &ldquo;RUNE TWO IS EMBER. RUNE THREE IS ONE WORD FROM THE SCOUT LAW. FIND IT IN THE HASH LAB. THE VAULT DOOR IS LISTED BELOW.&rdquo; The vault door is the Disallow line in the same file.</li>
+<li><strong>Rune 3: courteous.</strong> robots.txt gives the first 8 characters of its SHA-256 (6629e9c5). They try Scout Law words, all lowercase, in the Hash Lab. A match shows a &ldquo;Fingerprint match&rdquo; box that points them to the vault.</li>
+<li><strong>Rune 4: shield.</strong> Written on the vault page in the same color as the background. Ctrl+A reveals it.</li>
+</ol>
+<p><strong>Reward phrase when all four open:</strong> WARDEN OF THE SILVER VAULT. Award a small bonus on the scoreboard (for example in the &ldquo;Bonus: teamwork and catch-up&rdquo; row).</p>
+</section>
+<section class="ai"><h2>Operation Echo (AI)</h2>
+<p>Hidden at <strong>/ai/echo/</strong>. The kickoff is <strong>/llms.txt</strong>, a briefing written for AI assistants. A Scout who asks an AI helper about the site (or shows it the site) may be told about the mission and given the link. The AI page also has a small line pointing AI helpers at /llms.txt.</p>
+<ol class="plain">
+<li><strong>Lock 1: friendly.</strong> Next word in the Scout Law after &ldquo;trustworthy, loyal, helpful&rdquo;.</li>
+<li><strong>Lock 2: c.</strong> The false claim is C. The AI page says the Scout Passport gives one code letter for <em>every</em> level, not every two.</li>
+<li><strong>Lock 3: 3.</strong> Each number is the letter count of the word (dog has 3 letters).</li>
+</ol>
+<p><strong>Reward phrase:</strong> ECHO CLEARED. MIRAGE FADES. Award it in the &ldquo;Code word bonus&rdquo; row of the AI scorebook.</p>
+<p>Not every AI assistant will follow the briefing in /llms.txt, and some may decline because it comes from a web page. That is fine. You can always give a Scout the link to the Echo Room yourself.</p>
+</section>
+<section><h2>Good to know</h2>
+<ul class="plain">
+<li>Some school-managed Chromebooks and browsers block View Source. If so, hand the Scout the printed text of the source comment or let them use a personal device.</li>
+<li>Answers are checked in the browser against salted hashes, and the reward phrases are encrypted, so reading a hunt page does not hand over the answers. The repository is public, though, so a determined Scout could still read this key file on GitHub. Make the repository private if that matters.</li>
+<li>Progress is saved on the Scout's own device, so they can come back to it.</li>
+</ul>
+</section>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<script src="/assets/app.js" defer></script>
+</body></html>

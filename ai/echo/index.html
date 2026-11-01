@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en" class="ai">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Operation Echo</title>
+<meta name="description" content="A secret mission for Agents of A.I.R.A.">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/">Cybersecurity</a><a href="/ai/" aria-current="page">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">Artificial Intelligence merit badge &middot; secret</p>
+  <h1>Operation Echo</h1>
+  <p class="lead">The Mirage left a hidden signal on this site. Agents who solve three puzzles can shut it down.</p>
+</div></section>
+<div class="wrap hunt">
+<section>
+<p class="lead" style="max-width:60ch">An AI helper told you about this room, so you know the Mirage left a signal behind. Three answers will shut it down. You can ask your AI helper for hints, but remember: it can be wrong, so check its claims against the site.</p>
+<p class="whisper">Stuck? Every lock has two hints.</p>
+<ul class="claims" aria-label="Claims from an AI chatbot about this site">
+<li><b>A</b> The A.I.R.A. Field Log has eight levels.</li>
+<li><b>B</b> There are three outside tools used in class.</li>
+<li><b>C</b> The Scout Passport gives one code letter for every two levels you clear.</li>
+</ul>
+<div id="locks"></div>
+<div class="reward" id="reward" hidden role="status"><h2>Signal cleared</h2><p>The Mirage's transmission is shut down. Tell your counselor:</p><p class="phrase"></p><p>One more thing to think about: which of the three puzzles could an AI have gotten wrong without telling you?</p></div>
+</section>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<script src="/assets/hunt.js"></script>
+<script>
+Hunt.init({ id: "operation-echo", salt: "echo-room", root: "locks", rewardId: "reward",
+  cipher: "16ca20cf2b7507598617048ee6a754c1b1d4b7804a3a4076e530fb",
+  locks: [
+ {
+  "title": "Next token",
+  "riddle": "An AI works by guessing the next word, again and again. You try it: Scouts are trustworthy, loyal, helpful, ____. What word comes next in the Scout Law?",
+  "hint1": "You know this one from every meeting. Think of the fourth point of the Scout Law.",
+  "hint2": "It starts with F and it is how a Scout treats everyone.",
+  "hash": "acf0ba7d4657c1fde549641d4badbd3318fd81c6550806e0bea4ea014ca3d7ad"
+ },
+ {
+  "title": "Catch the hallucination",
+  "riddle": "An AI chatbot wrote three facts about this site. One of them is made up (AIs do that, and it is called a hallucination). Check the facts yourself and type the letter of the false one.",
+  "hint1": "Open the Artificial Intelligence page on this site. The answer to every claim is on it.",
+  "hint2": "Read what the page says about the Scout Passport and how many code letters you collect.",
+  "hash": "e09b1a546785a1acfbfbf5f9bf64cd7f7e2faed83442401de6fbb462cec5e923"
+ },
+ {
+  "title": "Learn from examples",
+  "riddle": "An AI learned from these examples: cat = 3, horse = 5, elephant = 8. It is now asked: dog = ? What does it answer? (Work out the pattern, just like a model does.)",
+  "hint1": "Each answer is a number you get from the word itself, not from the animal.",
+  "hint2": "Count something in each word. Cat has three of them.",
+  "hash": "924c660f0d0af56aa45f32e9aee9c61deae0836057ce1e887738718ddfaf4f88"
+ }
+] });
+</script>
+<script src="/assets/app.js" defer></script>
+</body></html>
