@@ -91,3 +91,45 @@
   }
   doors.forEach(function (a) { a.addEventListener("click", function (e) { if (seen()) return; e.preventDefault(); show(a.href, a); }); });
 })();
+
+// ---- Class countdowns: a red bar at the top of every page and one on each badge door ------------------------
+// Both classes are Saturday Nov 14 2026 (Eastern time, EST = UTC-5) and run three hours.
+(function () {
+  var HOUR = 3600000;
+  var CLASSES = [
+    { key: "cy", name: "Cybersecurity", start: Date.UTC(2026, 10, 14, 14, 0, 0), label: "Sat Nov 14 · 9:00 AM–12:00 PM ET" },
+    { key: "ai", name: "Artificial Intelligence", start: Date.UTC(2026, 10, 14, 18, 0, 0), label: "Sat Nov 14 · 1:00 PM–4:00 PM ET" }
+  ];
+  CLASSES.forEach(function (c) { c.end = c.start + 3 * HOUR; });
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function left(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+    return (d ? d + "d " : "") + pad(h) + ":" + pad(m) + ":" + pad(x);
+  }
+  function phase(c, now) { return now < c.start ? "before" : now < c.end ? "live" : "done"; }
+  var bar = document.createElement("div");
+  bar.id = "cdbar"; bar.setAttribute("role", "status"); bar.hidden = true;
+  bar.style.cssText = "background:#C1121F;color:#fff;text-align:center;padding:9px 14px;font-weight:700;font-size:15px;letter-spacing:.01em;";
+  document.body.insertBefore(bar, document.body.firstChild);
+  var cds = {};
+  CLASSES.forEach(function (c) {
+    var door = document.querySelector("a.door." + c.key); if (!door) return;
+    var e = document.createElement("span"); e.className = "door-cd";
+    e.style.cssText = "display:inline-block;align-self:flex-start;margin-top:6px;padding:6px 12px;border-radius:8px;background:#C1121F;color:#fff;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums";
+    door.insertBefore(e, door.querySelector(".door-go")); cds[c.key] = e;
+  });
+  function tick() {
+    var now = Date.now(), upcoming = null;
+    CLASSES.forEach(function (c) {
+      var p = phase(c, now), e = cds[c.key];
+      if (p !== "done" && !upcoming) upcoming = { c: c, p: p };
+      if (!e) return;
+      e.textContent = p === "before" ? "Starts in " + left(c.start - now) + "  ·  " + c.label : p === "live" ? "In session now · ends in " + left(c.end - now) : "See you next time!";
+      e.style.background = p === "done" ? "#2F6F4F" : "#C1121F";
+    });
+    if (!upcoming) { bar.hidden = true; return; }
+    bar.hidden = false;
+    bar.textContent = upcoming.p === "before" ? upcoming.c.name + " merit badge starts in " + left(upcoming.c.start - now) + "  ·  " + upcoming.c.label : upcoming.c.name + " merit badge is in session now · ends in " + left(upcoming.c.end - now);
+  }
+  tick(); setInterval(tick, 1000);
+})();
