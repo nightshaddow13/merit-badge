@@ -130,4 +130,4 @@ Run from `/ai/scoreboard/duel.html`. Squads send one prompt + output each (`POST
 
 ## Using one Field Log on two devices
 
-Enter the same recovery code on the second device (Agent file > "Lost your progress? Recover it"). Each device checks the saved copy every 20 seconds (and when the tab becomes visible again) and quietly pulls it in when it is newer, never while the Scout is typing or has unsent edits. Newer is decided by `rev`, a timestamp bumped only when the content changes; the member ID is never synced.
+Enter the same recovery code on the second device (Agent file > "Lost your progress? Recover it"). Each device checks the saved copy every 20 seconds (and when the tab becomes visible again) and quietly pulls it in when it is newer, never while the Scout is typing or has unsent edits. Newer is decided by `rev`, a timestamp bumped only when the content changes; the Scouting America member ID (optional, digits only) is part of the backup so it follows the Scout across devices, and staff can see it on the Field Log dashboard.

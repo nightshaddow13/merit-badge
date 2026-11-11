@@ -353,7 +353,7 @@ function backupLog(){
   if(logBusy){ scheduleLog(); return Promise.resolve(false); }
   if(!(state.name||"").trim()) return Promise.resolve(false);
   ensureId();
-  var snap=snapshot(); delete snap.saved; delete snap.memberId; // the member ID stays on this device, in the PDF and in downloaded files
+  var snap=snapshot(); delete snap.saved; // the member ID is included so it follows the Scout to other devices (staff can see it)
   var body={id:state.scoutId,name:state.name,squad:state.squad,squadSlot:state.squadSlot,summary:summary(),state:snap}, sig=JSON.stringify(body);
   if(sig===lastLogSig) return Promise.resolve(true);
   logBusy=true;

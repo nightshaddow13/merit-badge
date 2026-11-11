@@ -143,6 +143,7 @@ function ok(v){return String(v||"").trim().length>=3}
   var m=j.meta,s=m.summary||{},ov=j.overrides||{};
   detail.hidden=false;detail.textContent="";
   detail.appendChild(E("h2",null,(m.name||"(no name)")+(m.squad?" · "+m.squad:"")));
+  var mid=((j.state||{}).memberId||"").replace(/\D/g,"");if(mid)detail.appendChild(E("p","small","Scouting America member ID: "+mid));
   detail.appendChild(E("p","small","Recovery code (give it to the Scout if they lost it): "+m.id.replace(/(.{4})/g,"$1-").replace(/-$/,"")));
   detail.appendChild(E("p",null,"Last saved "+when(m.updated)+". "+(s.won?"MIRAGE shut down.":"Unlocked up to level "+(s.unlocked||1)+" of 8.")+" Vocab Vault best: "+(s.vault==null?"not taken":s.vault+" / 10")+". AI or Not best: "+(s.aiOrNot==null?"not played":s.aiOrNot+" / 10")+"."));
   var g=E("div","lvgrid");
