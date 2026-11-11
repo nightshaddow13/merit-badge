@@ -86,6 +86,11 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 .tcard.drag{outline:2px solid var(--accent,#2f7d5b);opacity:.9}.tcard.ok,.tcard.right{border-color:var(--ok)}.tcard.right{background:rgba(47,191,113,.22);box-shadow:inset 4px 0 0 var(--ok)}.tcard.right .tpos{background:var(--ok);color:#06210f}.tpos{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent,#2f7d5b);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px}
 .tcard{flex-wrap:wrap}@media(max-width:520px){.tctl{width:100%;justify-content:flex-end}}.tbody{flex:1 1 160px;min-width:0}.tbody b{display:block}.tdesc{display:block;font-size:13px;opacity:.85}.tctl{display:flex;gap:4px;align-items:center}
 .thandle,.tbtn{min-width:44px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:16px;cursor:pointer}.thandle{cursor:grab;touch-action:none}.tbtn:disabled{opacity:.35;cursor:default}
+.mgame{display:grid;grid-template-columns:1fr 1.6fr;gap:12px}.mcol{display:grid;gap:8px;align-content:start}.mcol h3{margin:0;font-size:14px;opacity:.8}
+.mterm,.mdef{text-align:left;border:2px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--ink);padding:10px;font:inherit;cursor:pointer;min-height:44px}
+.mterm{font-weight:700}.mterm.sel{border-color:var(--accent,#2f7d5b);background:rgba(47,125,91,.22)}.mdef{font-size:14px}.mdef.bad{border-color:#e5484d;background:rgba(229,72,77,.2)}
+.mrow{margin:6px 0;font-size:14px}.mdone{margin-top:12px}.mdone summary{cursor:pointer;color:var(--ok);font-weight:700}
+@media(max-width:560px){.mgame{grid-template-columns:1fr}}
 .stephead{margin:18px 2px 4px;padding:8px 12px;border-left:4px solid var(--accent,#2f7d5b);background:rgba(47,125,91,.10);border-radius:6px;font-size:14px}.stephead b{display:block;font-size:15px}.stephead span{opacity:.85}
 </style>
 </head>
@@ -127,7 +132,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 
   <section class="card" id="level1">
     <h2>Level 1 &middot; Operation: THE DECODER</h2>
-    <p class="hint">Requirement 1. Be ready to explain every term to your counselor. Ask Scoutly, then jot each one in <b>your own words</b> with an example. These notes are optional. The Vocab Vault quiz is required.</p>
+    <p class="hint">Requirement 1. Match each term to its definition: tap a term, then tap the definition that fits. Matched terms lock in. Be ready to explain every term to your counselor, and ask Scoutly if you are stuck. The Vocab Vault quiz is required.</p>
     <div id="terms"></div>
   </section>
   <div class="actions" style="margin:6px 0 4px"><button class="primary" id="goVault">Open the Vocab Vault (required) &rarr;</button></div>
@@ -181,6 +186,12 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
     <div class="msg" id="msg"></div>
   </section>
   </div>
+
+  <section class="card" id="instructor">
+    <h2>About your instructor</h2>
+    <p>Your counselor is <b>Xavier Goss</b>: a software engineer, a Venturing Scouts leader, and the writer behind the GossSquatch outdoor adventure blog. He built this field kit and the class scoreboard so the badge is hands-on and fun.</p>
+    <p class="hint">Want to know more about his work? <a href="https://xavier.goss.quest" target="_blank" rel="noopener noreferrer">See his digital resume &#8599;</a> &middot; Questions about the class: xgoss@live.com</p>
+  </section>
 
   <footer>A.I.R.A. Field Log &middot; Scouting America Artificial Intelligence merit badge class</footer>
 </div>
@@ -270,7 +281,7 @@ var TOOLS = [
   {label:"Sightengine AI-or-Not (images)", url:"https://sightengine.com/ai-or-not", alt:true}
 ];
 
-var state = { name:"", squad:"", squadSlot:0, scoutId:"", answers:{}, unlocked:1, won:false, page:"L1", vault:{best:null,last:null}, games:{ai:{best:null,last:null}}, wwyd:[], l2:null };   // answers["L1|0"] = {def, ex}
+var state = { name:"", squad:"", squadSlot:0, scoutId:"", matched:[], answers:{}, unlocked:1, won:false, page:"L1", vault:{best:null,last:null}, games:{ai:{best:null,last:null}}, wwyd:[], l2:null };   // answers["L1|0"] = {def, ex}
 
 function load(){
   try { var s = JSON.parse(localStorage.getItem(STORE_KEY)||"null"); if(s && typeof s==="object") state = Object.assign(state,s); } catch(e){}
@@ -336,30 +347,47 @@ function syncPoints(){
 }
 function $(id){ return document.getElementById(id); }
 function key(l,i){ return LEVELS[l].id+"|"+i; }
-function isDone(l,i){ var a=state.answers[key(l,i)]; return !!(a && a.def && a.def.trim().length>=8); }
+function isDone(l,i){ if(l===0 && state.matched && state.matched[i]) return true; var a=state.answers[key(l,i)]; return !!(a && a.def && a.def.trim().length>=8); }
 
+// ---- Level 1 matching game: pair each term with its definition --------------------------
+var mSel=-1, mMsg="";
+function normMatched(){ var m=[]; for(var i=0;i<LEVELS[0].items.length;i++){ var o=state.answers&&state.answers["L1|"+i]; m[i]=!!(state.matched&&state.matched[i]) || !!(o&&o.def&&o.def.trim().length>=8); } state.matched=m; }
+function renderMatch(){
+  var host=$("terms"); host.innerHTML=""; normMatched();
+  var n=LEVELS[0].items.length, order=[]; DEFS.forEach(function(d,i){ order.push(i); });
+  var open=order.filter(function(i){ return !state.matched[i]; });
+  if(!open.length){ var ok=el("div","msg ok","All 16 terms matched. Nice work, agent. Now open the Vocab Vault."); host.appendChild(ok); }
+  else {
+    var set=open.slice(0,8);
+    var cols=el("div","mgame"); var L=el("div","mcol"), R=el("div","mcol");
+    L.appendChild(el("h3",null,"Terms")); R.appendChild(el("h3",null,"Definitions"));
+    // Fixed, scrambled order so the two columns do not line up.
+    var defs=set.slice().sort(function(a,b){ return ((a*7+3)%16)-((b*7+3)%16); });
+    set.forEach(function(i){ var b=el("button","mterm"+(mSel===i?" sel":""),DEFS[i][0]); b.type="button"; b.setAttribute("aria-pressed",mSel===i?"true":"false");
+      b.addEventListener("click",function(){ mSel=(mSel===i?-1:i); mMsg=""; renderMatch(); }); L.appendChild(b); });
+    defs.forEach(function(i){ var b=el("button","mdef",DEFS[i][1]); b.type="button"; b.disabled=false;
+      b.addEventListener("click",function(){
+        if(mSel<0){ mMsg="First tap a term on the left, then tap its definition."; renderMatch(); return; }
+        if(mSel===i){ state.matched[i]=true; mMsg="Match! "+DEFS[i][0]+" locked in."; mSel=-1; save(); refresh(); renderMatch(); }
+        else { mMsg="Not a match. Talk it over with your squad and try again."; b.classList.add("bad"); var s2=host.querySelector(".mmsg"); if(s2){ s2.textContent=mMsg; s2.className="msg err mmsg"; } setTimeout(function(){ b.classList.remove("bad"); },700); }
+      }); R.appendChild(b); });
+    cols.appendChild(L); cols.appendChild(R); host.appendChild(cols);
+  }
+  var m=el("div","msg mmsg"+(/^Match/.test(mMsg)?" ok":(mMsg?" err":"")),mMsg); m.setAttribute("role","status"); host.appendChild(m);
+  var got=state.matched.filter(Boolean).length;
+  if(got){ var det=el("details","mdone"); det.appendChild(el("summary",null,"Matched so far ("+got+" of "+n+")"));
+    state.matched.forEach(function(v,i){ if(v){ var r=el("div","mrow"); r.appendChild(el("b",null,DEFS[i][0])); r.appendChild(el("span",null," \u2014 "+DEFS[i][1])); det.appendChild(r); } }); host.appendChild(det); }
+}
 function build(){
-  var host = $("terms"); host.innerHTML="";
-  LEVELS[0].items.forEach(function(term,i){
-    var a = state.answers[key(0,i)] || {def:"",ex:""};
-    var d = document.createElement("div"); d.className="term"; d.id="t"+i;
-    d.innerHTML = '<h3><span class="n">'+(i+1)+'</span><span></span><span class="chk" title="Done">&#10003; done</span></h3>'+
-      '<label for="d'+i+'">In my own words</label><textarea id="d'+i+'" maxlength="400"></textarea>'+
-      '<label for="e'+i+'">Example (a Scouting example earns bonus XP)</label><textarea id="e'+i+'" maxlength="300"></textarea>';
-    d.querySelector("h3 span:nth-child(2)").textContent = term;
-    host.appendChild(d);
-    $("d"+i).value = a.def||""; $("e"+i).value = a.ex||"";
-    function upd(){ state.answers[key(0,i)] = {def:$("d"+i).value, ex:$("e"+i).value}; refresh(); save(); }
-    $("d"+i).addEventListener("input",upd); $("e"+i).addEventListener("input",upd);
-  });
+  renderMatch();
   $("name").value = state.name||""; renderSquads();
   refresh();
 }
 function refresh(){
   var n=LEVELS[0].items.length, done=0;
-  for(var i=0;i<n;i++){ var ok=isDone(0,i); if(ok) done++; $("t"+i).classList.toggle("done",ok); }
+  for(var i=0;i<n;i++){ if(isDone(0,i)) done++; }
   var pct=Math.round(done/n*100);
-  $("plabel").textContent="Level 1 · "+done+" of "+n+" terms done";
+  $("plabel").textContent="Level 1 · "+done+" of "+n+" terms matched";
   $("ppct").textContent=pct+"%"; $("pbar").style.width=pct+"%";
 }
 function curPage(){ return state.page||"L1"; }
@@ -433,14 +461,15 @@ function fixL2(o){
   if(Array.isArray(o.tl)) o.tl.slice(0,8).forEach(function(r,i){ n.tl[i]={year:String((r&&r.year)||"").slice(0,5),text:String((r&&r.text)||"").slice(0,160)}; });
   return n;
 }
+function tlCount(){ if(state.l2.tlDone) return 5; var td=0; state.l2.tl.forEach(function(r){ if(tlOk(r)) td++; }); return Math.min(5,td); }
 function l2Filled(v){ return String(v||"").trim().length>=3; }
 function tlOk(r){ return /^\d{3,4}$/.test(String(r.year).trim()) && String(r.text).trim().length>=5; }
-function l2Count(){ var d=0,t=0; ["life","work","school"].forEach(function(k){ state.l2[k].forEach(function(v){ t++; if(l2Filled(v)) d++; }); }); var td=0; state.l2.tl.forEach(function(r){ if(tlOk(r)) td++; }); t+=5; d+=Math.min(5,td); t++; if(state.games.ai.best!=null) d++; return [d,t]; }
+function l2Count(){ var d=0,t=0; ["life","work","school"].forEach(function(k){ state.l2[k].forEach(function(v){ t++; if(l2Filled(v)) d++; }); }); var td=0; state.l2.tl.forEach(function(r){ if(tlOk(r)) td++; }); t+=5; d+=tlCount(); t++; if(state.games.ai.best!=null) d++; return [d,t]; }
 function l2Refresh(){
   var c=l2Count(), pct=Math.round(c[0]/c[1]*100), e=$("l2label"); if(!e) return;
   e.textContent="Level 2 \u00b7 "+c[0]+" of "+c[1]+" items done"; $("l2pct").textContent=pct+"%"; $("l2bar").style.width=pct+"%";
   L2SEC.forEach(function(sec){ var k=sec[0],d=0; state.l2[k].forEach(function(v){ if(l2Filled(v)) d++; }); $("l2c-"+k).textContent=d+" of "+sec[3]; });
-  var td=0; state.l2.tl.forEach(function(r){ if(tlOk(r)) td++; }); $("l2c-tl").textContent=Math.min(5,td)+" of 5 required";
+  $("l2c-tl").textContent=tlCount()>=5?"Done":"Not done yet";
   var best=state.games.ai.best; $("l2ai").textContent=best==null?"Required: play all 10 rounds":"Done. Score: "+best+" / 10";
 }
 function buildL2(pg){
@@ -487,26 +516,16 @@ function buildL2(pg){
       }
       list.appendChild(li);
     });
-    chk.hidden=done; if(done){ tlMsg.className="msg ok"; tlMsg.textContent="Correct! Years revealed. Your timeline is filled in below."; }
+    chk.hidden=done; if(done){ tlMsg.className="msg ok"; tlMsg.textContent="Correct! You put every milestone in order. Timeline done."; }
     var e=list.children[focusIdx]; if(e) e.querySelector(".thandle").focus();
   }
   chk.addEventListener("click",function(){
     var right=state.l2.tlOrder.filter(function(ci,pos){ return ci===pos; }).length;
-    if(right===8){ state.l2.tlDone=true; state.l2.tl=TLC.map(function(c){ return {year:c[0],text:c[1]}; }); drawList(); drawTl(); l2Refresh(); save(); }
+    if(right===8){ state.l2.tlDone=true; state.l2.tl=TLC.map(function(c){ return {year:c[0],text:c[1]}; }); drawList(); l2Refresh(); save(); }
     else { checked=true; drawList(); tlMsg.className="msg err"; tlMsg.textContent=right+" of 8 cards are in the right place (the green ones). Talk it over and try again."; }
   });
   t.appendChild(chk); t.appendChild(tlMsg);
-  t.appendChild(el("h3",null,"Write it down")); t.appendChild(el("p","hint","This fills in when your order is correct. You can also edit it. Each scout needs at least 5 milestones with a year and a few words."));
-  var rows=el("div"); t.appendChild(rows);
-  function drawTl(){ rows.innerHTML=""; state.l2.tl.forEach(function(r,i){ var row=el("div"); row.style.cssText="display:grid;grid-template-columns:86px 1fr;gap:8px;margin:6px 0";
-    var y=el("input"); y.type="text"; y.inputMode="numeric"; y.maxLength=5; y.placeholder="Year"; y.value=r.year; y.setAttribute("aria-label","Milestone "+(i+1)+" year");
-    var x=el("input"); x.type="text"; x.maxLength=160; x.placeholder="What happened?"; x.value=r.text; x.setAttribute("aria-label","Milestone "+(i+1)+" event");
-    y.addEventListener("input",function(){ r.year=y.value; l2Refresh(); save(); }); x.addEventListener("input",function(){ r.text=x.value; l2Refresh(); save(); });
-    row.appendChild(y); row.appendChild(x); rows.appendChild(row); }); }
-  drawTl(); drawList();
-  var sb=el("button","secondary","Sort oldest to newest"); sb.style.marginTop="8px";
-  sb.addEventListener("click",function(){ state.l2.tl.sort(function(a,b){ var A=parseInt(a.year,10),B=parseInt(b.year,10); if(isNaN(A)) A=1e9; if(isNaN(B)) B=1e9; return A-B; }); drawTl(); save(); });
-  t.appendChild(sb); pg.appendChild(t);
+  pg.appendChild(t);
   var s4=el("div","stephead"); s4.innerHTML="<b>Step 4 &middot; Unlock Level 3</b> <span>Finish every required item, then enter the code letter your counselor gives you.</span>"; pg.appendChild(s4);
   l2Refresh();
 }
@@ -735,14 +754,11 @@ function makePdf(){
     doc.text(L.title+"  ("+L.req+")",M,y); doc.setFont("helvetica","normal"); doc.setFontSize(10);
     doc.text(done+" of "+L.items.length+" done",W-M,y,{align:"right"}); doc.setTextColor(20,20,20); y+=22;
     L.items.forEach(function(term,i){
-      var a=state.answers[key(li,i)]||{def:"",ex:""};
-      need(60);
+      need(40);
       doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text((i+1)+". "+term,M,y);
       doc.setFont("helvetica","bold"); doc.setFontSize(9); if(isDone(li,i)) doc.setTextColor(30,130,80); else doc.setTextColor(170,60,60);
-      doc.text(isDone(li,i)?"DONE":"INCOMPLETE",W-M,y,{align:"right"}); doc.setTextColor(20,20,20); y+=14;
-      wrap("My words: "+(a.def.trim()||"(blank)"),10,"normal",12);
-      wrap("Example: "+(a.ex.trim()||"(blank)"),10,"normal",12);
-      y+=8;
+      doc.text(isDone(li,i)?"MATCHED":"NOT MATCHED",W-M,y,{align:"right"}); doc.setTextColor(20,20,20); y+=14;
+      y+=4;
     });
   });
   (function(){
@@ -751,7 +767,7 @@ function makePdf(){
     L2SEC.forEach(function(sec){ need(30); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text(sec[1],M,y); y+=14;
       state.l2[sec[0]].forEach(function(v,i){ wrap((i+1)+". "+(v.trim()||"(blank)"),10,"normal",12); }); y+=6; });
     need(30); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text("AI timeline",M,y); y+=14;
-    state.l2.tl.forEach(function(r,i){ wrap((i+1)+". "+(r.year.trim()||"----")+": "+(r.text.trim()||"(blank)"),10,"normal",12); }); y+=6;
+    if(state.l2.tlDone) state.l2.tlOrder.forEach(function(ci,i){ wrap((i+1)+". "+TLC[ci][0]+": "+TLC[ci][1],10,"normal",12); }); else if(tlCount()>=5) state.l2.tl.forEach(function(r,i){ wrap((i+1)+". "+(r.year.trim()||"----")+": "+(r.text.trim()||"(blank)"),10,"normal",12); }); else wrap("Drag-and-drop timeline not completed yet.",10,"normal",12); y+=6;
     wrap("AI or Not best score: "+(state.games.ai.best==null?"not played":state.games.ai.best+" / 10"),10,"normal",0); y+=8;
   })();
   if(state.wwyd.length){
@@ -798,7 +814,7 @@ function fallback(doc,subject,body){
 }
 function saveJson(){
   if(needName()) return;
-  var data={app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,l2:state.l2,lv:state.lv};
+  var data={app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,matched:state.matched,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,l2:state.l2,lv:state.lv};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="AIRA-Field-Log-"+slug(state.name)+".json";
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
@@ -818,7 +834,7 @@ function loadJson(f){
         if(m && +m[1]<max && v && typeof v==="object") clean[k]={def:String(v.def||"").slice(0,400),ex:String(v.ex||"").slice(0,300)};
       });
       var keepId=/^[a-f0-9]{16,32}$/.test(String(d.scoutId||""))?String(d.scoutId):state.scoutId, slotIn=parseInt(d.squadSlot,10);
-      state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
+      state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,matched:(Array.isArray(d.matched)?d.matched.slice(0,max).map(function(v){return v===true;}):[]),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
       try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}
       lastSent=""; buildPages(); build(); renderL8win(); show("L1"); scheduleSync(); msg("Loaded "+f.name+". Your work is back.","ok");
     }catch(e){ msg("That doesn't look like an A.I.R.A. field log file.","err"); }
@@ -828,7 +844,7 @@ function loadJson(f){
 }
 function clearAll(){
   if(!confirm("Erase everything on this device and start over?")) return;
-  var keepId=state.scoutId; state={name:"",squad:"",squadSlot:0,scoutId:keepId,answers:{},unlocked:1,won:false,page:"L1",vault:{best:null,last:null},games:{ai:{best:null,last:null}},wwyd:[],l2:null}; try{localStorage.removeItem(STORE_KEY);}catch(e){}
+  var keepId=state.scoutId; state={name:"",squad:"",squadSlot:0,scoutId:keepId,matched:[],answers:{},unlocked:1,won:false,page:"L1",vault:{best:null,last:null},games:{ai:{best:null,last:null}},wwyd:[],l2:null}; try{localStorage.removeItem(STORE_KEY);}catch(e){}
   location.reload();
 }
 $("name").addEventListener("input",function(){ state.name=this.value; save(); });
