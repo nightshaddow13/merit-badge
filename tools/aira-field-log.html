@@ -117,6 +117,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
     <p class="hint">Only your first name and last initial. Nothing here is typed into an AI chatbot.</p>
     <div class="grid2">
       <div><label for="name">Agent name (first name + last initial)</label><input type="text" id="name" autocomplete="off" maxlength="40"></div>
+      <div><label for="mid">Scouting America member ID (optional)</label><input type="text" id="mid" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Digits only"></div>
       <div><label for="squad">Squad</label><select id="squad"><option value="">Loading squads&hellip;</option></select></div>
     </div>
     <p class="hint" id="squadNote" role="status"></p>
@@ -348,7 +349,7 @@ function backupLog(){
   if(logBusy){ scheduleLog(); return Promise.resolve(false); }
   if(!(state.name||"").trim()) return Promise.resolve(false);
   ensureId();
-  var snap=snapshot(); delete snap.saved;
+  var snap=snapshot(); delete snap.saved; delete snap.memberId; // the member ID stays on this device, in the PDF and in downloaded files
   var body={id:state.scoutId,name:state.name,squad:state.squad,squadSlot:state.squadSlot,summary:summary(),state:snap}, sig=JSON.stringify(body);
   if(sig===lastLogSig) return Promise.resolve(true);
   logBusy=true;
@@ -435,7 +436,7 @@ function renderMatch(){
 }
 function build(){
   renderMatch();
-  $("name").value = state.name||""; renderSquads();
+  $("name").value = state.name||""; $("mid").value = state.memberId||""; renderSquads();
   refresh();
 }
 function refresh(){
@@ -493,6 +494,7 @@ function show(p){
   if(p==="G2") p="L2"; if(p==="G4") p="L4";
   if(ids.indexOf(p)<0) p="L1";
   var n=parseInt(p.slice(1),10); if(p!=="send" && n>state.unlocked) p=lvPage(state.unlocked);
+  if(state.page==="L1"&&p!=="L1") topHide=true; // tuck the agent info away once page 1 is done
   state.page=p; save();
   ids.forEach(function(id){ var el=$("p-"+id); if(el){ el.hidden=(id!==p); if(id===p){ el.style.animation="none"; void el.offsetWidth; el.style.animation=""; } } });
   renderNav(); window.scrollTo({top:0,behavior:"smooth"});
@@ -503,7 +505,7 @@ function renderSub(){
   else if(paneLbl[par.slice(1)]) { var nn=par.slice(1); items=paneLbl[nn].map(function(l,i){ return {label:l,on:(paneSel[nn]||0)===i,go:function(){ setPane(nn,i); }}; }); }
   sn.hidden=!items; if(!items) return;
   items.forEach(function(x){ var b=document.createElement("button"); b.textContent=x.label; if(x.on) b.className="cur"; b.addEventListener("click",x.go); sn.appendChild(b); }); }
-var topHide=false; try{ topHide=localStorage.getItem("aira_top_hidden")==="1"; }catch(e){}
+var topHide=true;
 function renderTop(){ var onL1=curPage()==="L1", hide=!onL1&&topHide;
   $("topinfo").hidden=hide; $("topbar").hidden=onL1;
   $("topwho").textContent=(state.name?"Agent "+state.name:"Agent file")+(state.squad?" \u00b7 "+state.squad:"");
@@ -1064,6 +1066,7 @@ function makePdf(){
   header();
   doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.text("Agent: "+state.name.trim(),M,y);
   doc.text("Squad: "+(state.squad.trim()||"-"),W/2,y); y+=16;
+  if(state.memberId){ doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.text("Scouting America member ID: "+state.memberId,M,y); y+=14; }
   doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(90,90,90);
   doc.text("Created: "+new Date().toLocaleString()+"   |   Levels unlocked: "+state.unlocked+" of 8"+(state.won?"   |   MIRAGE shut down":""),M,y); y+=14;
   doc.text("Vocab Vault best: "+(state.vault.best==null?"not taken":state.vault.best+" / "+QN)+"   |   AI or Not best: "+(state.games.ai.best==null?"not played":state.games.ai.best+" / 10"),M,y); y+=22; doc.setTextColor(20,20,20);
@@ -1136,7 +1139,7 @@ function fallback(doc,subject,body){
   location.href="mailto:"+COUNSELOR_EMAIL+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body+"\n\n(Attach the PDF "+filename()+" that just downloaded.)");
   msg("PDF downloaded. In the email that opened, attach "+filename()+" and send.","ok");
 }
-function snapshot(){ return {app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,matched:state.matched,hvm:state.hvm,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,wwydGid:state.wwydGid||0,l2:state.l2,lv:state.lv}; }
+function snapshot(){ return {app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,memberId:state.memberId||"",squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,matched:state.matched,hvm:state.hvm,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,wwydGid:state.wwydGid||0,l2:state.l2,lv:state.lv}; }
 function saveJson(){
   if(needName()) return;
   var data=snapshot();
@@ -1165,8 +1168,8 @@ function applyData(d,label){
         var m=/^L1\|(\d+)$/.exec(k), v=d.answers[k];
         if(m && +m[1]<max && v && typeof v==="object") clean[k]={def:String(v.def||"").slice(0,400),ex:String(v.ex||"").slice(0,300)};
       });
-      var keepId=/^[a-f0-9]{16,32}$/.test(String(d.scoutId||""))?String(d.scoutId):state.scoutId, slotIn=parseInt(d.squadSlot,10);
-      state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,hvm:fixHvm(d.hvm),matched:(Array.isArray(d.matched)?d.matched.slice(0,max).map(function(v){return v===true;}):[]),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwydGid:(Number.isInteger(d.wwydGid)?d.wwydGid:0),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
+      var keepMid=state.memberId||""; var keepId=/^[a-f0-9]{16,32}$/.test(String(d.scoutId||""))?String(d.scoutId):state.scoutId, slotIn=parseInt(d.squadSlot,10);
+      state={memberId:String(d.memberId||keepMid||"").replace(/\D/g,"").slice(0,12),name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,hvm:fixHvm(d.hvm),matched:(Array.isArray(d.matched)?d.matched.slice(0,max).map(function(v){return v===true;}):[]),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwydGid:(Number.isInteger(d.wwydGid)?d.wwydGid:0),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
       try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}
       lastSent=""; buildPages(); build(); renderL8win(); show("L1"); scheduleSync(); msg("Loaded "+label+". Your work is back.","ok");
     }catch(e){ msg("That doesn't look like an A.I.R.A. field log.","err"); }
@@ -1191,6 +1194,7 @@ function clearAll(){
 }
 $("recGo").addEventListener("click",recover); showCode();
 $("name").addEventListener("input",function(){ state.name=this.value; save(); });
+$("mid").addEventListener("input",function(){ state.memberId=this.value.replace(/\D/g,"").slice(0,12); this.value=state.memberId; save(); });
 $("squad").addEventListener("change",function(){ var v=parseInt(this.value,10)||0; state.squadSlot=v; state.squad=v?squads[v-1]||"":""; lastSent=""; save(); });
 window.addEventListener("focus",function(){ if(!squads.some(Boolean)) loadSquads(); });
 $("btnSave").addEventListener("click",saveJson);
@@ -1199,7 +1203,7 @@ $("fileIn").addEventListener("change",function(){ loadJson(this.files && this.fi
 $("btnPdf").addEventListener("click",download);
 $("btnMail").addEventListener("click",mail);
 $("btnClear").addEventListener("click",clearAll);
-$("topTog").addEventListener("click",function(){ topHide=!topHide; try{ localStorage.setItem("aira_top_hidden",topHide?"1":"0"); }catch(e){} renderTop(); });
+$("topTog").addEventListener("click",function(){ topHide=!topHide; renderTop(); });
 $("goVault").addEventListener("click",function(){ show("V1"); });
 $("bNext").addEventListener("click",bonusNext); $("bTimer").addEventListener("click",bonusTimer);
 (function(){ var h=$("tools"); TOOLS.forEach(function(t){ if(!t.url) return; var a=document.createElement("a"); a.href=t.url; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=t.label+" \u2197"; if(t.alt) a.className="alt"; h.appendChild(a); });
