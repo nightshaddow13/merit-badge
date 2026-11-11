@@ -110,14 +110,13 @@ function ok(v){return String(v||"").trim().length>=3}
    else{var right=ord.filter(function(c,i){return c===i}).length;p.appendChild(E("p",null,l2.tlDone?"Solved: all 8 in order.":right+" of 8 in the right place right now."));
     var ol=E("ol","tl");ord.forEach(function(c,i){ol.appendChild(E("li",c===i?"yes":"",(l2.tlDone?TLC[c][0]+" \u00b7 ":"")+TLC[c][1]))});p.appendChild(ol)}
    return p}
-  if(n===3){var hv=st.hvm||{},hm=hv.machine,hu=hv.human;
-   p.appendChild(E("h4",null,"Human vs. Machine game"));
-   if(!hm&&!hu)p.appendChild(E("p","muted","Not played yet."));
+  if(n===3){var hv=st.hvm||{},hr=hv.run||hv.machine;
+   p.appendChild(E("h4",null,"Class Race game"));
+   if(!hr)p.appendChild(E("p","muted","Not played yet."));
    else{var ts=E("div","stats");
-    if(hm){ts.appendChild(stat("Machine time",hm.sec+" s"));ts.appendChild(stat("Machine wrong bins",String(hm.wrong),hm.wrong?"":"good"));ts.appendChild(stat("Machine red count",hm.count+" (real 10)"))}
-    if(hu){ts.appendChild(stat("Human time",hu.sec+" s"));ts.appendChild(stat("Human wrong bins",String(hu.wrong)));ts.appendChild(stat("Human trivia",hu.trivia+" of 24"))}
+    ts.appendChild(stat("Time",hr.sec+" s"));ts.appendChild(stat("Wrong bins",String(hr.wrong),hr.wrong?"":"good"));ts.appendChild(stat("Red count",hr.count+" (real 10)"));
     p.appendChild(ts);
-    if(hm)p.appendChild(textRow("Pink card, Machine",hm.pink));if(hu)p.appendChild(textRow("Pink card, Human",hu.pink));
+    p.appendChild(textRow("Pink card",hr.pink));
     var nn=hv.notes||{};p.appendChild(textRow("Where the machine was better",nn.better));p.appendChild(textRow("Where it was worse",nn.worse));p.appendChild(textRow("Why humans are still needed",nn.why))}}
   var secs=SCHEMA[n]||[],lv=(st.lv||{})[n]||{};
   if(n===4){var w=st.wwyd||[];bar.appendChild(stat("What Would You Do?",w.length+" of 5 rounds",w.length>=5?"good":""))}

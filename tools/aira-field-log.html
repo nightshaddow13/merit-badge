@@ -17,7 +17,7 @@ header{display:flex;align-items:center;gap:14px;padding:18px 0 6px}
 h1{margin:0;font-size:24px;line-height:1.1}
 .sub{color:var(--mut);font-size:14px;margin:2px 0 0}
 .stamp{margin-left:auto;border:3px solid var(--red);color:var(--red);font:700 13px "Courier New",monospace;padding:4px 8px;transform:rotate(-4deg);letter-spacing:.1em;white-space:nowrap}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.25),0 6px 16px rgba(0,0,0,.28),0 14px 30px rgba(0,0,0,.18)}
 .card h2{margin:0 0 4px;font-size:18px;color:var(--gold)}
 .hint{color:var(--mut);font-size:14px;margin:0 0 12px}
 label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px;font-weight:600}
@@ -51,7 +51,10 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 .nav button{flex:none;background:var(--panel);color:var(--ink);border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-size:14px}
 .nav button.cur{background:var(--gold);color:var(--bg);border-color:var(--gold)}
 .nav button:disabled{opacity:.45}
-.subnav{display:flex;gap:6px;margin:0 0 10px;border-bottom:2px solid var(--line)}.subnav button{background:none;color:var(--ink);border:0;border-bottom:3px solid transparent;padding:8px 14px;font-size:14px;margin-bottom:-2px;opacity:.7}.subnav button.cur{border-bottom-color:var(--gold);opacity:1;font-weight:700}
+.subnav{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;border-bottom:2px solid var(--line)}.subnav button{background:none;color:var(--ink);border:0;border-bottom:3px solid transparent;padding:8px 14px;font-size:14px;margin-bottom:-2px;opacity:.7}.subnav button.cur{border-bottom-color:var(--gold);opacity:1;font-weight:700}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0;font-size:14px;color:var(--mut)}.topbar button{padding:6px 12px;font-size:13px}
+.topbar[hidden],.nextrow[hidden]{display:none}
+.nextrow{margin:14px 0 6px;display:flex;justify-content:flex-end}.nextrow button{padding:11px 18px}
 .page{animation:pg .35s ease both}
 @keyframes pg{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(prefers-reduced-motion:reduce){.page{animation:none}}
@@ -102,6 +105,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 <body>
 <div class="wrap">
   <p style="margin:0 0 10px"><a href="/" style="color:var(--gold);font-weight:700">&larr; Back to the main page</a></p>
+  <div id="topinfo">
   <header>
     <span class="badge">A.I.R.A.</span>
     <div><h1>Field Log</h1><p class="sub">Mission: AI Ready &middot; Artificial Intelligence merit badge</p></div>
@@ -131,6 +135,9 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
     <p class="hint">ChatGPT has its own age and parental-consent rules for people under 18. Ask a parent or guardian before you use it, and follow your counselor&rsquo;s directions.</p>
     <div class="tools" id="tools"></div>
   </section>
+
+  </div>
+  <div class="topbar" id="topbar" hidden><span id="topwho"></span><button class="secondary" id="topTog" type="button" aria-expanded="true">Hide agent info ▲</button></div>
 
   <nav class="nav" id="nav" aria-label="Levels"></nav>
   <nav class="subnav" id="subnav" aria-label="Level sections" hidden></nav>
@@ -166,10 +173,11 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 
   <div class="page" id="p-G4" hidden>
     <section class="card">
-      <h2>Level 4 &middot; What Would You Do? <span class="small">(Requirement 4b &middot; Boss Challenge: 50 XP)</span></h2>
+      <h2>Level 4 &middot; What Would You Do? <span class="small" id="wwydst"></span> <span class="small">(Requirement 4b &middot; Boss Challenge: 50 XP)</span></h2>
       <p class="hint">Five scenarios. Discuss as a squad, pick a stance, and write your reason. Strong reasoning earns points, not the &ldquo;right&rdquo; answer.</p>
       <div id="wwyd"></div>
     </section>
+    <div class="nextrow"><button class="primary" id="nextG4">Next: Ethics worksheet &rarr;</button></div>
   </div>
 
   <div id="extraPages"></div>
@@ -448,17 +456,72 @@ function show(p){
   ids.forEach(function(id){ var el=$("p-"+id); if(el){ el.hidden=(id!==p); if(id===p){ el.style.animation="none"; void el.offsetWidth; el.style.animation=""; } } });
   renderNav(); window.scrollTo({top:0,behavior:"smooth"});
 }
-var SUBS={L1:[["L1","Terms"],["V1","Vocab Vault"]],L4:[["L4","Ethics worksheet"],["G4","What Would You Do?"]]};
+var SUBS={L1:[["L1","Terms"],["V1","Vocab Vault"]],L4:[["G4","What Would You Do?"],["L4","Ethics worksheet"]]};
+// Levels whose long page is split into in-page tabs. Order follows the Requirement order (and the slides).
+var PANES={
+ 3:[["Class Race",["hvm"]],["3a\u20133c Examples",["home","work","school"]],["3e Timeline",["hist"]],["3f Boss Challenge",["boss"]]],
+ 5:[["5a What is a deepfake?",["what"]],["5b If it targets you",["act"]],["Spot the Fake",["sf"]]],
+ 6:[["6b Five ways",["meth"]],["6c Why it matters",["why"]],["6d Your prompts",["pr"]]],
+ 7:[["7a Plan it",["plan"]],["Build it",["tm"]],["7a Share it",["share"]]],
+ 8:[["8b Interview",["who"]]]};
+var paneSel={}, paneLbl={};
+function lvPage(i){ return i===4?"G4":"L"+i; }
 function parentLevel(p){ return p==="V1"?"L1":p==="G4"?"L4":p; }
+function setPane(n,i){ paneSel[n]=i; applyPanes(n); renderSub(); window.scrollTo({top:0,behavior:"smooth"}); }
+function applyPanes(n){ var pg=$("p-L"+n); if(!pg) return; var cur=paneSel[n]||0;
+  [].forEach.call(pg.querySelectorAll("[data-pane]"),function(e){ e.hidden=(parseInt(e.dataset.pane,10)!==cur); }); }
+function setupPanes(n,pg){
+  var labels, kids=[].slice.call(pg.children);
+  if(n===2){
+    labels=[]; var idx=-1;
+    kids.forEach(function(e){
+      if(e.classList.contains("stephead")){ idx++; labels.push((e.querySelector("b")||e).textContent.replace(/ \(required\)/,"").replace(/^Step (\d) \u00b7 /,"Step $1 \u00b7 ")); }
+      if(idx>=0) e.dataset.pane=idx;
+    });
+  } else if(PANES[n]){
+    labels=PANES[n].map(function(x){ return x[0]; });
+    kids.forEach(function(e){
+      if(e.dataset.sk){ for(var i=0;i<PANES[n].length;i++) if(PANES[n][i][1].indexOf(e.dataset.sk)>=0){ e.dataset.pane=i; break; } }
+    });
+    labels.push(n<8?"Unlock Level "+(n+1):"Shut it down"); var last=labels.length-1;
+    kids.forEach(function(e){ if(e.classList.contains("codebox")) e.dataset.pane=last; });
+  } else return;
+  paneLbl[n]=labels;
+  // a "Next" link at the bottom of every tab but the last
+  for(var i=0;i<labels.length-1;i++){ (function(i){
+    var r=el("div","nextrow"); r.dataset.pane=i; var b=el("button","primary","Next: "+labels[i+1]+" \u2192"); b.addEventListener("click",function(){ setPane(n,i+1); }); r.appendChild(b);
+    var anchor=null; kids.forEach(function(e){ if(e.dataset.pane==i) anchor=e; });
+    if(anchor&&anchor.nextSibling) pg.insertBefore(r,anchor.nextSibling); else pg.appendChild(r);
+  })(i); }
+  if(paneSel[n]==null||paneSel[n]>=labels.length) paneSel[n]=0;
+  applyPanes(n);
+}
+function show(p){
+  var ids=["L1","V1","L2","L3","L4","G4","L5","L6","L7","L8","send"];
+  if(p==="G2") p="L2";
+  if(ids.indexOf(p)<0) p="L1";
+  var n=parseInt(p.slice(1),10); if(p!=="send" && n>state.unlocked) p=lvPage(state.unlocked);
+  state.page=p; save();
+  ids.forEach(function(id){ var el=$("p-"+id); if(el){ el.hidden=(id!==p); if(id===p){ el.style.animation="none"; void el.offsetWidth; el.style.animation=""; } } });
+  renderNav(); window.scrollTo({top:0,behavior:"smooth"});
+}
 function renderSub(){
-  var sn=$("subnav"), par=parentLevel(curPage()), subs=SUBS[par]; sn.innerHTML=""; sn.hidden=!subs; if(!subs) return;
-  subs.forEach(function(x){ var b=document.createElement("button"); b.textContent=x[1]; if(curPage()===x[0]) b.className="cur"; b.addEventListener("click",function(){ show(x[0]); }); sn.appendChild(b); }); }
-function renderNav(){ renderSub(); for(var q=3;q<=8;q++){ if($("lvl-"+q)) lvRefresh(q); } l2Refresh();
+  var sn=$("subnav"), par=parentLevel(curPage()); sn.innerHTML=""; var items=null;
+  if(SUBS[par]) items=SUBS[par].map(function(x){ return {label:x[1],on:curPage()===x[0],go:function(){ show(x[0]); }}; });
+  else if(paneLbl[par.slice(1)]) { var nn=par.slice(1); items=paneLbl[nn].map(function(l,i){ return {label:l,on:(paneSel[nn]||0)===i,go:function(){ setPane(nn,i); }}; }); }
+  sn.hidden=!items; if(!items) return;
+  items.forEach(function(x){ var b=document.createElement("button"); b.textContent=x.label; if(x.on) b.className="cur"; b.addEventListener("click",x.go); sn.appendChild(b); }); }
+var topHide=false; try{ topHide=localStorage.getItem("aira_top_hidden")==="1"; }catch(e){}
+function renderTop(){ var onL1=curPage()==="L1", hide=!onL1&&topHide;
+  $("topinfo").hidden=hide; $("topbar").hidden=onL1;
+  $("topwho").textContent=(state.name?"Agent "+state.name:"Agent file")+(state.squad?" \u00b7 "+state.squad:"");
+  $("topTog").textContent=hide?"Show agent info \u25bc":"Hide agent info \u25b2"; $("topTog").setAttribute("aria-expanded",hide?"false":"true"); }
+function renderNav(){ renderSub(); renderTop(); for(var q=3;q<=8;q++){ if($("lvl-"+q)) lvRefresh(q); } l2Refresh();
   var nav=$("nav"); nav.innerHTML="";
   for(var i=1;i<=8;i++){ (function(i){
     var b=document.createElement("button"); var locked=i>state.unlocked;
     b.textContent=locked?"\ud83d\udd12 L"+i:"L"+i; b.disabled=locked; b.title=META[i-1][0]+(locked?" (locked)":"");
-    if(parentLevel(curPage())==="L"+i) b.className="cur"; b.addEventListener("click",function(){ show("L"+i); }); nav.appendChild(b);
+    if(parentLevel(curPage())==="L"+i) b.className="cur"; b.addEventListener("click",function(){ show(lvPage(i)); }); nav.appendChild(b);
   })(i); }
   var s=document.createElement("button"); s.textContent="Send & save"; if(curPage()==="send") s.className="cur";
   s.addEventListener("click",function(){ show("send"); }); nav.appendChild(s);
@@ -489,7 +552,7 @@ function tryUnlock(n){
 function checkCode(n,inp,m,v,waived){
   if((hash("aira:"+v)===HASHES[n-1] && v.length===n) || (n<8 && v.length===1 && hash("aira1:"+v)===SINGLES[n-1])){
     var note=waived?" (counselor override)":"";
-    if(n<8){ state.unlocked=n+1; save(); m.textContent="ACCESS GRANTED"+note; m.className="msg ok"; setTimeout(function(){ show("L"+(n+1)); },700); }
+    if(n<8){ state.unlocked=n+1; save(); m.textContent="ACCESS GRANTED"+note; m.className="msg ok"; setTimeout(function(){ show(lvPage(n+1)); },700); }
     else { state.won=true; save(); m.textContent="ACCESS GRANTED"+note; m.className="msg ok"; renderL8win(); }
   } else {
     m.textContent="ACCESS DENIED. Type the code letters you have so far, in order (for example V then VE)."; m.className="msg err"; inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake");
@@ -601,7 +664,6 @@ var LV={
  {k:"boss",t:"form",h:"3f \u00b7 Boss Challenge: design a workflow",hint:"Pick a repetitive Scouting job, like reminders or sign-ups. Then defend your workflow to the room in 30 seconds. Your counselor scores it: full 50 XP if the trigger, three tasks, variable and defense are all clear.",f:[{k:"job",label:"1. The Scouting job (something repetitive)"},{k:"trig",label:"2. The trigger: what event starts it?"},{k:"t1",label:"3. Task 1: what does the machine do first?"},{k:"t2",label:"Task 2"},{k:"t3",label:"Task 3"},{k:"var",label:"4. The variable: what does it keep track of?"},{k:"def",label:"5. Your 30-second defense: why is this a clean workflow?",area:1},{k:"safe",label:"Safeguard: what happens if the trigger fires by mistake, and what would catch it?",area:1}]}]},
 4:{secs:[
  {k:"big",t:"form",h:"4a \u00b7 Ethical concerns",hint:"In a sentence or two each, describe the concern.",f:[{k:"bias",label:"Bias",area:1},{k:"priv",label:"Privacy",area:1},{k:"dec",label:"AI decision-making (who is responsible when it is wrong?)",area:1}]},
- {k:"game",t:"game"},
  {k:"law",t:"rows",h:"4c \u00b7 My guidelines for using AI",hint:"Three rules for how you will use AI, each tied to a point of the Scout Law.",n:3,cols:[{k:"law",sel:LAW,w:"130px"},{k:"rule",ph:"My rule"}]},
  {k:"tur",t:"form",h:"4d \u00b7 The Turing test",hint:"",f:[{k:"exp",label:"Explain the Turing test in your own words.",area:1}]}]},
 5:{secs:[
@@ -659,10 +721,10 @@ function mkField(n,s,kind,obj,key,def,ph){
 function buildLv(n,pg){
   var top=el("div","progress"); top.innerHTML='<div class="pl"><span id="lvl-'+n+'"></span><span id="lvp-'+n+'"></span></div><div class="bar"><i id="lvb-'+n+'"></i></div>'; pg.appendChild(top);
   LV[n].secs.forEach(function(s){
-    if(s.t==="hvm"){ pg.appendChild(buildHvm()); return; }
+    if(s.t==="hvm"){ var hc=buildHvm(); hc.dataset.sk=s.k; pg.appendChild(hc); return; }
     if(s.t==="game"){ var wc=el("section","card"); var wh=el("h2",null,"4b \u00b7 What Would You Do? "); var ws=el("span","small"); ws.id="wwydst"; wh.appendChild(ws); wc.appendChild(wh); wc.appendChild(el("p","hint","Five scenarios. Discuss as a squad, pick a stance, and write your reason. Reasoning earns points, not the right answer. When you finish, come back to the Ethics worksheet tab for Steps 3 and 4 and the unlock.")); var wb=el("button","primary","Open the What Would You Do? tab \u2192"); wb.addEventListener("click",function(){ show("G4"); }); wc.appendChild(wb); pg.appendChild(wc); return; }
-    if(s.t==="note"){ var nc=el("section","card"); nc.appendChild(el("h2",null,s.h)); if(s.hint) nc.appendChild(el("p","hint",s.hint)); if(s.link){ var la=el("a","primary",s.link[1]+" \u2197"); la.href=s.link[0]; la.target="_blank"; la.rel="noopener noreferrer"; la.style.cssText="display:inline-block;text-decoration:none;margin:2px 0 8px;padding:10px 14px;border-radius:8px;font-weight:700"; nc.appendChild(la); } pg.appendChild(nc); return; }
-    var card=el("section","card"), h=el("h2",null,s.h+" "), cnt=el("span","small"); cnt.id="lvc-"+n+"-"+s.k; h.appendChild(cnt); card.appendChild(h);
+    if(s.t==="note"){ var nc=el("section","card"); nc.dataset.sk=s.k; nc.appendChild(el("h2",null,s.h)); if(s.hint) nc.appendChild(el("p","hint",s.hint)); if(s.link){ var la=el("a","primary",s.link[1]+" \u2197"); la.href=s.link[0]; la.target="_blank"; la.rel="noopener noreferrer"; la.style.cssText="display:inline-block;text-decoration:none;margin:2px 0 8px;padding:10px 14px;border-radius:8px;font-weight:700"; nc.appendChild(la); } pg.appendChild(nc); return; }
+    var card=el("section","card"), h=el("h2",null,s.h+" "), cnt=el("span","small"); card.dataset.sk=s.k; cnt.id="lvc-"+n+"-"+s.k; h.appendChild(cnt); card.appendChild(h);
     if(s.hint) card.appendChild(el("p","hint",s.hint));
     if(s.link){ var la=el("a","primary",s.link[1]+" \u2197"); la.href=s.link[0]; la.target="_blank"; la.rel="noopener noreferrer"; la.style.cssText="display:inline-block;text-decoration:none;margin:2px 0 8px;padding:10px 14px;border-radius:8px;font-weight:700"; card.appendChild(la); }
     var v=state.lv[n][s.k];
@@ -693,6 +755,7 @@ function buildPages(){
   for(var k=1;k<=8;k++){ var box=codeBox(k); (k===1?$("p-V1"):$("p-L"+k)).appendChild(box); }
   for(var j=1;j<=8;j++){ (function(j){ $("cg"+j).addEventListener("click",function(){ tryUnlock(j); });
     $("ci"+j).addEventListener("keydown",function(e){ if(e.key==="Enter") tryUnlock(j); }); })(j); }
+  for(var q=2;q<=8;q++){ setupPanes(q,$("p-L"+q)); }
   renderL8win();
   l2Refresh();
 }
@@ -750,28 +813,30 @@ function renderAion(){
   nx.addEventListener("click",function(){ ai.i++; ai.locked=false; renderAion(); });
 }
 
-// ---- Level 3 game: Human vs. Machine ---------------------------------------------------------
+// ---- Level 3 game: Class Race ---------------------------------------------------------
 // A digital version of the class relay. The MACHINE follows three rules exactly (Trigger: the card is red.
 // Task: put it in bin A. Variable: add one to the red count). The HUMAN sorts by instinct while answering trivia.
-var HV_TRIVIA=[["What is the Scout motto?", "Be Prepared."], ["How many points are in the Scout Law?", "12."], ["What do you call the knot used to join two ropes of equal size?", "A square knot (reef knot)."], ["What planet is closest to the Sun?", "Mercury."], ["How many sides does a hexagon have?", "6."], ["What gas do plants take in from the air?", "Carbon dioxide."], ["What is 7 times 8?", "56."], ["What is the capital of Florida?", "Tallahassee."], ["What is the largest ocean?", "The Pacific."], ["How many minutes are in two hours?", "120."], ["What do the letters in the word AI stand for?", "Artificial intelligence."], ["What is the freezing point of water in Fahrenheit?", "32 degrees."], ["Name the first two points of the Scout Law.", "Trustworthy and Loyal."], ["How many continents are there?", "7."], ["What is the opposite of north on a compass?", "South."], ["What is 15 plus 27?", "42."], ["What is the hardest natural material?", "Diamond."], ["How many legs does a spider have?", "8."], ["Which direction does the sun rise?", "East."], ["How many players are on a standard soccer team on the field?", "11."], ["What color do you get from mixing blue and yellow?", "Green."], ["How many days are in a leap year?", "366."], ["What do bees make?", "Honey."], ["What is 100 divided by 4?", "25."]];
 var HV_COLORS={red:["#D92D3A","#fff"],blue:["#2F6FE0","#fff"],green:["#25A35A","#fff"],yellow:["#F0CF2B","#2a2300"],pink:["#FF8AD0","#3a0a2a"]};
 function fixHvm(o){
-  var n={machine:null,human:null,notes:{better:"",worse:"",why:""}}; if(!o||typeof o!=="object") return n;
+  var n={run:null,notes:{better:"",worse:"",why:""}}; if(!o||typeof o!=="object") return n;
   function num(v,hi){ v=Number(v); return isFinite(v)?Math.max(0,Math.min(hi,v)):0; }
-  ["machine","human"].forEach(function(k){ var r=o[k]; if(r&&typeof r==="object") n[k]={sec:Math.round(num(r.sec,3600)*10)/10,wrong:Math.round(num(r.wrong,24)),count:Math.round(num(r.count,99)),trivia:Math.round(num(r.trivia,24)),pink:String(r.pink||"").slice(0,60)}; });
+  var r=o.run||o.machine; // older saves kept a Machine run
+  if(r&&typeof r==="object") n.run={sec:Math.round(num(r.sec,3600)*10)/10,wrong:Math.round(num(r.wrong,24)),count:Math.round(num(r.count,99)),pink:String(r.pink||"").slice(0,60)};
   if(o.notes&&typeof o.notes==="object") ["better","worse","why"].forEach(function(k){ n.notes[k]=String(o.notes[k]||"").slice(0,400); });
   return n;
 }
 function hvRng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; var t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
 function hvShuffle(a,r){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)),t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
-function hvDeck(seed){ var d=[],add=function(c,k){ for(var i=0;i<k;i++) d.push(c); }; add("red",10); add("blue",5); add("green",5); add("yellow",3); add("pink",1); return seed==null?shuffle(d):hvShuffle(d,hvRng(seed)); }
+var HV_SEED=2026;
+// Everyone gets the same shuffled deck, so every run is a fair race.
+function hvDeck(){ var d=[],add=function(c,k){ for(var i=0;i<k;i++) d.push(c); }; add("red",10); add("blue",5); add("green",5); add("yellow",3); add("pink",1); return hvShuffle(d,hvRng(HV_SEED)); }
 function buildHvm(){
   state.hvm=fixHvm(state.hvm);
-  var card=el("section","card"), h=el("h2",null,"Class game · Human vs. Machine "); var st=el("span","small"); st.id="hvmst"; h.appendChild(st); card.appendChild(h);
+  var card=el("section","card"), h=el("h2",null,"Class Race · Automation vs. everyone "); var st=el("span","small"); st.id="hvmst"; h.appendChild(st); card.appendChild(h);
   var host=el("div"); host.id="hvm"; card.appendChild(host);
-  var run=null, tick=null;
+  var run=null, tick=null, boardBox=null, bTimer=null, bNote="";
   function stopTick(){ if(tick){ clearInterval(tick); tick=null; } }
-  function status(){ var m=state.hvm.machine,u=state.hvm.human; st.textContent=(m&&u)?"Both runs done":(m||u)?"One run done":"Not played"; }
+  function status(){ st.textContent=state.hvm.run?"Played":"Not played"; }
   function sec(t){ return Math.round(t/100)/10; }
   function rules(){
     var r=el("div"); r.style.cssText="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:8px 0";
@@ -780,23 +845,21 @@ function buildHvm(){
   }
   function intro(){
     stopTick(); host.innerHTML=""; status();
-    host.appendChild(el("p","hint","A live demo of automation. One scout plays the MACHINE and follows the rules exactly. A teammate plays the HUMAN and sorts by instinct while answering trivia out loud. Play both runs, swap players, and compare speed and mistakes. Squads play on one device, passing it between runs."));
+    host.appendChild(el("p","hint","A live demo of automation, and a race. You are the MACHINE: follow the three rules exactly, with no guessing, as fast as you can. Every Scout in the class gets the same 24 cards. Fewest wrong bins wins, then the fastest time. Your squad earns scoreboard XP from the average points of its Scouts, so every run counts. You can play again to beat your best."));
     host.appendChild(rules());
-    var a=el("div","actions"); var bm=el("button","primary","Start MACHINE run"); var bh=el("button","secondary","Start HUMAN run"); var bv=el("button","secondary","Play a squadmate (2 devices)");
-    bm.addEventListener("click",function(){ start("machine"); }); bh.addEventListener("click",function(){ start("human"); }); bv.addEventListener("click",matchMenu); a.appendChild(bm); a.appendChild(bh); a.appendChild(bv); host.appendChild(a);
-    if(state.hvm.machine||state.hvm.human) results();
-    else host.appendChild(el("p","small","Tip: a different scout plays each run. The squad is the timer, counter, and judge."));
+    var a=el("div","actions"); var bm=el("button","primary",state.hvm.run?"Race again":"Start the race");
+    bm.addEventListener("click",start); a.appendChild(bm); host.appendChild(a);
+    if(state.hvm.run) results();
+    else host.appendChild(el("p","small","Tip: add your name and squad at the top of the page first so your score reaches the class board."));
     boardBox=el("div","hvres"); host.appendChild(boardBox); setTimeout(loadBoard,300);
     if(!bTimer) bTimer=setInterval(loadBoard,20000);
   }
-  // ---- class leaderboard: everyone plays against everyone; squads get the average on the scoreboard ----
-  var boardBox=null, bTimer=null, bNote="";
-  function postBoard(mode,r){
+  function postBoard(r){
     var nm=(state.name||"").trim().replace(/\s+/g," ");
-    if(!state.squadSlot){ bNote="Choose your squad at the top of the page to put your scores on the class board."; return Promise.resolve(); }
-    if(!NAME_OK.test(nm)){ bNote="Enter your first name and last initial (like Sam K) at the top to put your scores on the class board."; return Promise.resolve(); }
+    if(!state.squadSlot){ bNote="Choose your squad at the top of the page to put your score on the class board."; return Promise.resolve(); }
+    if(!NAME_OK.test(nm)){ bNote="Enter your first name and last initial (like Sam K) at the top to put your score on the class board."; return Promise.resolve(); }
     ensureId(); bNote="";
-    return fetch("/api/hvboard",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.scoutId,slot:state.squadSlot,name:nm,mode:mode,sec:r.sec,wrong:r.wrong,trivia:r.trivia||0})})
+    return fetch("/api/hvboard",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.scoutId,slot:state.squadSlot,name:nm,sec:r.sec,wrong:r.wrong})})
       .then(function(x){ return x.json().catch(function(){return {};}).then(function(j){ if(!x.ok) throw new Error(j.error||"Could not post your score."); bNote="Posted to the class board."; }); })
       .catch(function(e){ bNote=e.message; });
   }
@@ -810,9 +873,9 @@ function buildHvm(){
     if(!boardBox||!document.body.contains(boardBox)) return;
     boardBox.innerHTML=""; boardBox.appendChild(el("h3",null,"Class leaderboard"));
     if(bNote) boardBox.appendChild(el("p","small",bNote));
-    if(!x.ok){ boardBox.appendChild(el("p","hint",x.status===403?"Play a run (with your name and squad filled in at the top) to see how the whole class is doing. Squads earn scoreboard XP from the average of everyone\u2019s points.":(x.j.error||"The leaderboard is not available right now."))); return; }
+    if(!x.ok){ boardBox.appendChild(el("p","hint",x.status===403?"Run the race (with your name and squad filled in at the top) to see how the whole class is doing. Squads earn scoreboard XP from the average of everyone’s points.":(x.j.error||"The leaderboard is not available right now."))); return; }
     var b=x.j;
-    boardBox.appendChild(el("p",null,"Your game points: "+b.you.points+" of 10"+(b.you.squad?" \u00b7 Squad: "+b.you.squad:"")+". Each run earns 1 point for finishing plus up to 4 for accuracy (fewer wrong bins), Machine and Human runs separately. Your squad\u2019s scoreboard XP is the average of every Scout who played."));
+    boardBox.appendChild(el("p",null,"Your points: "+b.you.points+" of 10"+(b.you.squad?" · Squad: "+b.you.squad:"")+". A run earns 4 points for finishing plus up to 6 for accuracy (fewer wrong bins). Your squad’s scoreboard XP is the average of every Scout who raced."));
     function tbl(title,heads,rows){
       boardBox.appendChild(el("h4",null,title)); if(!rows.length){ boardBox.appendChild(el("p","small","No runs yet.")); return; }
       var t=el("table"); t.className="hvt"; var hr=el("tr"); heads.forEach(function(h){ var th=el("th",null,h); th.scope="col"; hr.appendChild(th); }); t.appendChild(hr);
@@ -820,150 +883,53 @@ function buildHvm(){
       var w=el("div"); w.style.overflowX="auto"; w.appendChild(t); boardBox.appendChild(w);
     }
     tbl("Squads (average points)",["#","Squad","Scouts","Avg points"],b.squads.map(function(q){ return {you:q.you,cells:[q.place,q.name,q.players,q.avg]}; }));
-    tbl("Machine runs",["#","Scout","Squad","Wrong","Seconds"],b.machine.map(function(q){ return {you:q.you,cells:[q.place,q.name,q.squad,q.wrong,q.sec.toFixed(1)]}; }));
-    tbl("Human runs",["#","Scout","Squad","Wrong","Trivia","Seconds"],b.human.map(function(q){ return {you:q.you,cells:[q.place,q.name,q.squad,q.wrong,q.trivia+"/24",q.sec.toFixed(1)]}; }));
-    boardBox.appendChild(el("p","small","Ranked by fewest wrong bins, then faster time. Updates every 20 seconds. "+b.players+" Scout"+(b.players===1?"":"s")+" played."));
+    tbl("Scouts",["#","Scout","Squad","Wrong","Seconds","Pts"],b.racers.map(function(q){ return {you:q.you,cells:[q.place,q.name,q.squad,q.wrong,q.sec.toFixed(1),q.points]}; }));
+    boardBox.appendChild(el("p","small","Ranked by fewest wrong bins, then faster time. Updates every 20 seconds. "+b.players+" Scout"+(b.players===1?"":"s")+" raced."));
   }
-  function start(mode,match){
-    var seed=match?match.seed:null;
-    run={mode:mode,deck:hvDeck(seed),i:0,wrong:0,count:0,trivia:0,answered:false,pink:"",t0:Date.now(),qs:seed==null?shuffle(HV_TRIVIA):hvShuffle(HV_TRIVIA,hvRng(seed+1)),match:match||null};
+  function start(){
+    run={deck:hvDeck(),i:0,wrong:0,count:0,pink:"",t0:Date.now()};
     draw();
   }
   function bin(choice){
     var c=run.deck[run.i], red=c==="red";
-    if(run.mode==="machine"){
-      if(choice==="A"){ if(!red) run.wrong++; run.count++; if(c==="pink") run.pink="Put it in bin A (guessed)"; }
-      else if(choice==="B"){ if(red) run.wrong++; if(c==="pink") run.pink="Bin B (pink is not red, by the rule)"; }
-      else { if(c!=="pink") run.wrong++; else run.pink="Froze: no rule for pink"; }
-    } else {
-      if(choice==="A"){ if(!red&&c!=="pink") run.wrong++; if(c==="pink") run.pink="Put it in bin A (judgment)"; }
-      else { if(red) run.wrong++; if(c==="pink") run.pink="Put it in bin B (judgment)"; }
-    }
-    run.i++; run.answered=false;
+    if(choice==="A"){ if(!red) run.wrong++; run.count++; if(c==="pink") run.pink="Put it in bin A (guessed)"; }
+    else if(choice==="B"){ if(red) run.wrong++; if(c==="pink") run.pink="Bin B (pink is not red, by the rule)"; }
+    else { if(c!=="pink") run.wrong++; else run.pink="Froze: no rule for pink"; }
+    run.i++;
     if(run.i>=24) finish(); else draw();
   }
   function finish(){
     stopTick();
-    var secs=sec(Date.now()-run.t0);
-    state.hvm[run.mode]={sec:secs,wrong:run.wrong,count:run.mode==="machine"?run.count:run.count,trivia:run.trivia,pink:run.pink};
-    save(); var mt=run.match, mine=state.hvm[run.mode], md=run.mode; run=null;
-    postBoard(md,mine);
-    if(mt){ submitMatch(mt,mine); } else { intro(); host.scrollIntoView({behavior:"smooth",block:"start"}); }
+    var mine={sec:sec(Date.now()-run.t0),wrong:run.wrong,count:run.count,pink:run.pink};
+    var old=state.hvm.run;
+    if(!old||mine.wrong<old.wrong||(mine.wrong===old.wrong&&mine.sec<old.sec)) state.hvm.run=mine;
+    save(); run=null; status();
+    intro(); host.insertBefore(el("p","msg ok","Run finished: "+mine.sec.toFixed(1)+" s, "+mine.wrong+" wrong bin"+(mine.wrong===1?"":"s")+". Sending your score to the class board…"),host.firstChild);
+    postBoard(mine).then(loadBoard);
+    host.scrollIntoView({behavior:"smooth",block:"start"});
   }
   function draw(){
     stopTick(); host.innerHTML=""; status();
-    var m=run.mode==="machine", c=run.deck[run.i];
+    var c=run.deck[run.i];
     var top=el("div"); top.style.cssText="display:flex;justify-content:space-between;gap:8px;font-weight:700;margin:4px 0";
-    var l=el("span",null,(m?"MACHINE":"HUMAN")+" · card "+(run.i+1)+" of 24"), t=el("span",null,"0.0 s"); top.appendChild(l); top.appendChild(t); host.appendChild(top);
+    var l=el("span",null,"Card "+(run.i+1)+" of 24"), t=el("span",null,"0.0 s"); top.appendChild(l); top.appendChild(t); host.appendChild(top);
     tick=setInterval(function(){ if(!document.body.contains(t)){ stopTick(); return; } t.textContent=sec(Date.now()-run.t0).toFixed(1)+" s"; },100);
-    if(m){ host.appendChild(rules()); }
-    else host.appendChild(el("p","hint","Your only instruction: “Put the red cards in bin A.” Answer each trivia question out loud before you touch the next card. Your squad judges."));
+    host.appendChild(rules());
     var tile=el("div","hvtile"); tile.style.background=HV_COLORS[c][0]; tile.style.color=HV_COLORS[c][1]; tile.textContent=c.toUpperCase(); host.appendChild(tile);
-    if(m){ host.appendChild(el("p","small","Red count so far: "+run.count+". Follow the rules exactly. Do not think. Do not guess.")); }
-    else {
-      var q=run.qs[run.i%run.qs.length], qb=el("div","hvq"); qb.appendChild(el("b",null,"Trivia: "+q[0]));
-      if(!run.answered){
-        var j=el("div","actions"), ans=el("span","small"); ans.style.cssText="display:none;width:100%"; ans.textContent="Answer: "+q[1];
-        var sh=el("button","secondary","Judge: show answer"); sh.addEventListener("click",function(){ ans.style.display="block"; });
-        var ok=el("button","secondary","✔ Got it right"), no=el("button","secondary","✖ Missed it");
-        ok.addEventListener("click",function(){ run.trivia++; run.answered=true; draw(); }); no.addEventListener("click",function(){ run.answered=true; draw(); });
-        j.appendChild(sh); j.appendChild(ok); j.appendChild(no); qb.appendChild(j); qb.appendChild(ans);
-      } else qb.appendChild(el("p","small","Answered. Now sort the card."));
-      host.appendChild(qb);
-    }
-    var a=el("div","actions"), ba=el("button","primary",m?"Bin A (red) + add 1":"Bin A"), bb=el("button","secondary",m?"Bin B (not red)":"Bin B");
-    ba.addEventListener("click",function(){ bin("A"); }); bb.addEventListener("click",function(){ bin("B"); });
-    a.appendChild(ba); a.appendChild(bb);
-    if(m){ var fz=el("button","secondary","No rule for this card (freeze)"); fz.addEventListener("click",function(){ bin("F"); }); a.appendChild(fz); }
-    else { ba.disabled=bb.disabled=!run.answered; }
-    host.appendChild(a);
+    host.appendChild(el("p","small","Red count so far: "+run.count+". Follow the rules exactly. Do not think. Do not guess."));
+    var a=el("div","actions"), ba=el("button","primary","Bin A (red) + add 1"), bb=el("button","secondary","Bin B (not red)"), fz=el("button","secondary","No rule for this card (freeze)");
+    ba.addEventListener("click",function(){ bin("A"); }); bb.addEventListener("click",function(){ bin("B"); }); fz.addEventListener("click",function(){ bin("F"); });
+    a.appendChild(ba); a.appendChild(bb); a.appendChild(fz); host.appendChild(a);
     var q2=el("div","actions"); var quit=el("button","secondary","Stop and go back"); quit.addEventListener("click",function(){ run=null; intro(); }); q2.appendChild(quit); host.appendChild(q2);
   }
-  // ---- head to head: two devices, same deck, same start time --------------------------------
-  var poll=null, off=0;
-  function stopPoll(){ if(poll){ clearInterval(poll); poll=null; } }
-  function mapi(path,body){
-    return fetch("/api/hvmatch"+path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
-      .then(function(r){ return r.json().catch(function(){return {};}).then(function(j){ if(!r.ok) throw new Error(j.error||"Request failed ("+r.status+")"); if(j.now) off=j.now-Date.now(); return j; }); });
-  }
-  function leave(){ stopPoll(); run=null; intro(); }
-  function backBtn(label){ var b=el("button","secondary",label||"Leave the match"); b.addEventListener("click",leave); return b; }
-  function matchMenu(){
-    stopPoll(); host.innerHTML=""; ensureId();
-    host.appendChild(el("h3",null,"Play a squadmate"));
-    host.appendChild(el("p","hint","Two Scouts, two devices, the same shuffled deck, starting at the same moment. One plays the MACHINE (rules only) and one plays the HUMAN (instinct and trivia). Make a match and share the 4-character code, or join with your competitor\u2019s code."));
-    var msgEl=el("div","msg"); msgEl.setAttribute("role","status");
-    function needName(){ if(!(state.name||"").trim()){ msgEl.textContent="Type your agent name at the top of the page first (first name and last initial)."; msgEl.className="msg err"; return true; } return false; }
-    var a=el("div","actions"), cm=el("button","primary","Create a match as the MACHINE"), ch=el("button","secondary","Create a match as the HUMAN");
-    function create(role){ if(needName()) return; mapi("/create",{id:state.scoutId,name:state.name,role:role}).then(function(v){ watch(v.code); }).catch(function(e){ msgEl.textContent=e.message; msgEl.className="msg err"; }); }
-    cm.addEventListener("click",function(){ create("machine"); }); ch.addEventListener("click",function(){ create("human"); }); a.appendChild(cm); a.appendChild(ch); host.appendChild(a);
-    var jr=el("div","row"), ji=el("input"); ji.type="text"; ji.maxLength=4; ji.placeholder="CODE"; ji.autocomplete="off"; ji.setAttribute("aria-label","Match code"); ji.style.cssText="text-transform:uppercase;letter-spacing:.3em;text-align:center;max-width:140px";
-    var jb=el("button","secondary","Join"); jb.addEventListener("click",function(){ if(needName()) return; var code=ji.value.toUpperCase().replace(/[^A-Z0-9]/g,""); if(code.length!==4){ msgEl.textContent="The code has 4 characters."; msgEl.className="msg err"; return; }
-      mapi("/join",{code:code,id:state.scoutId,name:state.name}).then(function(v){ watch(v.code); }).catch(function(e){ msgEl.textContent=e.message; msgEl.className="msg err"; }); });
-    jr.appendChild(ji); jr.appendChild(jb); host.appendChild(jr); host.appendChild(msgEl);
-    var b=el("div","actions"); b.appendChild(backBtn("Back")); host.appendChild(b);
-  }
-  // Poll the match and draw whichever screen fits its status.
-  function watch(code){
-    stopPoll(); var started=false, readyHit=false, sent=false;
-    function paint(v){
-      if(started) return;
-      host.innerHTML=""; var you=v.you, opp=v.opponent;
-      host.appendChild(el("h3",null,"Match "+v.code));
-      var big=el("div","hvtile"); big.style.cssText="height:90px;font-size:44px;background:#183446;color:#D4A843"; big.textContent=v.code; host.appendChild(big);
-      if(!opp){ host.appendChild(el("p",null,"You are the "+you.role.toUpperCase()+". Share this code with your competitor and wait for them to join\u2026")); host.appendChild(backBtn()); return; }
-      host.appendChild(el("p",null,"You ("+you.name+") are the "+you.role.toUpperCase()+". Your competitor: "+opp.name+", the "+opp.role.toUpperCase()+"."));
-      if(v.status==="done"||(v.yourResult&&!started)){ stopPoll(); headToHead(v); return; }
-      if(v.status==="go"&&v.startAt){
-        var left=v.startAt-(Date.now()+off), t=el("div","hvtile"); t.style.cssText="height:110px;background:#0F1F2B;color:#fff"; t.textContent=left>0?String(Math.ceil(left/1000)):"GO"; host.appendChild(t);
-        if(left<=0){ started=true; stopPoll(); start(you.role,{seed:v.seed,code:v.code}); }
-        else { stopPoll(); poll=setInterval(function(){ var l=v.startAt-(Date.now()+off); if(l<=0){ stopPoll(); started=true; start(you.role,{seed:v.seed,code:v.code}); } else t.textContent=String(Math.ceil(l/1000)); },100); }
-        return; }
-      if(you.ready){ host.appendChild(el("p",null,"Ready. Waiting for "+opp.name+"\u2026")); }
-      else { var rb=el("button","primary","I\u2019m ready"); rb.addEventListener("click",function(){ rb.disabled=true; mapi("/ready",{code:v.code,id:state.scoutId}).then(paint).catch(function(e){ rb.disabled=false; host.appendChild(el("div","msg err",e.message)); }); }); host.appendChild(rb); }
-      host.appendChild(backBtn());
-    }
-    function tickPoll(){ mapi("?code="+code+"&id="+state.scoutId).then(paint).catch(function(e){ stopPoll(); host.innerHTML=""; host.appendChild(el("div","msg err",e.message)); host.appendChild(backBtn("Back")); }); }
-    tickPoll(); poll=setInterval(tickPoll,1500);
-  }
-  function submitMatch(mt,mine){
-    host.innerHTML=""; host.appendChild(el("p",null,"Run finished. Sending your result\u2026"));
-    mapi("/result",{code:mt.code,id:state.scoutId,result:{sec:mine.sec,wrong:mine.wrong,count:mine.count,trivia:mine.trivia,pink:mine.pink}})
-      .then(function(v){ if(v.opponentResult) headToHead(v); else { host.innerHTML=""; host.appendChild(el("p",null,"Your run is in. Waiting for your competitor to finish\u2026")); host.appendChild(el("p","small","Your time: "+mine.sec.toFixed(1)+" s \u00b7 wrong bins: "+mine.wrong)); stopPoll(); poll=setInterval(function(){ mapi("?code="+mt.code+"&id="+state.scoutId).then(function(x){ if(x.opponentResult){ stopPoll(); headToHead(x); } }).catch(function(){}); },2000); } })
-      .catch(function(e){ host.appendChild(el("div","msg err",e.message+" Your result is saved on this device.")); host.appendChild(backBtn("Back")); });
-  }
-  function headToHead(v){
-    stopPoll(); host.innerHTML=""; var me=v.yourResult, op=v.opponentResult;
-    host.appendChild(el("h3",null,"Head to head"));
-    if(!op){ host.appendChild(el("p",null,"Waiting for "+v.opponent.name+" to finish\u2026")); poll=setInterval(function(){ mapi("?code="+v.code+"&id="+state.scoutId).then(function(x){ if(x.opponentResult) headToHead(x); }).catch(function(){}); },2000); host.appendChild(backBtn("Back")); return; }
-    var tb=el("table"); tb.className="hvt"; var hr=el("tr");
-    ["",v.you.name+" ("+v.you.role+")",v.opponent.name+" ("+v.opponent.role+")"].forEach(function(x){ var th=el("th",null,x); th.scope="col"; hr.appendChild(th); }); tb.appendChild(hr);
-    function row(label,a,b){ var tr=el("tr"); var th=el("th",null,label); th.scope="row"; tr.appendChild(th); tr.appendChild(el("td",null,a)); tr.appendChild(el("td",null,b)); tb.appendChild(tr); }
-    function stat(r,role,k){ if(k==="trivia") return role==="human"?r.trivia+" of 24":"not asked"; if(k==="count") return role==="machine"?String(r.count)+" (real 10)":"-"; return String(r[k]); }
-    row("Seconds to finish",me.sec.toFixed(1),op.sec.toFixed(1)); row("Cards in the wrong bin",String(me.wrong),String(op.wrong));
-    row("Trivia right",stat(me,v.you.role,"trivia"),stat(op,v.opponent.role,"trivia")); row("Red count",stat(me,v.you.role,"count"),stat(op,v.opponent.role,"count")); row("The pink card",me.pink||"-",op.pink||"-");
-    host.appendChild(tb);
-    var meWins=me.wrong<op.wrong||(me.wrong===op.wrong&&me.sec<op.sec), tie=me.wrong===op.wrong&&me.sec===op.sec;
-    host.appendChild(el("p",null,tie?"A tie!":(meWins?"You win":v.opponent.name+" wins")+" (fewest wrong bins, then faster time)."));
-    host.appendChild(el("p","hint","Talk it over: did the Machine\u2019s red count match the real 10? What did each of you do with the pink card? Why do real workflows still need humans?"));
-    var a=el("div","actions"); a.appendChild(backBtn("Done")); host.appendChild(a);
-  }
   function results(){
-    var m=state.hvm.machine,u=state.hvm.human, box=el("div","hvres");
-    box.appendChild(el("h3",null,"Results so far"));
+    var m=state.hvm.run, box=el("div","hvres");
+    box.appendChild(el("h3",null,"Your best run"));
     var tb=el("table"); tb.className="hvt";
-    var hr=el("tr"); ["","Machine","Human"].forEach(function(x){ var th=el("th",null,x); th.scope="col"; hr.appendChild(th); }); tb.appendChild(hr);
-    function row(label,a,b){ var tr=el("tr"); var th=el("th",null,label); th.scope="row"; tr.appendChild(th); tr.appendChild(el("td",null,a)); tr.appendChild(el("td",null,b)); tb.appendChild(tr); }
-    row("Seconds to finish",m?m.sec.toFixed(1):"-",u?u.sec.toFixed(1):"-");
-    row("Cards in the wrong bin",m?String(m.wrong):"-",u?String(u.wrong):"-");
-    row("Trivia right","not asked",u?u.trivia+" of 24":"-");
-    row("Red count (real: 10)",m?String(m.count):"-","not counted");
-    row("The pink card",m?(m.pink||"-"):"-",u?(u.pink||"-"):"-");
+    function row(label,a){ var tr=el("tr"); var th=el("th",null,label); th.scope="row"; tr.appendChild(th); tr.appendChild(el("td",null,a)); tb.appendChild(tr); }
+    row("Seconds to finish",m.sec.toFixed(1)); row("Cards in the wrong bin",String(m.wrong)); row("Red count (real: 10)",String(m.count)); row("The pink card",m.pink||"-");
     box.appendChild(tb);
-    if(m&&u){
-      box.appendChild(el("p",null,(m.sec<u.sec?"The Machine was faster by "+(u.sec-m.sec).toFixed(1)+" s. ":"The Human was faster by "+(m.sec-u.sec).toFixed(1)+" s. ")+(m.wrong<u.wrong?"The Machine made fewer mistakes.":m.wrong>u.wrong?"The Human made fewer mistakes.":"Both made the same number of mistakes.")));
-      box.appendChild(el("p","hint","Did the Machine’s red count match the real number of red cards (10)? Where was the Machine better? Where was it worse? Pink is the exception: nobody wrote a rule for it. Why do real workflows still need humans?"));
-    }
+    box.appendChild(el("p","hint","Did your red count match the real number of red cards (10)? Pink is the exception: nobody wrote a rule for it. Why do real workflows still need humans?"));
     var nf=[["better","Where was the machine better? (consistent, tireless)"],["worse","Where was it worse? (exceptions, judgment)"],["why","Why do real workflows still need humans?"]];
     nf.forEach(function(x){ var lab=el("label",null,x[1]); lab.style.cssText="display:block;margin:10px 0 4px;font-size:14px"; var ta=el("textarea"); ta.rows=2; ta.maxLength=400; ta.value=state.hvm.notes[x[0]]; ta.setAttribute("aria-label",x[1]); ta.addEventListener("input",function(){ state.hvm.notes[x[0]]=ta.value; save(); }); box.appendChild(lab); box.appendChild(ta); });
     host.appendChild(box);
@@ -1055,9 +1021,8 @@ function makePdf(){
     if(state.l2.tlDone) state.l2.tlOrder.forEach(function(ci,i){ wrap((i+1)+". "+TLC[ci][0]+": "+TLC[ci][1],10,"normal",12); }); else if(tlCount()>=5) state.l2.tl.forEach(function(r,i){ wrap((i+1)+". "+(r.year.trim()||"----")+": "+(r.text.trim()||"(blank)"),10,"normal",12); }); else wrap("Drag-and-drop timeline not completed yet.",10,"normal",12); y+=6;
     wrap("AI or Not best score: "+(state.games.ai.best==null?"not played":state.games.ai.best+" / 10"),10,"normal",0); y+=8;
   })();
-  if(state.hvm&&(state.hvm.machine||state.hvm.human)){ var hv=state.hvm; need(60); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text("Level 3 - Human vs. Machine game",M,y); y+=14;
-    if(hv.machine) wrap("Machine: "+hv.machine.sec+" s, "+hv.machine.wrong+" wrong bin, red count "+hv.machine.count+". Pink: "+(hv.machine.pink||"-"),10,"normal",12);
-    if(hv.human) wrap("Human: "+hv.human.sec+" s, "+hv.human.wrong+" wrong bin, trivia "+hv.human.trivia+" of 24. Pink: "+(hv.human.pink||"-"),10,"normal",12);
+  if(state.hvm&&state.hvm.run){ var hv=state.hvm; need(60); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text("Level 3 - Class Race game",M,y); y+=14;
+    wrap("Best run: "+hv.run.sec+" s, "+hv.run.wrong+" wrong bin, red count "+hv.run.count+". Pink: "+(hv.run.pink||"-"),10,"normal",12);
     wrap("Machine better: "+(hv.notes.better||"(blank)"),10,"normal",12); wrap("Machine worse: "+(hv.notes.worse||"(blank)"),10,"normal",12); wrap("Why humans are still needed: "+(hv.notes.why||"(blank)"),10,"normal",12); y+=8; }
   if(state.wwyd.length){
     need(40); doc.setFillColor(232,240,234); doc.rect(M-6,y-14,maxW+12,22,"F"); doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(22,53,43);
@@ -1164,7 +1129,9 @@ $("fileIn").addEventListener("change",function(){ loadJson(this.files && this.fi
 $("btnPdf").addEventListener("click",download);
 $("btnMail").addEventListener("click",mail);
 $("btnClear").addEventListener("click",clearAll);
+$("topTog").addEventListener("click",function(){ topHide=!topHide; try{ localStorage.setItem("aira_top_hidden",topHide?"1":"0"); }catch(e){} renderTop(); });
 $("goVault").addEventListener("click",function(){ show("V1"); });
+$("nextG4").addEventListener("click",function(){ show("L4"); });
 $("bNext").addEventListener("click",bonusNext); $("bTimer").addEventListener("click",bonusTimer);
 (function(){ var h=$("tools"); TOOLS.forEach(function(t){ if(!t.url) return; var a=document.createElement("a"); a.href=t.url; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=t.label+" \u2197"; if(t.alt) a.className="alt"; h.appendChild(a); });
   if(!h.children.length) $("toolsCard").hidden=true; })();

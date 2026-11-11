@@ -24,7 +24,7 @@
 </div></section>
 <div class="wrap">
   <section><div id="roster"></div>
-  <div class="savebar"><button id="reset" class="btn ghost" type="button">Remove all Scouts</button><button id="hvreset" class="btn ghost" type="button">Clear Human vs. Machine scores</button><p id="msg" class="msg" role="status"></p></div></section>
+  <div class="savebar"><button id="reset" class="btn ghost" type="button">Remove all Scouts</button><button id="hvreset" class="btn ghost" type="button">Clear Class Race scores</button><p id="msg" class="msg" role="status"></p></div></section>
 </div>
 </main>
 <footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
@@ -48,7 +48,7 @@
   t.appendChild(b);var w=document.createElement("div");w.className="tablewrap";w.appendChild(t);box.appendChild(w)}
  rb.onclick=function(){if(!armed){armed=true;rb.textContent="Remove everyone? Press again";setTimeout(function(){armed=false;rb.textContent="Remove all Scouts"},5000);return}
   armed=false;rb.textContent="Remove all Scouts";api("/api/airalog/reset",{}).then(function(r){paint(r);say("Roster cleared and the automatic rows emptied.")}).catch(function(e){say(e.message)})};
- var hr=document.getElementById("hvreset"),hArmed=false;hr.onclick=function(){if(!hArmed){hArmed=true;hr.textContent="Clear every game score? Press again";setTimeout(function(){hArmed=false;hr.textContent="Clear Human vs. Machine scores"},5000);return}hArmed=false;hr.textContent="Clear Human vs. Machine scores";api("/api/hvboard/reset",{}).then(function(){say("Human vs. Machine scores cleared and the scoreboard row emptied.")}).catch(function(e){say(e.message)})};
+ var hr=document.getElementById("hvreset"),hArmed=false;hr.onclick=function(){if(!hArmed){hArmed=true;hr.textContent="Clear every game score? Press again";setTimeout(function(){hArmed=false;hr.textContent="Clear Class Race scores"},5000);return}hArmed=false;hr.textContent="Clear Human vs. Machine scores";api("/api/hvboard/reset",{}).then(function(){say("Human vs. Machine scores cleared and the scoreboard row emptied.")}).catch(function(e){say(e.message)})};
  fetch("/api/scores/ai",{cache:"no-store"}).then(function(r){return r.json()}).then(function(d){names=(d.lodges||[]).map(String)}).catch(function(){}).then(function(){return api("/api/airalog/roster")}).then(paint).catch(function(e){say(e.message)});
 })();
 </script>
