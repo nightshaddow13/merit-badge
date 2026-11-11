@@ -762,7 +762,9 @@ function fixHvm(o){
   if(o.notes&&typeof o.notes==="object") ["better","worse","why"].forEach(function(k){ n.notes[k]=String(o.notes[k]||"").slice(0,400); });
   return n;
 }
-function hvDeck(){ var d=[],add=function(c,k){ for(var i=0;i<k;i++) d.push(c); }; add("red",10); add("blue",5); add("green",5); add("yellow",3); add("pink",1); return shuffle(d); }
+function hvRng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; var t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function hvShuffle(a,r){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)),t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function hvDeck(seed){ var d=[],add=function(c,k){ for(var i=0;i<k;i++) d.push(c); }; add("red",10); add("blue",5); add("green",5); add("yellow",3); add("pink",1); return seed==null?shuffle(d):hvShuffle(d,hvRng(seed)); }
 function buildHvm(){
   state.hvm=fixHvm(state.hvm);
   var card=el("section","card"), h=el("h2",null,"Class game · Human vs. Machine "); var st=el("span","small"); st.id="hvmst"; h.appendChild(st); card.appendChild(h);
@@ -780,13 +782,14 @@ function buildHvm(){
     stopTick(); host.innerHTML=""; status();
     host.appendChild(el("p","hint","A live demo of automation. One scout plays the MACHINE and follows the rules exactly. A teammate plays the HUMAN and sorts by instinct while answering trivia out loud. Play both runs, swap players, and compare speed and mistakes. Squads play on one device, passing it between runs."));
     host.appendChild(rules());
-    var a=el("div","actions"); var bm=el("button","primary","Start MACHINE run"); var bh=el("button","secondary","Start HUMAN run");
-    bm.addEventListener("click",function(){ start("machine"); }); bh.addEventListener("click",function(){ start("human"); }); a.appendChild(bm); a.appendChild(bh); host.appendChild(a);
+    var a=el("div","actions"); var bm=el("button","primary","Start MACHINE run"); var bh=el("button","secondary","Start HUMAN run"); var bv=el("button","secondary","Play a squadmate (2 devices)");
+    bm.addEventListener("click",function(){ start("machine"); }); bh.addEventListener("click",function(){ start("human"); }); bv.addEventListener("click",matchMenu); a.appendChild(bm); a.appendChild(bh); a.appendChild(bv); host.appendChild(a);
     if(state.hvm.machine||state.hvm.human) results();
     else host.appendChild(el("p","small","Tip: a different scout plays each run. The squad is the timer, counter, and judge."));
   }
-  function start(mode){
-    run={mode:mode,deck:hvDeck(),i:0,wrong:0,count:0,trivia:0,answered:false,pink:"",t0:Date.now(),qs:shuffle(HV_TRIVIA)};
+  function start(mode,match){
+    var seed=match?match.seed:null;
+    run={mode:mode,deck:hvDeck(seed),i:0,wrong:0,count:0,trivia:0,answered:false,pink:"",t0:Date.now(),qs:seed==null?shuffle(HV_TRIVIA):hvShuffle(HV_TRIVIA,hvRng(seed+1)),match:match||null};
     draw();
   }
   function bin(choice){
@@ -806,7 +809,8 @@ function buildHvm(){
     stopTick();
     var secs=sec(Date.now()-run.t0);
     state.hvm[run.mode]={sec:secs,wrong:run.wrong,count:run.mode==="machine"?run.count:run.count,trivia:run.trivia,pink:run.pink};
-    save(); run=null; intro(); host.scrollIntoView({behavior:"smooth",block:"start"});
+    save(); var mt=run.match, mine=state.hvm[run.mode]; run=null;
+    if(mt){ submitMatch(mt,mine); } else { intro(); host.scrollIntoView({behavior:"smooth",block:"start"}); }
   }
   function draw(){
     stopTick(); host.innerHTML=""; status();
@@ -836,6 +840,75 @@ function buildHvm(){
     else { ba.disabled=bb.disabled=!run.answered; }
     host.appendChild(a);
     var q2=el("div","actions"); var quit=el("button","secondary","Stop and go back"); quit.addEventListener("click",function(){ run=null; intro(); }); q2.appendChild(quit); host.appendChild(q2);
+  }
+  // ---- head to head: two devices, same deck, same start time --------------------------------
+  var poll=null, off=0;
+  function stopPoll(){ if(poll){ clearInterval(poll); poll=null; } }
+  function mapi(path,body){
+    return fetch("/api/hvmatch"+path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+      .then(function(r){ return r.json().catch(function(){return {};}).then(function(j){ if(!r.ok) throw new Error(j.error||"Request failed ("+r.status+")"); if(j.now) off=j.now-Date.now(); return j; }); });
+  }
+  function leave(){ stopPoll(); run=null; intro(); }
+  function backBtn(label){ var b=el("button","secondary",label||"Leave the match"); b.addEventListener("click",leave); return b; }
+  function matchMenu(){
+    stopPoll(); host.innerHTML=""; ensureId();
+    host.appendChild(el("h3",null,"Play a squadmate"));
+    host.appendChild(el("p","hint","Two Scouts, two devices, the same shuffled deck, starting at the same moment. One plays the MACHINE (rules only) and one plays the HUMAN (instinct and trivia). Make a match and share the 4-character code, or join with your competitor\u2019s code."));
+    var msgEl=el("div","msg"); msgEl.setAttribute("role","status");
+    function needName(){ if(!(state.name||"").trim()){ msgEl.textContent="Type your agent name at the top of the page first (first name and last initial)."; msgEl.className="msg err"; return true; } return false; }
+    var a=el("div","actions"), cm=el("button","primary","Create a match as the MACHINE"), ch=el("button","secondary","Create a match as the HUMAN");
+    function create(role){ if(needName()) return; mapi("/create",{id:state.scoutId,name:state.name,role:role}).then(function(v){ watch(v.code); }).catch(function(e){ msgEl.textContent=e.message; msgEl.className="msg err"; }); }
+    cm.addEventListener("click",function(){ create("machine"); }); ch.addEventListener("click",function(){ create("human"); }); a.appendChild(cm); a.appendChild(ch); host.appendChild(a);
+    var jr=el("div","row"), ji=el("input"); ji.type="text"; ji.maxLength=4; ji.placeholder="CODE"; ji.autocomplete="off"; ji.setAttribute("aria-label","Match code"); ji.style.cssText="text-transform:uppercase;letter-spacing:.3em;text-align:center;max-width:140px";
+    var jb=el("button","secondary","Join"); jb.addEventListener("click",function(){ if(needName()) return; var code=ji.value.toUpperCase().replace(/[^A-Z0-9]/g,""); if(code.length!==4){ msgEl.textContent="The code has 4 characters."; msgEl.className="msg err"; return; }
+      mapi("/join",{code:code,id:state.scoutId,name:state.name}).then(function(v){ watch(v.code); }).catch(function(e){ msgEl.textContent=e.message; msgEl.className="msg err"; }); });
+    jr.appendChild(ji); jr.appendChild(jb); host.appendChild(jr); host.appendChild(msgEl);
+    var b=el("div","actions"); b.appendChild(backBtn("Back")); host.appendChild(b);
+  }
+  // Poll the match and draw whichever screen fits its status.
+  function watch(code){
+    stopPoll(); var started=false, readyHit=false, sent=false;
+    function paint(v){
+      if(started) return;
+      host.innerHTML=""; var you=v.you, opp=v.opponent;
+      host.appendChild(el("h3",null,"Match "+v.code));
+      var big=el("div","hvtile"); big.style.cssText="height:90px;font-size:44px;background:#183446;color:#D4A843"; big.textContent=v.code; host.appendChild(big);
+      if(!opp){ host.appendChild(el("p",null,"You are the "+you.role.toUpperCase()+". Share this code with your competitor and wait for them to join\u2026")); host.appendChild(backBtn()); return; }
+      host.appendChild(el("p",null,"You ("+you.name+") are the "+you.role.toUpperCase()+". Your competitor: "+opp.name+", the "+opp.role.toUpperCase()+"."));
+      if(v.status==="done"||(v.yourResult&&!started)){ stopPoll(); headToHead(v); return; }
+      if(v.status==="go"&&v.startAt){
+        var left=v.startAt-(Date.now()+off), t=el("div","hvtile"); t.style.cssText="height:110px;background:#0F1F2B;color:#fff"; t.textContent=left>0?String(Math.ceil(left/1000)):"GO"; host.appendChild(t);
+        if(left<=0){ started=true; stopPoll(); start(you.role,{seed:v.seed,code:v.code}); }
+        else { stopPoll(); poll=setInterval(function(){ var l=v.startAt-(Date.now()+off); if(l<=0){ stopPoll(); started=true; start(you.role,{seed:v.seed,code:v.code}); } else t.textContent=String(Math.ceil(l/1000)); },100); }
+        return; }
+      if(you.ready){ host.appendChild(el("p",null,"Ready. Waiting for "+opp.name+"\u2026")); }
+      else { var rb=el("button","primary","I\u2019m ready"); rb.addEventListener("click",function(){ rb.disabled=true; mapi("/ready",{code:v.code,id:state.scoutId}).then(paint).catch(function(e){ rb.disabled=false; host.appendChild(el("div","msg err",e.message)); }); }); host.appendChild(rb); }
+      host.appendChild(backBtn());
+    }
+    function tickPoll(){ mapi("?code="+code+"&id="+state.scoutId).then(paint).catch(function(e){ stopPoll(); host.innerHTML=""; host.appendChild(el("div","msg err",e.message)); host.appendChild(backBtn("Back")); }); }
+    tickPoll(); poll=setInterval(tickPoll,1500);
+  }
+  function submitMatch(mt,mine){
+    host.innerHTML=""; host.appendChild(el("p",null,"Run finished. Sending your result\u2026"));
+    mapi("/result",{code:mt.code,id:state.scoutId,result:{sec:mine.sec,wrong:mine.wrong,count:mine.count,trivia:mine.trivia,pink:mine.pink}})
+      .then(function(v){ if(v.opponentResult) headToHead(v); else { host.innerHTML=""; host.appendChild(el("p",null,"Your run is in. Waiting for your competitor to finish\u2026")); host.appendChild(el("p","small","Your time: "+mine.sec.toFixed(1)+" s \u00b7 wrong bins: "+mine.wrong)); stopPoll(); poll=setInterval(function(){ mapi("?code="+mt.code+"&id="+state.scoutId).then(function(x){ if(x.opponentResult){ stopPoll(); headToHead(x); } }).catch(function(){}); },2000); } })
+      .catch(function(e){ host.appendChild(el("div","msg err",e.message+" Your result is saved on this device.")); host.appendChild(backBtn("Back")); });
+  }
+  function headToHead(v){
+    stopPoll(); host.innerHTML=""; var me=v.yourResult, op=v.opponentResult;
+    host.appendChild(el("h3",null,"Head to head"));
+    if(!op){ host.appendChild(el("p",null,"Waiting for "+v.opponent.name+" to finish\u2026")); poll=setInterval(function(){ mapi("?code="+v.code+"&id="+state.scoutId).then(function(x){ if(x.opponentResult) headToHead(x); }).catch(function(){}); },2000); host.appendChild(backBtn("Back")); return; }
+    var tb=el("table"); tb.className="hvt"; var hr=el("tr");
+    ["",v.you.name+" ("+v.you.role+")",v.opponent.name+" ("+v.opponent.role+")"].forEach(function(x){ var th=el("th",null,x); th.scope="col"; hr.appendChild(th); }); tb.appendChild(hr);
+    function row(label,a,b){ var tr=el("tr"); var th=el("th",null,label); th.scope="row"; tr.appendChild(th); tr.appendChild(el("td",null,a)); tr.appendChild(el("td",null,b)); tb.appendChild(tr); }
+    function stat(r,role,k){ if(k==="trivia") return role==="human"?r.trivia+" of 24":"not asked"; if(k==="count") return role==="machine"?String(r.count)+" (real 10)":"-"; return String(r[k]); }
+    row("Seconds to finish",me.sec.toFixed(1),op.sec.toFixed(1)); row("Cards in the wrong bin",String(me.wrong),String(op.wrong));
+    row("Trivia right",stat(me,v.you.role,"trivia"),stat(op,v.opponent.role,"trivia")); row("Red count",stat(me,v.you.role,"count"),stat(op,v.opponent.role,"count")); row("The pink card",me.pink||"-",op.pink||"-");
+    host.appendChild(tb);
+    var meWins=me.wrong<op.wrong||(me.wrong===op.wrong&&me.sec<op.sec), tie=me.wrong===op.wrong&&me.sec===op.sec;
+    host.appendChild(el("p",null,tie?"A tie!":(meWins?"You win":v.opponent.name+" wins")+" (fewest wrong bins, then faster time)."));
+    host.appendChild(el("p","hint","Talk it over: did the Machine\u2019s red count match the real 10? What did each of you do with the pink card? Why do real workflows still need humans?"));
+    var a=el("div","actions"); a.appendChild(backBtn("Done")); host.appendChild(a);
   }
   function results(){
     var m=state.hvm.machine,u=state.hvm.human, box=el("div","hvres");

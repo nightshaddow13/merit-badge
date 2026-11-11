@@ -111,3 +111,7 @@ Only users with the `counselor` or `scorekeeper` role can list or open logs, via
 When Unlock is blocked by unfinished items, the Scout can press "Ask my counselor to waive this page". That marks a pending override (shown on the dashboard). Once granted, the Scout's page checks every 15 seconds, and Unlock skips the missing-items check; the code letter is still required. Overrides live in their own rows, so a Scout's autosave never undoes one. Staff can also waive a page with no request.
 
 Recovery: each Field Log shows a recovery code (the device id in groups of four). Typing it under "Lost your progress? Recover it" calls `GET /api/fieldlog/restore?id=` and loads that Scout's backup on any device. The dashboard shows the same code for each Scout so staff can give it back. The dashboard's "View highlights" button on each level shows that level's scores and answers.
+
+## Human vs. Machine head-to-head
+
+In the Level 3 game, "Play a squadmate (2 devices)" makes a match with a 4-character code (`POST /api/hvmatch/create`, `join`, `ready`, `result`; `GET /api/hvmatch?code=&id=`). Both Scouts get the same shuffled deck from a shared seed and start together after a 5-second server countdown; one plays the Machine and one the Human. Only first name + last initial, role and the run numbers are stored (partition `hvmatch` in the `cup` table), matches expire after 3 hours, and at most 100 are live at once. Nothing to configure in Azure.
