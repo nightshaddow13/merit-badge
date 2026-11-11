@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en" class="ai">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt Duel dashboard: A.I.R.A.</title>
+<meta name="description" content="Enter scores.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/">Cybersecurity</a><a href="/ai/" aria-current="page">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">For counselors</p>
+  <h1>Prompt Duel</h1>
+  <p class="lead">Press <b>Start duel</b> and squads send in their rewritten prompt and the output it produced (one entry per squad). When enough are in, press <b>Reveal &amp; open voting</b>: the board shows the outputs as numbered cards with no squad names and Scouts vote from their Field Logs (never for their own squad, one vote each). Press <b>Show results</b> for the winner, then <b>End duel</b> to bring the scoreboard back. Award the style points on the scorekeeper page.</p>
+  <p class="jump"><a href="/ai/scoreboard/" target="_blank" rel="noopener">Open the scoreboard to project</a> &middot; <a href="/ai/scoreboard/edit.html">Scorekeeper</a> &middot; <a href="/ai/scoreboard/wwyd.html">What Would You Do?</a> &middot; <a href="/ai/scoreboard/logs.html">Field Log dashboard</a></p>
+</div></section>
+<div class="wrap">
+  <p id="msg" class="msg" role="status"></p>
+  <div class="savebar"><button id="bStart" class="btn" type="button">Start duel</button><button id="bRev" class="btn" type="button">Reveal &amp; open voting</button><button id="bRes" class="btn" type="button">Show results</button><button id="bEnd" class="btn ghost" type="button">End duel</button><span id="state" class="pill"></span></div>
+  <p id="sub" class="small"></p>
+  <div id="out"></div>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouting America merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<style>
+.ans{margin:4px 0;padding:6px 10px;border-left:3px solid var(--line);font-size:15px}.ans b{display:block;font-size:13px;color:var(--mut)}
+.scn{border:2px solid var(--ink);border-radius:12px;padding:14px;margin:14px 0;background:var(--white)}.scn h3{margin:0 0 4px}.scn p{margin:0 0 8px;color:var(--mut)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:14px;font-weight:700;background:#E2EAE5;color:#14201B}.pill.ok{background:#BFEBD0;color:#0b3a1f}.pill.warn{background:#FFE08A;color:#4a3300}
+.small{font-size:13px;color:var(--mut)}.tally{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.tally span{padding:3px 10px;border-radius:99px;border:1px solid var(--line);font-size:14px}
+.ent{border:2px solid var(--ink);border-radius:12px;padding:12px;margin:12px 0;background:var(--white)}.ent h3{margin:0 0 6px}.ent pre{white-space:pre-wrap;font:inherit;margin:4px 0 8px}</style>
+<script>
+(function(){
+ var msg=document.getElementById("msg"),out=document.getElementById("out"),st=document.getElementById("state"),sub=document.getElementById("sub"),G=null;
+ function say(t){msg.textContent=t}
+ function E(tag,cls,t){var e=document.createElement(tag);if(cls)e.className=cls;if(t!=null)e.textContent=t;return e}
+ function api(path,body){return fetch(path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||"Request failed ("+r.status+")");return j})})}
+ function ctl(action){ return api("/api/duel/control",{action:action}).then(function(){ say(""); return load(); }).catch(function(e){ say(e.message); }); }
+ var LABEL={off:"No duel running",write:"Collecting entries",vote:"Voting is open",results:"Results shown"};
+ function paint(j){
+  G=j; st.textContent=LABEL[j.phase]; st.className="pill "+(j.phase==="off"?"":j.phase==="vote"?"ok":"warn");
+  document.getElementById("bStart").textContent=j.phase==="off"?"Start duel":"Restart (clears entries and votes)";
+  document.getElementById("bRev").hidden=j.phase!=="write"; document.getElementById("bRes").hidden=j.phase!=="vote"; document.getElementById("bEnd").hidden=j.phase==="off";
+  sub.textContent=j.phase==="off"?"":(j.entries.length+" entr"+(j.entries.length===1?"y":"ies")+" in"+(j.phase!=="write"?" \u00b7 "+j.votes+" vote"+(j.votes===1?"":"s")+" cast":""));
+  out.textContent="";
+  if(j.phase==="off"){ out.appendChild(E("p","muted","Start a duel to begin.")); return; }
+  var order=j.phase==="write"?null:j.order;
+  j.entries.forEach(function(e){
+   var box=E("section","ent"); var idx=order?order.indexOf(e.squad):-1;
+   box.appendChild(E("h3",null,(idx>=0?"#"+(idx+1)+" \u00b7 ":"")+e.squad+" (sent by "+e.by+")"+(idx>=0?" \u00b7 "+j.tally[idx]+" vote"+(j.tally[idx]===1?"":"s"):"")));
+   box.appendChild(E("b",null,"Prompt")); box.appendChild(E("pre",null,e.prompt)); box.appendChild(E("b",null,"Output")); box.appendChild(E("pre",null,e.output)); out.appendChild(box); });
+ }
+ function load(){ return api("/api/duel/all").then(paint).catch(function(e){ say(e.message); }); }
+ document.getElementById("bStart").onclick=function(){ ctl("start"); };
+ document.getElementById("bRev").onclick=function(){ ctl("reveal"); };
+ document.getElementById("bRes").onclick=function(){ ctl("results"); };
+ document.getElementById("bEnd").onclick=function(){ ctl("end"); };
+ load(); setInterval(load,5000);
+})();
+</script>
+</body>
+</html>

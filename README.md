@@ -119,3 +119,15 @@ Everyone plays against everyone. Each Scout sorts the same shuffled 24-card deck
 ## What Would You Do? live class game
 
 Run from `/ai/scoreboard/wwyd.html` (counselor or scorekeeper). **Start game** picks five random scenarios (`POST /api/wwyd/control {action:"start"}`, clears old answers). Scouts' Field Logs poll `GET /api/wwyd?id=` and lock in a stance and reason for the current scenario (`POST /api/wwyd`, only the current scenario and only before the reveal). **Reveal** shows everyone's answers (with names, to Scouts who answered; without names on the public scoreboard page), and **Next scenario** is only allowed after a reveal; Scouts then move on with their own Next button. **End game** returns the normal scoreboard. While a game is active the public scoreboard page (`/ai/scoreboard/`) shows the current scenario over the board, with the revealed answers underneath, polling every 4 seconds. With no game running, the Field Log falls back to solo practice. Table `cup`, partition `wwyd`; no new Azure setup.
+
+## Human Neural Network mystery cards
+
+The Level 6 "Human Neural Network" tab deals mystery cards from `POST /api/hnn/reveal` (Apple/Tomato, Cat/Dog or Soccer ball/Basketball, or a misleading card). A card is assigned the first time a Scout presses Reveal and is never dealt again to anyone until staff reset (`POST /api/hnn/reset`, button on the Field Log dashboard `/ai/scoreboard/logs.html`, which also shows the answer key and what is left). The images are opaque-named SVGs in `ai/hnn/` (168 cards); the answer key (`api/src/lib/hnncards.json`) stays on the server, and `POST /api/hnn/answer` only answers for a card dealt to that Scout. Rebuild or extend the deck with `node tools/gen-hnn-cards.js` (writes the SVGs and the key). Table `cup`, partition `hnn`; no new Azure setup.
+
+## Prompt Duel
+
+Run from `/ai/scoreboard/duel.html`. Squads send one prompt + output each (`POST /api/duel/submit`); **Reveal & open voting** shows them as numbered anonymous cards on the public scoreboard page (which takes over the board) and in each Scout's Field Log, where every Scout gets one vote and cannot vote for their own squad (`POST /api/duel/vote`); **Show results** reveals squads and votes; **End duel** returns the scoreboard. Partition `duel`.
+
+## Using one Field Log on two devices
+
+Enter the same recovery code on the second device (Agent file > "Lost your progress? Recover it"). Each device checks the saved copy every 20 seconds (and when the tab becomes visible again) and quietly pulls it in when it is newer, never while the Scout is typing or has unsent edits. Newer is decided by `rev`, a timestamp bumped only when the content changes; the member ID is never synced.

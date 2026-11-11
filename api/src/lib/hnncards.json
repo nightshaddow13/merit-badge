@@ -1,0 +1,861 @@
+{
+ "sets": [
+  {
+   "a": "Apple",
+   "b": "Tomato",
+   "trick": "a red ball (it is neither!)"
+  },
+  {
+   "a": "Cat",
+   "b": "Dog",
+   "trick": "a fox (it is neither!)"
+  },
+  {
+   "a": "Soccer ball",
+   "b": "Basketball",
+   "trick": "a tennis ball (it is neither!)"
+  }
+ ],
+ "cards": [
+  {
+   "id": "mccbe2deed236",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m95fe2830aac7",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m952605779902",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m1b52d8263fd8",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "mb84dbce54211",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m25a91ff336b0",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "me1617c7a4a18",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m70416917fb27",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "maafb9d3790c2",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "mdb4d5a8c4e11",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "mbf4df68bb689",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m00365e04f278",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "mbff11236b4b1",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "mac9e6e9a42fb",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m22b665cd773c",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m8763e3ed59a3",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m04b8bc359307",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "mfaaeb6db6779",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m3afcb1820d55",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m4a251aad89c1",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m54ae9f4e4738",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "m09ebf49200d3",
+   "set": 0,
+   "role": "A"
+  },
+  {
+   "id": "me7c9f2f5bbd4",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "mdd9dbfbec37f",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m30e4499ad068",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m1b79498d5d5d",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m83f7eb48735b",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m72c49308b0c5",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m1c2d70a17776",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m9ac01274165d",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m66f087961009",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "mf55425b68a5e",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "mcf8ca91953db",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m8922afc66705",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "mb9fb3bd13e5a",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m09c2fa2a7a00",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m64f0d610f0b2",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m6509b5026d48",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m111b8e1ee416",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "mbf48d052b01a",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m7c76ed70346c",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m7b71c2996d2c",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m6129886cdcc5",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "m8da5e42a20b7",
+   "set": 0,
+   "role": "B"
+  },
+  {
+   "id": "mf898f1be5478",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "m92260cc32f5b",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "me860d0b6f9d2",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "m56dc5f8a1027",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "ma3f74b2a5e78",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "mfd3946f9b618",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "m83e63e03d7f6",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "m71db039752cc",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "m2f71a642023c",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "m5ba84f8856f3",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "mb4375ade618d",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "md74ac708f962",
+   "set": 0,
+   "role": "trick"
+  },
+  {
+   "id": "mac639081a388",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m43c6665ee816",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m0b0e7aad60f8",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "mdf52ab74a293",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "ma9af703cadaf",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "mc50a2938576b",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "mc0904059a778",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "mf4b1b1832a54",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m0278ced8768d",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "mde8bde96f41c",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m8311346aabc1",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "mb29346470b46",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m6f98a570279c",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m56e92b378695",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m542515d5c0c9",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m355dec16c9d3",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "mbe823231c552",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "mf28869b05bcd",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "me903c9a5e4d2",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m4bfbeb51391e",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m1b9a6c19a4f6",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "m5948d02e7798",
+   "set": 1,
+   "role": "A"
+  },
+  {
+   "id": "mfe7a719bf872",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "mb732d273498e",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "ma83bf2762737",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "mde100e097938",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m5de2f2d6cab1",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m19573fdad0f7",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m6cf32ddf08eb",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m9774dff57e38",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m4dc0a9335c2c",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "mbed15d66144e",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "mcaaeb89335d2",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m1cab24f75256",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "mce0f8c143d0d",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m0d5c7afa55bf",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m3327b26eb02a",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m033bface39a7",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m344f0c833340",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "mef9da32557a8",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m229b487befc7",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m7137d73a4bc0",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "m83759752cb95",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "mf9e71b2d143b",
+   "set": 1,
+   "role": "B"
+  },
+  {
+   "id": "mfe379ddc90f5",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "m7021cb849e07",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "m7abd1b6ebf1d",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "m8da7c38c3237",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "m02d2cdac9008",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "m4bd3d2e8565c",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "me0e6c6b20b4d",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "mcccb3688b075",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "maf0c1f7ba6c3",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "mab9892db5e06",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "m20bf30f9a9ce",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "m1f4a19eed242",
+   "set": 1,
+   "role": "trick"
+  },
+  {
+   "id": "m0974284a7e96",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m463e88bd7cbb",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m4cfa4e12ad5f",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m12d1c1c95244",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m9f7f54c122a1",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "mbb941f74829b",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m7ea99a2a19af",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m38d87531328f",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m9700020c8833",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m163ac5a87530",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m9f02fa21e43a",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "mb9aed3c2d2a0",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m77c172067eea",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "md23458aeffd4",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "mf949a06abc5d",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m7dcfabc351e7",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "mc958aabada49",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "mdd306fdf08fc",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m2fc332bfe739",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m4b39e0f7204c",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m8cb23db37c38",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "m623dfdb04265",
+   "set": 2,
+   "role": "A"
+  },
+  {
+   "id": "maccae3fb523d",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m64753e8ae965",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "mea10cbc48fa2",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m2627cf2f32e1",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "mede1e90c564a",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m9cf5c9d0a80b",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m1d61da44e412",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m45e6fb059f16",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m42372d6b5c17",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "mdc5317719d1f",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "mbd3cde12d3df",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m2db17127c39d",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m230de98ea9ac",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m92ed4817ef11",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "md5eb0671b36e",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m88b1f9d8dd2d",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "mf0dc3a1f93c8",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "mb9c35b692b24",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "mb0d3f7114929",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m81d139dea111",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m7254140b6db2",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m1b4ee270160e",
+   "set": 2,
+   "role": "B"
+  },
+  {
+   "id": "m8ee72e6ee5b8",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "mfde83885f2dd",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "m2336adc150de",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "m770d34a31262",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "m437ead2f80e3",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "mb6d9f5247e32",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "mae367689ba81",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "m01a7847ba39f",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "mc348fd722277",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "mca9418625404",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "me1f6612da146",
+   "set": 2,
+   "role": "trick"
+  },
+  {
+   "id": "m93e324412c28",
+   "set": 2,
+   "role": "trick"
+  }
+ ]
+}

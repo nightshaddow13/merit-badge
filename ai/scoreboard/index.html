@@ -23,6 +23,7 @@
 </div></section>
 <div class="wrap">
   <section id="wwydLive" class="wl" hidden aria-live="polite"></section>
+  <section id="duelLive" class="wl" hidden aria-live="polite"></section>
   <div id="boardWrap">
   <section id="code" class="codeblock" aria-live="polite"></section>
   <section><div id="board" aria-live="polite"><p class="empty">Loading standings…</p></div></section>
@@ -47,8 +48,9 @@
  var box=document.getElementById("wwydLive"),wrap=document.getElementById("boardWrap");
  function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
  function paint(j){
-  if(!j.active){ box.hidden=true; wrap.hidden=false; return; }
-  box.hidden=false; wrap.hidden=true; box.textContent="";
+  window.__live=window.__live||{}; window.__live.w=!!j.active; wrap.hidden=!!(window.__live.w||window.__live.d);
+  if(!j.active){ box.hidden=true; return; }
+  box.hidden=false; box.textContent="";
   var d=SCN[j.scn]||["Scenario",""];
   box.appendChild(E("div","rd","What Would You Do? \u00b7 Scenario "+(j.round+1)+" of "+j.total));
   box.appendChild(E("h2",null,d[0])); box.appendChild(E("p","pr",d[1]));
@@ -57,6 +59,28 @@
   j.answers.forEach(function(a){ var r=E("div","ans"); r.appendChild(E("b",null,(a.squad||"Squad")+" \u00b7 "+STANCES[a.stance])); r.appendChild(E("span",null,a.why)); box.appendChild(r); });
  }
  function poll(){ fetch("/api/wwyd",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){ if(j) paint(j); }).catch(function(){}); }
+ poll(); setInterval(poll,4000);
+})();
+</script>
+<script>
+(function(){
+ var box=document.getElementById("duelLive"),wrap=document.getElementById("boardWrap");
+ function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+ function paint(j){
+  window.__live=window.__live||{}; window.__live.d=j.phase!=="off"; wrap.hidden=!!(window.__live.w||window.__live.d);
+  if(j.phase==="off"){ box.hidden=true; return; }
+  box.hidden=false; box.textContent="";
+  box.appendChild(E("div","rd","Prompt Duel"));
+  box.appendChild(E("h2",null,"\u201cHelp me with my history project.\u201d"));
+  if(j.phase==="write"){ box.appendChild(E("p","pr","Squads: rewrite the lazy prompt with the five methods, run it, and send your prompt and its output from your Field Log."));
+    box.appendChild(E("p","wait",(j.submitted||0)+" squad"+(j.submitted===1?"":"s")+" ready"+((j.squads&&j.squads.length)?": "+j.squads.join(", "):""))); return; }
+  box.appendChild(E("p","pr",j.phase==="vote"?"Which output is best? Vote from your Field Log. "+(j.votes||0)+" vote"+(j.votes===1?"":"s")+" so far.":"Results"));
+  var top=Math.max.apply(null,[0].concat(j.entries.map(function(e){return e.votes||0})));
+  j.entries.forEach(function(e){ var c=E("div","ans"); var win=j.phase==="results"&&top&&e.votes===top;
+   c.appendChild(E("b",null,"Output #"+e.n+(j.phase==="results"?" \u00b7 "+e.squad+" \u00b7 "+e.votes+" vote"+(e.votes===1?"":"s")+(win?" \u00b7 WINNER":""):"")));
+   var p=E("div",null,"Prompt: "+e.prompt); p.style.fontWeight="700"; c.appendChild(p); var o=E("div",null,e.output); o.style.whiteSpace="pre-wrap"; c.appendChild(o); box.appendChild(c); });
+ }
+ function poll(){ fetch("/api/duel",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){ if(j) paint(j); }).catch(function(){}); }
  poll(); setInterval(poll,4000);
 })();
 </script>

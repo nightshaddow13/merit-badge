@@ -20,12 +20,17 @@
   <p class="crumb">For counselors</p>
   <h1>Field Log dashboard</h1>
   <p class="lead">Every backed-up Field Log, newest first. Open one to see a summary and the answers, waive the required items on a level page, or download it as a .json the Field Log can load.</p>
-  <p class="jump"><a href="/ai/scoreboard/edit.html">Scorekeeper</a> &middot; <a href="/ai/scoreboard/roster.html">Field Log roster</a> &middot; <a href="/ai/scoreboard/wwyd.html">What Would You Do?</a></p>
+  <p class="jump"><a href="/ai/scoreboard/edit.html">Scorekeeper</a> &middot; <a href="/ai/scoreboard/roster.html">Field Log roster</a> &middot; <a href="/ai/scoreboard/wwyd.html">What Would You Do?</a> &middot; <a href="/ai/scoreboard/duel.html">Prompt Duel</a></p>
 </div></section>
 <div class="wrap">
   <p id="msg" class="msg" role="status"></p>
   <div id="list"></div>
   <section id="detail" hidden></section>
+  <section class="lvpanel" id="hnn"><h3>Human Neural Network mystery cards</h3>
+    <p id="hnnSum" class="muted">Loading&hellip;</p>
+    <p class="muted">Each card is dealt to one Scout the first time they press Reveal and is never dealt again until you reset. Reset when a new class starts.</p>
+    <div class="savebar"><button id="hnnReset" class="btn ghost" type="button">Reset all mystery cards</button><button id="hnnKey" class="btn ghost" type="button">Show the answer key</button></div>
+    <div id="hnnGrid" hidden></div></section>
 </div>
 </main>
 <footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
@@ -160,6 +165,13 @@ function ok(v){return String(v||"").trim().length>=3}
   bar.appendChild(dl);bar.appendChild(rm);bar.appendChild(close);detail.appendChild(bar);
   var det=E("details");det.appendChild(E("summary",null,"Everything the Scout has written"));var d=E("div","dump");dump(d,j.state||{},0);det.appendChild(d);detail.appendChild(det);
   detail.scrollIntoView({behavior:"smooth",block:"start"})}
+ function hnnLoad(){return api("/api/hnn/all").then(function(j){
+  document.getElementById("hnnSum").textContent=j.used+" of "+j.total+" cards used. "+j.sets.map(function(s){return s.a+" / "+s.b+": "+s.left+" of "+s.total+" left ("+s.leftTrick+" misleading)"}).join(" \u00b7 ")+".";
+  var g=document.getElementById("hnnGrid");g.textContent="";g.style.cssText="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:10px";
+  j.cards.forEach(function(c){var d=E("div",null,"");d.style.cssText="border:1px solid var(--line);border-radius:8px;padding:4px;font-size:12px;text-align:center;"+(c.used?"opacity:.45":"");var im=E("img");im.src=c.url;im.alt=c.answer;im.loading="lazy";im.style.cssText="width:100%;height:auto;border-radius:6px";d.appendChild(im);d.appendChild(E("div",null,c.answer+(c.used?" \u00b7 used by "+c.by:"")));g.appendChild(d)})}).catch(function(e){document.getElementById("hnnSum").textContent=e.message})}
+ var hr=document.getElementById("hnnReset"),hArm=false;hr.onclick=function(){if(!hArm){hArm=true;hr.textContent="Make every card available again? Press again";setTimeout(function(){hArm=false;hr.textContent="Reset all mystery cards"},5000);return}hArm=false;hr.textContent="Reset all mystery cards";api("/api/hnn/reset",{}).then(function(){say("Mystery cards reset.");return hnnLoad()}).catch(function(e){say(e.message)})};
+ document.getElementById("hnnKey").onclick=function(){var g=document.getElementById("hnnGrid");g.hidden=!g.hidden;this.textContent=g.hidden?"Show the answer key":"Hide the answer key"};
+ hnnLoad();setInterval(function(){if(!document.hidden)hnnLoad()},30000);
  load();timer=setInterval(function(){
   if(document.hidden)return;
   if(detail.hidden){load();return}
