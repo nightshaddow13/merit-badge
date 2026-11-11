@@ -131,3 +131,7 @@ Run from `/ai/scoreboard/duel.html`. Squads send one prompt + output each (`POST
 ## Using one Field Log on two devices
 
 Enter the same recovery code on the second device (Agent file > "Lost your progress? Recover it"). Each device checks the saved copy every 20 seconds (and when the tab becomes visible again) and quietly pulls it in when it is newer, never while the Scout is typing or has unsent edits. Newer is decided by `rev`, a timestamp bumped only when the content changes; the Scouting America member ID (optional, digits only) is part of the backup so it follows the Scout across devices, and staff can see it on the Field Log dashboard.
+
+## Access code gate and certificate
+
+A Scout can only enter the access code for Level N once the scoreboard's "Levels completed" (set on `/ai/scoreboard/edit.html`) is at least N; until then the code box is disabled with a "locked" note, and pressing Unlock re-checks `GET /api/scores/ai`. If the scoreboard can't be reached the code is not accepted. This is a classroom gate: the code check itself still runs in the browser, so a determined Scout can bypass it with developer tools. After the final code (`won`), the Send & save page (and the "MIRAGE SHUT DOWN" card) offers a landscape PDF Certificate of Completion with the Scout's name, squad, date and optional member ID: print it, download it, or email it to themselves. It states that it is not an official Scouting America award.

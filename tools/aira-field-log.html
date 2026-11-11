@@ -183,6 +183,17 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
   <div id="extraPages"></div>
 
   <div class="page" id="p-send" hidden>
+  <section class="card win" id="certCard" hidden>
+    <h2>Certificate of completion</h2>
+    <p class="hint">You cracked every access code and shut MIRAGE down. Print your certificate or send it to yourself.</p>
+    <div class="actions">
+      <button class="primary" id="certPrint">Print certificate</button>
+      <button class="secondary" id="certPdf">Download PDF</button>
+      <button class="secondary" id="certMail">Email to myself</button>
+    </div>
+    <div class="msg" id="certMsg"></div>
+  </section>
+
   <section class="card" id="finish">
     <h2>Send your log to the counselor</h2>
     <ol class="how">
@@ -514,7 +525,7 @@ function renderTop(){ var onL1=curPage()==="L1", hide=!onL1&&topHide;
   $("topinfo").hidden=hide; $("topbar").hidden=onL1;
   $("topwho").textContent=(state.name?"Agent "+state.name:"Agent file")+(state.squad?" \u00b7 "+state.squad:"");
   $("topTog").textContent=hide?"Show agent info \u25bc":"Hide agent info \u25b2"; $("topTog").setAttribute("aria-expanded",hide?"false":"true"); }
-function renderNav(){ renderSub(); renderTop(); for(var q=3;q<=8;q++){ if($("lvl-"+q)) lvRefresh(q); } l2Refresh();
+function renderNav(){ renderSub(); renderTop(); updateGates(); for(var q=3;q<=8;q++){ if($("lvl-"+q)) lvRefresh(q); } l2Refresh();
   var nav=$("nav"); nav.innerHTML="";
   for(var i=1;i<=8;i++){ (function(i){
     var b=document.createElement("button"); var locked=i>state.unlocked;
@@ -529,13 +540,36 @@ function codeBox(n){
   var next = n<8 ? "Level "+(n+1) : "the final transmission";
   d.innerHTML='<h2>'+(n<8?'Enter the access code to unlock '+next:'Enter the full code word')+'</h2>'+
     '<p class="hint">'+(n<8?'Type every code letter you have so far, in order. Your counselor reveals the next letter when the squad clears this level.':'Type the whole MIRAGE access code to shut it down.')+'</p>'+
+    '<p class="hint" id="cgate'+n+'" style="font-weight:700"></p>'+
     '<div class="row"><input type="text" id="ci'+n+'" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" placeholder="'+(n<8?new Array(n+1).join("_ "):"_ _ _ _ _ _ _ _")+'">'+
     '<button class="primary" id="cg'+n+'">'+(n<8?'Unlock':'Shut it down')+'</button></div><div class="msg" id="cm'+n+'"></div>';
   return d;
 }
+// The class scoreboard says how many levels the counselor has opened ("Levels completed"). A code can only be
+// entered once the counselor has enabled it there.
+var boardLevels=null;
+function gateText(n){ return "Locked: your counselor has not enabled this access code on the scoreboard yet. It opens when the whole class clears Level "+n+"."; }
+function updateGates(){
+  for(var n=1;n<=8;n++){ var g=$("cgate"+n), i=$("ci"+n), b=$("cg"+n); if(!g||!i||!b) continue;
+    var done=(n<state.unlocked)||(n===8&&state.won), shut=!done&&boardLevels!==null&&n>boardLevels;
+    g.textContent=shut?gateText(n):""; g.style.display=shut?"":"none"; i.disabled=shut; b.disabled=shut; }
+}
+function refreshGate(){
+  return fetch("/api/scores/ai",{cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error(); return r.json(); })
+    .then(function(d){ boardLevels=Math.max(0,Math.min(8,parseInt(d.levels,10)||0)); return boardLevels; })
+    .catch(function(){ return null; }).then(function(v){ updateGates(); return v; });
+}
 function tryUnlock(n){
   var inp=$("ci"+n), m=$("cm"+n), v=inp.value.replace(/[^a-z]/gi,"").toUpperCase();
   if(n<state.unlocked || (n===8 && state.won)){ m.textContent="Already cleared."; m.className="msg ok"; return; }
+  m.textContent="Checking with the scoreboard\u2026"; m.className="msg";
+  refreshGate().then(function(lv){
+    if(lv===null){ m.textContent="Could not reach the scoreboard to check that this code is open. Check your Wi-Fi and try again."; m.className="msg err"; return; }
+    if(n>lv){ m.textContent=gateText(n); m.className="msg err"; return; }
+    unlockChecked(n,inp,m,v);
+  });
+}
+function unlockChecked(n,inp,m,v){
   var miss=lvMissing(n);
   if(miss.length){
     m.textContent="Checking\u2026"; m.className="msg";
@@ -558,7 +592,39 @@ function checkCode(n,inp,m,v,waived){
   renderNav();
 }
 function renderL8win(){
-  var w=$("win8"); if(!w) return; w.hidden=!state.won;
+  var w=$("win8"); if(w) w.hidden=!state.won; var c=$("certCard"); if(c) c.hidden=!state.won;
+}
+function certMsg(t,cls){ var m=$("certMsg"); m.textContent=t||""; m.className="msg"+(cls?" "+cls:""); }
+function makeCert(){
+  var J=window.jspdf&&window.jspdf.jsPDF; if(!J) throw new Error("PDF tool did not load. Check your Wi-Fi and reload.");
+  var doc=new J({unit:"pt",format:"letter",orientation:"landscape"}), W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), cx=W/2;
+  doc.setFillColor(255,252,243); doc.rect(0,0,W,H,"F");
+  doc.setDrawColor(22,53,43); doc.setLineWidth(6); doc.rect(28,28,W-56,H-56); doc.setDrawColor(242,169,0); doc.setLineWidth(2); doc.rect(42,42,W-84,H-84);
+  doc.setTextColor(22,53,43); doc.setFont("helvetica","bold"); doc.setFontSize(14); doc.text("A.I.R.A.  \u00b7  MISSION: AI READY",cx,92,{align:"center"});
+  doc.setFont("times","bold"); doc.setFontSize(40); doc.text("Certificate of Completion",cx,148,{align:"center"});
+  doc.setFont("helvetica","normal"); doc.setFontSize(14); doc.setTextColor(70,70,70); doc.text("This certifies that",cx,200,{align:"center"});
+  var nm=(state.name||"Agent").trim(); doc.setFont("times","bolditalic"); doc.setFontSize(38); doc.setTextColor(180,120,0); doc.text(nm,cx,252,{align:"center"});
+  doc.setDrawColor(180,120,0); doc.setLineWidth(1); var tw=Math.min(doc.getTextWidth(nm)+60,W-160); doc.line(cx-tw/2,262,cx+tw/2,262);
+  doc.setFont("helvetica","normal"); doc.setFontSize(14); doc.setTextColor(40,40,40);
+  var sq=(state.squad||"").trim(); if(sq) doc.text("Squad: "+sq,cx,288,{align:"center"});
+  var lines=doc.splitTextToSize("has completed all eight missions of Operation MIRAGE in the Artificial Intelligence merit badge class, earned every access code, and shut the system down.",W-220);
+  doc.text(lines,cx,sq?322:306,{align:"center"});
+  var d=new Date(), ds=d.toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});
+  doc.setFontSize(12); doc.text("Completed "+ds+(state.memberId?"   \u00b7   Scouting America member ID "+state.memberId:""),cx,392,{align:"center"});
+  doc.setDrawColor(40,40,40); doc.setLineWidth(.8); doc.line(120,470,320,470); doc.line(W-320,470,W-120,470);
+  doc.setFontSize(11); doc.text("Merit badge counselor",220,486,{align:"center"}); doc.text("Date",W-220,486,{align:"center"});
+  doc.setFontSize(8.5); doc.setTextColor(110,110,110); doc.text("Class completion certificate from the A.I.R.A. Field Log. It is not an official Scouting America award; merit badge requirements are signed off by your counselor.",cx,H-52,{align:"center",maxWidth:W-140});
+  return doc;
+}
+function certFile(){ return "AIRA-Certificate-"+slug(state.name)+".pdf"; }
+function certNeed(){ if(!(state.name||"").trim()){ certMsg("Add your agent name at the top first so it prints on your certificate.","err"); return true; } return false; }
+function certPrint(){ if(certNeed()) return; try{ var doc=makeCert(); doc.autoPrint(); var u=doc.output("bloburl"); var w=window.open(u,"_blank"); if(!w){ doc.save(certFile()); certMsg("Your browser blocked the print window, so the PDF was downloaded. Open it and print.","ok"); } else certMsg("Opening the print window\u2026","ok"); }catch(e){ certMsg(e.message,"err"); } }
+function certPdf(){ if(certNeed()) return; try{ makeCert().save(certFile()); certMsg("Certificate downloaded.","ok"); }catch(e){ certMsg(e.message,"err"); } }
+function certMail(){
+  if(certNeed()) return; var doc; try{ doc=makeCert(); }catch(e){ certMsg(e.message,"err"); return; }
+  var file=new File([doc.output("blob")],certFile(),{type:"application/pdf"}), subject="My A.I.R.A. certificate of completion", body="I completed all eight missions in the A.I.R.A. Field Log.";
+  if(navigator.canShare&&navigator.canShare({files:[file]})){ navigator.share({files:[file],title:subject,text:body}).then(function(){ certMsg("Pick your email app and send it to yourself.","ok"); }).catch(function(e){ if(e&&e.name!=="AbortError"){ doc.save(certFile()); location.href="mailto:?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body+"\n\n(Attach "+certFile()+" that just downloaded.)"); } }); }
+  else { doc.save(certFile()); location.href="mailto:?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body+"\n\n(Attach "+certFile()+" that just downloaded.)"); certMsg("Certificate downloaded. In the email that opened, attach it and send it to yourself.","ok"); }
 }
 var L2SEC=[["life","2a \u00b7 AI in everyday life","Ten examples. Think home, phone, car, games, shopping, and around town.",10],
  ["work","2b \u00b7 AI in the workplace","Five examples of AI helping people do their jobs.",5],
@@ -761,7 +827,7 @@ function buildPages(){
       '<p>Your mission worksheet for this level will appear here. For now, follow along in class.</p>';
     if(n===2){ c.className='card'; c.innerHTML='<h2>Level 2 &middot; AI Basics</h2><p class="hint">Operation: SLEEPER CELL &middot; Requirement 2. Work down the page, Step 1 to Step 4, the same order as the slides. Everything saves on this device.</p>'; pg.appendChild(c); buildL2(pg); }
     else { c.className='card'; c.innerHTML='<h2>Level '+n+' &middot; '+META[n-1][0]+'</h2><p class="hint">Operation: '+META[n-1][1]+' &middot; '+META[n-1][2]+'. Work down the page in order, the same as the slides. Everything saves on this device.</p>'; pg.appendChild(c); buildLv(n,pg); }
-    if(n===8){ var w=document.createElement("section"); w.className="card win"; w.id="win8"; w.hidden=true; w.innerHTML='<h2>MIRAGE SHUT DOWN</h2><p>Code word cracked. Tell your counselor, then head to <b>Send &amp; save</b> to email your log.</p>'; pg.appendChild(w); }
+    if(n===8){ var w=document.createElement("section"); w.className="card win"; w.id="win8"; w.hidden=true; w.innerHTML='<h2>MIRAGE SHUT DOWN</h2><p>Code word cracked. Tell your counselor, then head to <b>Send &amp; save</b> to print your certificate and email your log.</p><div class="actions"><button class="primary" id="goCert" type="button">Get my certificate</button></div>'; pg.appendChild(w); }
     host.appendChild(pg); if(n>=3) lvRefresh(n);
   }
   if(!wwydSec){ var g4=$("p-G4"); wwydSec=g4&&g4.querySelector("section"); if(g4) g4.remove(); }
@@ -1317,6 +1383,9 @@ $("btnSave").addEventListener("click",saveJson);
 $("btnLoad").addEventListener("click",function(){ $("fileIn").click(); });
 $("fileIn").addEventListener("change",function(){ loadJson(this.files && this.files[0]); this.value=""; });
 $("btnPdf").addEventListener("click",download);
+document.addEventListener("click",function(e){ if(e.target&&e.target.id==="goCert"){ show("send"); setTimeout(function(){ var c=$("certCard"); if(c) c.scrollIntoView({behavior:"smooth",block:"start"}); },100); } });
+$("certPrint").addEventListener("click",certPrint); $("certPdf").addEventListener("click",certPdf); $("certMail").addEventListener("click",certMail);
+refreshGate(); setInterval(function(){ if(!document.hidden) refreshGate(); },30000);
 $("btnMail").addEventListener("click",mail);
 $("btnClear").addEventListener("click",clearAll);
 $("topTog").addEventListener("click",function(){ topHide=!topHide; renderTop(); });
