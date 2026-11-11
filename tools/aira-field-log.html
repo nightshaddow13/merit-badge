@@ -83,7 +83,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 .stance button{display:block;width:100%;text-align:left;margin:6px 0}
 .stance button.sel{border-color:var(--gold);background:#3a3a12}
 .tlist{list-style:none;margin:10px 0;padding:0;display:grid;gap:8px}.tcard{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel2)}
-.tcard.drag{outline:2px solid var(--accent,#2f7d5b);opacity:.9}.tcard.ok{border-color:var(--ok)}.tpos{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent,#2f7d5b);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px}
+.tcard.drag{outline:2px solid var(--accent,#2f7d5b);opacity:.9}.tcard.ok,.tcard.right{border-color:var(--ok)}.tcard.right{background:rgba(47,191,113,.22);box-shadow:inset 4px 0 0 var(--ok)}.tcard.right .tpos{background:var(--ok);color:#06210f}.tpos{flex:0 0 28px;height:28px;border-radius:50%;background:var(--accent,#2f7d5b);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px}
 .tcard{flex-wrap:wrap}@media(max-width:520px){.tctl{width:100%;justify-content:flex-end}}.tbody{flex:1 1 160px;min-width:0}.tbody b{display:block}.tdesc{display:block;font-size:13px;opacity:.85}.tctl{display:flex;gap:4px;align-items:center}
 .thandle,.tbtn{min-width:44px;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-size:16px;cursor:pointer}.thandle{cursor:grab;touch-action:none}.tbtn:disabled{opacity:.35;cursor:default}
 .stephead{margin:18px 2px 4px;padding:8px 12px;border-left:4px solid var(--accent,#2f7d5b);background:rgba(47,125,91,.10);border-radius:6px;font-size:14px}.stephead b{display:block;font-size:15px}.stephead span{opacity:.85}
@@ -458,15 +458,15 @@ function buildL2(pg){
   var ad=el("div"); ad.id="aion"; g.appendChild(ad); pg.appendChild(g);
   var s3=el("div","stephead"); s3.innerHTML="<b>Step 3 &middot; AI timeline (required)</b> <span>Requirement 2e. Drag the 8 milestone cards into order, oldest first. Check your order, then each scout writes the timeline down.</span>"; pg.appendChild(s3);
   var t=el("section","card"); var th=el("h2",null,"AI timeline "); var tc=el("span","small"); tc.id="l2c-tl"; th.appendChild(tc); t.appendChild(th);
-  t.appendChild(el("p","hint","Talk it over as a squad. Drag a card by its handle (or use the up and down buttons) so the oldest event is at the top. Press Check order. It tells you how many cards are in the right place, not which ones."));
+  t.appendChild(el("p","hint","Talk it over as a squad. Drag a card by its handle (or use the up and down buttons) so the oldest event is at the top. Press Check order. Cards in the right place turn green. Move the others and check again."));
   if(state.l2.tlOrder.length!==8) state.l2.tlOrder=shuffled8();
-  var list=el("ol","tlist"); t.appendChild(list); var tlMsg=el("div","msg"); tlMsg.setAttribute("role","status");
+  var checked=false, list=el("ol","tlist"); t.appendChild(list); var tlMsg=el("div","msg"); tlMsg.setAttribute("role","status");
   var chk=el("button","primary","Check order"); chk.style.marginTop="8px";
-  function move(from,to){ var o=state.l2.tlOrder; if(to<0||to>7||from===to) return; var c=o.splice(from,1)[0]; o.splice(to,0,c); state.l2.tlDone=false; drawList(); save(); }
+  function move(from,to){ var o=state.l2.tlOrder; if(to<0||to>7||from===to) return; var c=o.splice(from,1)[0]; o.splice(to,0,c); state.l2.tlDone=false; checked=false; tlMsg.textContent=""; tlMsg.className="msg"; drawList(); save(); }
   function drawList(focusIdx){
     list.innerHTML=""; var done=state.l2.tlDone;
     state.l2.tlOrder.forEach(function(ci,pos){
-      var c=TLC[ci], li=el("li","tcard"+(done?" ok":"")); li.dataset.pos=pos;
+      var c=TLC[ci], li=el("li","tcard"+(done?" ok":(checked&&ci===pos?" right":""))); li.dataset.pos=pos;
       var tag=el("span","tpos",String(pos+1)); li.appendChild(tag);
       var body=el("div","tbody"); body.appendChild(el("b",null,done?c[0]+" \u00b7 "+c[1]:c[2])); body.appendChild(el("span","tdesc",c[3])); li.appendChild(body);
       if(!done){
@@ -493,7 +493,7 @@ function buildL2(pg){
   chk.addEventListener("click",function(){
     var right=state.l2.tlOrder.filter(function(ci,pos){ return ci===pos; }).length;
     if(right===8){ state.l2.tlDone=true; state.l2.tl=TLC.map(function(c){ return {year:c[0],text:c[1]}; }); drawList(); drawTl(); l2Refresh(); save(); }
-    else { tlMsg.className="msg err"; tlMsg.textContent=right+" of 8 cards are in the right place. Talk it over and try again."; }
+    else { checked=true; drawList(); tlMsg.className="msg err"; tlMsg.textContent=right+" of 8 cards are in the right place (the green ones). Talk it over and try again."; }
   });
   t.appendChild(chk); t.appendChild(tlMsg);
   t.appendChild(el("h3",null,"Write it down")); t.appendChild(el("p","hint","This fills in when your order is correct. You can also edit it. Each scout needs at least 5 milestones with a year and a few words."));
