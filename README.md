@@ -102,6 +102,10 @@ Squad XP is the **average of every joined Scout (zeros included)**, rounded to w
 
 Abuse limits: 12 Scouts per squad, 40 total. Scorekeepers can see the roster, remove a Scout, or clear everyone at `/ai/scoreboard/roster.html`. Only first name + last initial is stored. Because the endpoint is public, a determined person could still send fake Scouts up to those caps; remove them on the roster page.
 
+Every removal or clear on the roster page asks "are you sure?" first. **Reset everything** (scorekeepers only, type RESET to confirm) calls `POST /api/resetall` and clears every Scout, Class Race score, What Would You Do answer, Prompt Duel entry and vote, Human Neural Network card assignment, and every manual score and the Levels completed number on the AI scoreboard. Squad names stay and the Cybersecurity scoreboard is untouched. A checkbox (on by default) also deletes every backed-up Field Log and waiver.
+
+The red countdown appears only on the two badge doors on the home page (there is no top-of-page bar).
+
 ## Field Log backup, dashboard and overrides
 
 The Field Log backs itself up to `POST /api/fieldlog` (public, keyed by the Scout's private device id) a few seconds after changes, once the Scout has typed a name. Storage is the same `cup` table and `STORAGE_CONNECTION_STRING` as the scoreboards (partitions `fieldlog` and `fieldlog-ovr`); no new Azure setup. Each log is split across entity properties (30K characters each), capped at 150K characters and 80 logs.

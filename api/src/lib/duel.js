@@ -89,7 +89,7 @@ function createDuel(store, rand) {
     if (act === "start") {
       for (const r of await store.list()) if (/^[ev]-/.test(r.rowKey)) await store.remove(r.rowKey);
       await save({ phase: "write", order: [], gid: (m.gid || 0) + 1 });
-    } else if (m.phase === "off") return { status: 409, body: { error: "No prompt duel is running." } };
+    } else if (m.phase === "off" && act !== "reset") return { status: 409, body: { error: "No prompt duel is running." } };
     else if (act === "reveal") {
       if (m.phase !== "write") return { status: 409, body: { error: "Start a duel first." } };
       const slots = (await rows("e-")).map((e) => e.slot);
@@ -100,6 +100,7 @@ function createDuel(store, rand) {
       if (m.phase !== "vote") return { status: 409, body: { error: "Reveal the outputs and let the room vote first." } };
       await save({ phase: "results", order: m.order, gid: m.gid });
     } else if (act === "end") await save({ phase: "off", order: [], gid: m.gid });
+    else if (act === "reset") { for (const r of await store.list()) if (/^[ev]-/.test(r.rowKey)) await store.remove(r.rowKey); await save({ phase: "off", order: [], gid: m.gid }); }
     else return { status: 400, body: { error: "Unknown action." } };
     return { status: 200, body: (await state("", 0, names)).body };
   }

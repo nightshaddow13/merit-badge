@@ -11,6 +11,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
+<style>
+.cfm{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:1000}
+.cfm[hidden]{display:none}
+.cfm .box{background:var(--card,#fff);color:inherit;max-width:30rem;width:100%;padding:20px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,.4)}
+.cfm h2{margin:0 0 8px}
+.cfm .row{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.cfm input[type=text]{width:100%;padding:10px;font:inherit;margin-top:8px}
+.cfm label.chk{display:flex;gap:8px;align-items:flex-start;margin-top:10px}
+</style>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -25,13 +34,29 @@
 <div class="wrap">
   <section><div id="roster"></div>
   <div class="savebar"><button id="reset" class="btn ghost" type="button">Remove all Scouts</button><button id="hvreset" class="btn ghost" type="button">Clear Class Race scores</button><p id="msg" class="msg" role="status"></p></div></section>
+  <section class="danger"><h2>Start over for a new class</h2><p class="lead">Clears everything: every Scout, the Class Race, What Would You Do answers, the Prompt Duel, the Human Neural Network cards, every score and the &ldquo;Levels completed&rdquo; number on the AI scoreboard. Squad names stay. The Cybersecurity scoreboard is not touched.</p><div class="savebar"><button id="resetall" class="btn" type="button">Reset everything&hellip;</button></div></section>
 </div>
 </main>
 <footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<div id="cfm" class="cfm" hidden><div class="box" role="alertdialog" aria-modal="true" aria-labelledby="cfmT"><h2 id="cfmT"></h2><p id="cfmP"></p><label class="chk" id="cfmOpt" hidden><input type="checkbox" id="cfmChk"><span id="cfmChkT"></span></label><div id="cfmType" hidden><label for="cfmIn">Type <b>RESET</b> to confirm</label><input id="cfmIn" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false"></div><div class="row"><button id="cfmNo" class="btn ghost" type="button">Cancel</button><button id="cfmYes" class="btn" type="button"></button></div></div></div>
 <script>
 (function(){
  var box=document.getElementById("roster"),msg=document.getElementById("msg"),rb=document.getElementById("reset"),armed=false,names=[];
  function say(t){msg.textContent=t}
+ var cf=document.getElementById("cfm"),cfIn=document.getElementById("cfmIn"),cfYes=document.getElementById("cfmYes"),cfChk=document.getElementById("cfmChk"),cfDone=null,cfNeed=false,cfBack=null;
+ function cfCheck(){cfYes.disabled=cfNeed&&cfIn.value.trim().toUpperCase()!=="RESET"}
+ function closeAsk(v){if(!cfDone)return;var d=cfDone;cfDone=null;cf.hidden=true;if(cfBack&&cfBack.focus)cfBack.focus();d(v)}
+ function ask(o){return new Promise(function(res){
+  cfBack=document.activeElement;cfDone=res;cfNeed=!!o.type;
+  document.getElementById("cfmT").textContent=o.title;document.getElementById("cfmP").textContent=o.text;
+  document.getElementById("cfmOpt").hidden=!o.option;if(o.option)document.getElementById("cfmChkT").textContent=o.option;cfChk.checked=!!o.optionOn;
+  document.getElementById("cfmType").hidden=!o.type;cfIn.value="";cfYes.textContent=o.ok;cfCheck();cf.hidden=false;
+  (o.type?cfIn:document.getElementById("cfmNo")).focus()})}
+ cfIn.oninput=cfCheck;
+ document.getElementById("cfmNo").onclick=function(){closeAsk(null)};
+ cfYes.onclick=function(){if(!cfYes.disabled)closeAsk({opt:cfChk.checked})};
+ cf.addEventListener("keydown",function(e){if(e.key==="Escape")closeAsk(null);else if(e.key==="Enter"&&e.target===cfIn&&!cfYes.disabled)cfYes.click()});
+ cf.addEventListener("click",function(e){if(e.target===cf)closeAsk(null)});
  function api(path,body){return fetch(path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||"Request failed ("+r.status+")");return j})})}
  function td(t){var c=document.createElement("td");c.textContent=t;return c}
  function paint(j){
@@ -43,12 +68,12 @@
   j.scouts.forEach(function(s){var tr=document.createElement("tr");
    tr.appendChild(td(names[s.slot-1]||("Squad "+s.slot)));tr.appendChild(td(s.name));tr.appendChild(td(s.vault));tr.appendChild(td(s.terms));tr.appendChild(td(s.levels));
    var c=document.createElement("td"),bt=document.createElement("button");bt.type="button";bt.className="btn ghost";bt.textContent="Remove";bt.setAttribute("aria-label","Remove "+s.name);
-   bt.onclick=function(){api("/api/airalog/remove",{id:s.id}).then(function(r){paint(r);say(s.name+" removed.")}).catch(function(e){say(e.message)})};
+   bt.onclick=function(){ask({title:"Remove "+s.name+"?",text:"This takes "+s.name+" off the roster and out of the squad averages. They can join again from their Field Log.",ok:"Remove "+s.name}).then(function(a){if(!a)return;return api("/api/airalog/remove",{id:s.id}).then(function(r){paint(r);say(s.name+" removed.")})}).catch(function(e){say(e.message)})};
    c.appendChild(bt);tr.appendChild(c);b.appendChild(tr)});
   t.appendChild(b);var w=document.createElement("div");w.className="tablewrap";w.appendChild(t);box.appendChild(w)}
- rb.onclick=function(){if(!armed){armed=true;rb.textContent="Remove everyone? Press again";setTimeout(function(){armed=false;rb.textContent="Remove all Scouts"},5000);return}
-  armed=false;rb.textContent="Remove all Scouts";api("/api/airalog/reset",{}).then(function(r){paint(r);say("Roster cleared and the automatic rows emptied.")}).catch(function(e){say(e.message)})};
- var hr=document.getElementById("hvreset"),hArmed=false;hr.onclick=function(){if(!hArmed){hArmed=true;hr.textContent="Clear every game score? Press again";setTimeout(function(){hArmed=false;hr.textContent="Clear Class Race scores"},5000);return}hArmed=false;hr.textContent="Clear Human vs. Machine scores";api("/api/hvboard/reset",{}).then(function(){say("Human vs. Machine scores cleared and the scoreboard row emptied.")}).catch(function(e){say(e.message)})};
+ rb.onclick=function(){ask({title:"Remove all Scouts?",text:"Every Scout leaves the roster and the automatic Field Log rows on the scoreboard go back to empty. This cannot be undone.",ok:"Remove all Scouts"}).then(function(a){if(!a)return;return api("/api/airalog/reset",{}).then(function(r){paint(r);say("Roster cleared and the automatic rows emptied.")})}).catch(function(e){say(e.message)})};
+ var hr=document.getElementById("hvreset");hr.onclick=function(){ask({title:"Clear Class Race scores?",text:"Every Class Race score is deleted and its scoreboard row is emptied. This cannot be undone.",ok:"Clear Class Race scores"}).then(function(a){if(!a)return;return api("/api/hvboard/reset",{}).then(function(){say("Class Race scores cleared and the scoreboard row emptied.")})}).catch(function(e){say(e.message)})};
+ document.getElementById("resetall").onclick=function(){ask({title:"Reset everything?",text:"This deletes every Scout, Class Race score, What Would You Do answer, Prompt Duel entry and vote, Human Neural Network card assignment, every manual score and the Levels completed number on the AI scoreboard. Squad names stay. It cannot be undone.",option:"Also delete every backed-up Field Log and waiver",optionOn:true,type:true,ok:"Reset everything"}).then(function(a){if(!a)return;return api("/api/resetall",{confirm:"RESET",logs:a.opt}).then(function(r){say("Everything was reset."+(a.opt?" "+r.logs+" Field Log"+(r.logs===1?"":"s")+" deleted.":""));return api("/api/airalog/roster").then(paint)})}).catch(function(e){say(e.message)})};
  fetch("/api/scores/ai",{cache:"no-store"}).then(function(r){return r.json()}).then(function(d){names=(d.lodges||[]).map(String)}).catch(function(){}).then(function(){return api("/api/airalog/roster")}).then(paint).catch(function(e){say(e.message)});
 })();
 </script>

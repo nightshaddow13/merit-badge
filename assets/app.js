@@ -92,7 +92,7 @@
   doors.forEach(function (a) { a.addEventListener("click", function (e) { if (seen()) return; e.preventDefault(); show(a.href, a); }); });
 })();
 
-// ---- Class countdowns: a red bar at the top of every page and one on each badge door ------------------------
+// ---- Class countdowns: one red countdown on each badge door (home page) ------------------------
 // Both classes are Saturday Nov 14 2026 (Eastern time, EST = UTC-5) and run three hours.
 (function () {
   var HOUR = 3600000;
@@ -107,10 +107,6 @@
     return (d ? d + "d " : "") + pad(h) + ":" + pad(m) + ":" + pad(x);
   }
   function phase(c, now) { return now < c.start ? "before" : now < c.end ? "live" : "done"; }
-  var bar = document.createElement("div");
-  bar.id = "cdbar"; bar.setAttribute("role", "status"); bar.hidden = true;
-  bar.style.cssText = "background:#C1121F;color:#fff;text-align:center;padding:9px 14px;font-weight:700;font-size:15px;letter-spacing:.01em;";
-  document.body.insertBefore(bar, document.body.firstChild);
   var cds = {};
   CLASSES.forEach(function (c) {
     var door = document.querySelector("a.door." + c.key); if (!door) return;
@@ -119,17 +115,13 @@
     door.insertBefore(e, door.querySelector(".door-go")); cds[c.key] = e;
   });
   function tick() {
-    var now = Date.now(), upcoming = null;
+    var now = Date.now();
     CLASSES.forEach(function (c) {
       var p = phase(c, now), e = cds[c.key];
-      if (p !== "done" && !upcoming) upcoming = { c: c, p: p };
       if (!e) return;
       e.textContent = p === "before" ? "Starts in " + left(c.start - now) + "  ·  " + c.label : p === "live" ? "In session now · ends in " + left(c.end - now) : "See you next time!";
       e.style.background = p === "done" ? "#2F6F4F" : "#C1121F";
     });
-    if (!upcoming) { bar.hidden = true; return; }
-    bar.hidden = false;
-    bar.textContent = upcoming.p === "before" ? upcoming.c.name + " merit badge starts in " + left(upcoming.c.start - now) + "  ·  " + upcoming.c.label : upcoming.c.name + " merit badge is in session now · ends in " + left(upcoming.c.end - now);
   }
   tick(); setInterval(tick, 1000);
 })();

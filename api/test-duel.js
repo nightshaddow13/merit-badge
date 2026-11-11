@@ -46,5 +46,7 @@ const sub = (slot, o) => Object.assign({ id: hex(slot), slot, name: "Sam K", pro
   assert.strictEqual((await d.control({ action: "results" }, names)).status, 200);
   const res = (await d.state("", 0, names)).body; assert.strictEqual(res.phase, "results"); assert.ok(res.entries.every((e) => e.squad && typeof e.votes === "number"));
   assert.strictEqual((await d.control({ action: "bogus" }, names)).status, 400);
+  await d.control({ action: "reset" }, names); assert.strictEqual((await d.staffView(names)).body.entries.length, 0); assert.strictEqual((await d.state("", 0, names)).body.phase, "off");
+  assert.strictEqual((await d.control({ action: "reset" }, names)).status, 200, "reset works when idle");
   console.log("duel tests passed");
 })().catch((e) => { console.error(e); process.exit(1); });
