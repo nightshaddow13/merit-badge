@@ -525,7 +525,7 @@ function buildL2(pg){
     else { checked=true; drawList(); tlMsg.className="msg err"; tlMsg.textContent=right+" of 8 cards are in the right place (the green ones). Talk it over and try again."; }
   });
   t.appendChild(chk); t.appendChild(tlMsg);
-  pg.appendChild(t);
+  drawList(); pg.appendChild(t);
   var s4=el("div","stephead"); s4.innerHTML="<b>Step 4 &middot; Unlock Level 3</b> <span>Finish every required item, then enter the code letter your counselor gives you.</span>"; pg.appendChild(s4);
   l2Refresh();
 }
