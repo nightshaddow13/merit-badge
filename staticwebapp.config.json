@@ -324,6 +324,15 @@
       "headers": {
         "X-Robots-Tag": "noindex"
       }
+    },
+    {
+      "route": "/api/resetall",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
     }
   ],
   "globalHeaders": {
