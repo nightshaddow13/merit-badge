@@ -83,6 +83,57 @@
       }
     },
     {
+      "route": "/api/fieldlog/logs",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/fieldlog/log",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/fieldlog/grant",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/fieldlog/delete",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/ai/scoreboard/logs.html",
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ],
+      "headers": {
+        "X-Robots-Tag": "noindex",
+        "Cache-Control": "private, no-store"
+      }
+    },
+    {
       "route": "/api/forge/round",
       "methods": [
         "POST"

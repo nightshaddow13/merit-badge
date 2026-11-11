@@ -101,3 +101,11 @@ Each Scout's device sends `POST /api/airalog` (public, no sign-in) with a random
 Squad XP is the **average of every joined Scout (zeros included)**, rounded to whole XP, written into three read-only rows: `vocab-vault-avg` (1 XP per correct answer), `terms-avg` (1 XP per term), `levels-avg` (5 XP per level). Tune the XP in `PER` in `api/src/lib/airalog.js` and keep the row maxima in `ai/scoreboard/rows.json` and `api/src/lib/boards.js` equal to cap x PER (`node api/test.js` checks). Boss, style and bonus rows stay counselor-entered, and saving the scoreboard never overwrites the automatic rows.
 
 Abuse limits: 12 Scouts per squad, 40 total. Scorekeepers can see the roster, remove a Scout, or clear everyone at `/ai/scoreboard/roster.html`. Only first name + last initial is stored. Because the endpoint is public, a determined person could still send fake Scouts up to those caps; remove them on the roster page.
+
+## Field Log backup, dashboard and overrides
+
+The Field Log backs itself up to `POST /api/fieldlog` (public, keyed by the Scout's private device id) a few seconds after changes, once the Scout has typed a name. Storage is the same `cup` table and `STORAGE_CONNECTION_STRING` as the scoreboards (partitions `fieldlog` and `fieldlog-ovr`); no new Azure setup. Each log is split across entity properties (30K characters each), capped at 150K characters and 80 logs.
+
+Only users with the `counselor` or `scorekeeper` role can list or open logs, via `/ai/scoreboard/logs.html` (routes are locked in `staticwebapp.config.json`, and the API checks the role too). The dashboard shows a summary per level, lets staff waive or restore a level page's requirements, download a log as a `.json` that the Field Log's Load button accepts, or delete it.
+
+When Unlock is blocked by unfinished items, the Scout can press "Ask my counselor to waive this page". That marks a pending override (shown on the dashboard). Once granted, the Scout's page checks every 15 seconds, and Unlock skips the missing-items check; the code letter is still required. Overrides live in their own rows, so a Scout's autosave never undoes one. Staff can also waive a page with no request.

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en" class="ai">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field Log dashboard: A.I.R.A.</title>
+<meta name="description" content="Enter scores.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/">Cybersecurity</a><a href="/ai/" aria-current="page">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">For counselors</p>
+  <h1>Field Log dashboard</h1>
+  <p class="lead">Every backed-up Field Log, newest first. Open one to see a summary and the answers, waive the required items on a level page, or download it as a .json the Field Log can load.</p>
+  <p class="jump"><a href="/ai/scoreboard/edit.html">Scorekeeper</a> &middot; <a href="/ai/scoreboard/roster.html">Field Log roster</a></p>
+</div></section>
+<div class="wrap">
+  <p id="msg" class="msg" role="status"></p>
+  <div id="list"></div>
+  <section id="detail" hidden></section>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<style>
+.pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:13px;font-weight:700;background:#E2EAE5;color:#14201B}
+.pill.warn{background:#FFE08A;color:#4a3300}.pill.ok{background:#BFEBD0;color:#0b3a1f}
+.lrow{cursor:pointer}.lrow:hover{background:rgba(47,125,91,.10)}
+.lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:12px 0}
+.lvbox{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--white)}
+.lvbox h3{margin:0 0 4px;font-size:16px}.lvbox .btn{margin-top:8px;font-size:15px;padding:8px 12px}
+.dump{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;background:var(--white)}
+.dump div{margin:2px 0;padding-left:12px;border-left:2px solid var(--line)}.dump b{font-weight:700}
+</style>
+<script>
+(function(){
+ var list=document.getElementById("list"),detail=document.getElementById("detail"),msg=document.getElementById("msg"),cur=null,timer;
+ var NAMES=["Key Concepts","AI Basics","Automation","Ethics in AI","Deepfakes","AI Skills","Train Your Own AI","Career Exploration"];
+ function say(t){msg.textContent=t}
+ function api(path,body){return fetch(path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(r.status===401||r.status===403?"Sign in as a counselor or scorekeeper to see this page.":(j.error||"Request failed ("+r.status+")"));return j})})}
+ function E(tag,cls,t){var e=document.createElement(tag);if(cls)e.className=cls;if(t!=null)e.textContent=t;return e}
+ function when(iso){try{return new Date(iso).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}catch(e){return ""}}
+ function pending(l){return Object.keys(l.overrides||{}).filter(function(n){return l.overrides[n].status==="pending"})}
+ function paintList(logs){
+  list.textContent="";
+  if(!logs.length){list.textContent="No Field Logs backed up yet. They appear a few seconds after a Scout enters a name and starts working.";return}
+  var t=E("table","grid"),h=E("thead"),hr=E("tr");["Scout","Squad","Level","Vault","Updated","Needs you"].forEach(function(x){var th=E("th",null,x);th.scope="col";hr.appendChild(th)});h.appendChild(hr);t.appendChild(h);
+  var b=E("tbody");
+  logs.forEach(function(l){var tr=E("tr","lrow");tr.tabIndex=0;var s=l.summary||{};
+   var lvl=s.won?"MIRAGE shut down":"Level "+(s.unlocked||1);
+   [l.name||"(no name)",l.squad||"-",lvl,s.vault==null?"-":s.vault+" / 10",when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
+   var td=E("td");var p=pending(l);if(p.length)td.appendChild(E("span","pill warn","Override: level "+p.join(", ")));tr.appendChild(td);
+   function open(){openLog(l.id)}tr.addEventListener("click",open);tr.addEventListener("keydown",function(e){if(e.key==="Enter")open()});b.appendChild(tr)});
+  t.appendChild(b);var w=E("div","tablewrap");w.appendChild(t);list.appendChild(w)}
+ function load(){return api("/api/fieldlog/logs").then(function(j){paintList(j.logs)}).catch(function(e){say(e.message)})}
+ function dump(parent,v,depth){
+  if(v===null||v===undefined||v==="")return;
+  if(Array.isArray(v)){v.forEach(function(x,i){if(x&&typeof x==="object"){var d=E("div");d.appendChild(E("b",null,"#"+(i+1)));parent.appendChild(d);dump(d,x,depth+1)}else if(x!==""&&x!==null){var d2=E("div",null,(i+1)+". "+x);parent.appendChild(d2)}});return}
+  if(typeof v==="object"){Object.keys(v).forEach(function(k){var x=v[k];if(x===null||x===""||(Array.isArray(x)&&!x.length))return;var d=E("div");if(typeof x==="object"){d.appendChild(E("b",null,k));parent.appendChild(d);dump(d,x,depth+1)}else{d.appendChild(E("b",null,k+": "));d.appendChild(document.createTextNode(String(x)));parent.appendChild(d)}});return}
+  parent.appendChild(E("div",null,String(v)))}
+ function download(m,st){
+  var data=Object.assign({app:"aira-field-log",version:1,saved:m.updated},st);
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="AIRA-Field-Log-"+(m.name||"scout").replace(/[^A-Za-z0-9]+/g,"-")+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
+ function openLog(id){
+  api("/api/fieldlog/log?id="+id).then(function(j){cur=id;renderDetail(j)}).catch(function(e){say(e.message)})}
+ function renderDetail(j){
+  var m=j.meta,s=m.summary||{},ov=j.overrides||{};
+  detail.hidden=false;detail.textContent="";
+  detail.appendChild(E("h2",null,(m.name||"(no name)")+(m.squad?" · "+m.squad:"")));
+  detail.appendChild(E("p",null,"Last saved "+when(m.updated)+". "+(s.won?"MIRAGE shut down.":"Unlocked up to level "+(s.unlocked||1)+" of 8.")+" Vocab Vault best: "+(s.vault==null?"not taken":s.vault+" / 10")+". AI or Not best: "+(s.aiOrNot==null?"not played":s.aiOrNot+" / 10")+"."));
+  var g=E("div","lvgrid");
+  for(var n=1;n<=8;n++)(function(n){
+   var box=E("div","lvbox"),lv=(s.levels||{})[n],o=ov[n];
+   box.appendChild(E("h3",null,"Level "+n+" · "+NAMES[n-1]));
+   box.appendChild(E("div",null,lv?lv[0]+" of "+lv[1]+" items done":"No data yet"));
+   if(n<(s.unlocked||1)||(n===8&&s.won))box.appendChild(E("span","pill ok","Cleared"));
+   if(o&&o.status==="pending"){box.appendChild(E("span","pill warn","Override requested "+when(o.requestedAt)));if(o.missing&&o.missing.length)box.appendChild(E("div","small","Missing: "+o.missing.join("; ")))}
+   if(o&&o.status==="granted")box.appendChild(E("span","pill ok","Requirements waived"));
+   var bt=E("button","btn"+(o&&o.status==="granted"?" ghost":""),o&&o.status==="granted"?"Restore requirements":"Waive requirements");bt.type="button";
+   bt.onclick=function(){bt.disabled=true;api("/api/fieldlog/grant",{id:cur,level:n,granted:!(o&&o.status==="granted")}).then(function(){say("Level "+n+(o&&o.status==="granted"?" requirements restored.":" requirements waived. The Scout can now enter the code letter.")+"");return openLog(cur)}).then(load).catch(function(e){say(e.message);bt.disabled=false})};
+   box.appendChild(bt);g.appendChild(box)})(n);
+  detail.appendChild(g);
+  var bar=E("div","savebar"),dl=E("button","btn ghost","Download as .json (loads in the Field Log)"),rm=E("button","btn ghost","Delete this log"),close=E("button","btn ghost","Close");
+  dl.type=rm.type=close.type="button";dl.onclick=function(){download(m,j.state||{})};close.onclick=function(){detail.hidden=true;cur=null};
+  var armed=false;rm.onclick=function(){if(!armed){armed=true;rm.textContent="Delete for good? Press again";return}api("/api/fieldlog/delete",{id:cur}).then(function(){detail.hidden=true;cur=null;say("Deleted.");return load()}).catch(function(e){say(e.message)})};
+  bar.appendChild(dl);bar.appendChild(rm);bar.appendChild(close);detail.appendChild(bar);
+  var det=E("details");det.appendChild(E("summary",null,"Everything the Scout has written"));var d=E("div","dump");dump(d,j.state||{},0);det.appendChild(d);detail.appendChild(det);
+  detail.scrollIntoView({behavior:"smooth",block:"start"})}
+ load();timer=setInterval(function(){if(!document.hidden&&detail.hidden)load()},15000);
+})();
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

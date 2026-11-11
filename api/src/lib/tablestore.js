@@ -58,4 +58,47 @@ function scoreboardAdapter(client, board, emptyData, boardId) {
   };
 }
 
-module.exports = { tableStore, scoreboardAdapter };
+
+
+// Larger records (a whole Field Log). One entity per record: a small `meta` property that list()
+// can read cheaply, plus the full `state` JSON split across data0..dataN properties (each string
+// property holds at most 32K characters). get(k) -> { meta, state }, put(k, { meta, state }),
+// list() -> [{ rowKey, data: { meta } }] (state is NOT fetched), remove(k).
+const CHUNK = 30000;
+function bigStore(client, partition) {
+  return {
+    async get(rowKey) {
+      try {
+        const e = await client.getEntity(partition, rowKey);
+        let json = "";
+        for (let i = 0; i < (e.parts || 0); i++) json += e["data" + i] || "";
+        return { meta: JSON.parse(e.meta), state: json ? JSON.parse(json) : null };
+      } catch (e) {
+        if (e.statusCode === 404) return null;
+        throw e;
+      }
+    },
+    async put(rowKey, obj) {
+      const json = JSON.stringify(obj.state);
+      const ent = { partitionKey: partition, rowKey, meta: JSON.stringify(obj.meta), parts: Math.ceil(json.length / CHUNK) };
+      for (let i = 0; i < ent.parts; i++) ent["data" + i] = json.slice(i * CHUNK, (i + 1) * CHUNK);
+      await client.createTable();
+      await client.upsertEntity(ent, "Replace");
+    },
+    async list() {
+      const rows = [];
+      try {
+        for await (const e of client.listEntities({ queryOptions: { filter: "PartitionKey eq '" + partition + "'", select: ["RowKey", "meta"] } })) {
+          rows.push({ rowKey: e.rowKey, data: { meta: JSON.parse(e.meta) } });
+        }
+      } catch (e) {
+        if (e.statusCode !== 404) throw e;
+      }
+      return rows;
+    },
+    async remove(rowKey) {
+      try { await client.deleteEntity(partition, rowKey); } catch (e) { if (e.statusCode !== 404) throw e; }
+    },
+  };
+}
+module.exports = { tableStore, scoreboardAdapter, bigStore };

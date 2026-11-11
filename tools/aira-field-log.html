@@ -111,7 +111,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
     </div>
     <p class="hint" id="squadNote" role="status"></p>
     <p class="hint" id="ptsNote" role="status"></p>
-    <div class="safe"><b>Saved on this device only.</b> Your answers stay in this browser until you download the PDF and send it. You can also save them to a file and load them back. Counselor email: xgoss@live.com</div>
+    <div class="safe"><b>Saved on this device, with a backup for your counselor.</b> Your answers stay in this browser. A copy (your name, squad and answers) is also kept for your counselor so he can help if you get stuck. Download the PDF to send your log, or save to a file and load it back. Counselor email: xgoss@live.com</div>
   </section>
 
   <section class="card" id="toolsCard">
@@ -284,7 +284,7 @@ var saveTimer;
 function save(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(function(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }, 250);
-  scheduleSync();
+  scheduleSync(); scheduleLog();
 }
 
 // ---- Squad dropdown and squad points -------------------------------------------------
@@ -316,6 +316,49 @@ function loadSquads(){
     .then(function(d){ squads=(d.lodges||[]).slice(0,4).map(function(x){ return String(x||"").trim(); }); })
     .catch(function(){ squads=[]; })
     .then(function(){ renderSquads(); clearTimeout(squadTimer); if(!squads.some(Boolean)) squadTimer=setTimeout(loadSquads,20000); scheduleSync(); });
+}
+// ---- Backup to the class storage and counselor page overrides ---------------------------------
+// A copy of this Field Log is saved for the counselor (name, squad and answers). Only the counselor
+// and scorekeepers can open it. If Unlock is blocked by unfinished items, the Scout can ask for an override.
+var logTimer, lastLogSig="", logBusy=false, ovrTimer;
+function summary(){
+  var lv={}; lv[1]=[pointsNow().terms,LEVELS[0].items.length]; lv[2]=l2Count(); Object.keys(LV).forEach(function(k){ if(+k!==2) lv[k]=lvCount(+k); });
+  return {unlocked:state.unlocked,won:state.won,vault:state.vault&&Number.isInteger(state.vault.best)?state.vault.best:null,aiOrNot:state.games&&state.games.ai&&Number.isInteger(state.games.ai.best)?state.games.ai.best:null,levels:lv};
+}
+function scheduleLog(){ clearTimeout(logTimer); logTimer=setTimeout(function(){ backupLog(); },5000); }
+function backupLog(){
+  if(logBusy){ scheduleLog(); return Promise.resolve(false); }
+  if(!(state.name||"").trim()) return Promise.resolve(false);
+  ensureId();
+  var snap=snapshot(); delete snap.saved;
+  var body={id:state.scoutId,name:state.name,squad:state.squad,squadSlot:state.squadSlot,summary:summary(),state:snap}, sig=JSON.stringify(body);
+  if(sig===lastLogSig) return Promise.resolve(true);
+  logBusy=true;
+  return fetch("/api/fieldlog",{method:"POST",headers:{"Content-Type":"application/json"},body:sig})
+    .then(function(r){ if(!r.ok) throw new Error(); lastLogSig=sig; return true; })
+    .catch(function(){ logTimer=setTimeout(backupLog,30000); return false; })
+    .then(function(ok){ logBusy=false; return ok; });
+}
+function ovrStatus(){
+  return fetch("/api/fieldlog/override?id="+encodeURIComponent(state.scoutId),{cache:"no-store"}).then(function(r){ return r.ok?r.json():{granted:[],pending:[]}; }).catch(function(){ return {granted:[],pending:[]}; });
+}
+function pollOverride(n,m,btn){
+  clearInterval(ovrTimer);
+  ovrTimer=setInterval(function(){ ovrStatus().then(function(j){ if(j.granted.indexOf(n)>=0){ clearInterval(ovrTimer); m.textContent="Your counselor waived this page. Press Unlock again."; m.className="msg ok"; if(btn) btn.remove(); } }); },15000);
+}
+function askOverride(n,m,miss,box){
+  var old=box.querySelector(".ovrask"); if(old) old.remove();
+  var b=document.createElement("button"); b.type="button"; b.className="secondary ovrask"; b.style.marginTop="8px"; b.textContent="Ask my counselor to waive this page";
+  b.addEventListener("click",function(){
+    if(!(state.name||"").trim()){ m.textContent="Type your agent name at the top first, so your counselor knows who you are."; m.className="msg err"; return; }
+    b.disabled=true; m.textContent="Sending your request\u2026"; m.className="msg";
+    backupLog().then(function(){ return fetch("/api/fieldlog/override",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.scoutId,level:n,missing:miss})}); })
+      .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error||"Could not send."); return j; }); })
+      .then(function(j){ if(j.granted.indexOf(n)>=0){ m.textContent="Your counselor already waived this page. Press Unlock again."; m.className="msg ok"; b.remove(); }
+        else { m.textContent="Request sent. Your counselor will see it on his dashboard. This page checks for his answer every 15 seconds. You can keep working."; m.className="msg ok"; b.textContent="Request sent"; pollOverride(n,m,b); } })
+      .catch(function(e){ m.textContent=e.message; m.className="msg err"; b.disabled=false; });
+  });
+  box.appendChild(b);
 }
 function pointsNow(){
   var n=LEVELS[0].items.length, t=0; for(var i=0;i<n;i++) if(isDone(0,i)) t++;
@@ -421,10 +464,22 @@ function codeBox(n){
 function tryUnlock(n){
   var inp=$("ci"+n), m=$("cm"+n), v=inp.value.replace(/[^a-z]/gi,"").toUpperCase();
   if(n<state.unlocked || (n===8 && state.won)){ m.textContent="Already cleared."; m.className="msg ok"; return; }
-  var miss=lvMissing(n); if(miss.length){ m.textContent="Finish the required items first: "+miss.join(", ")+"."; m.className="msg err"; return; }
+  var miss=lvMissing(n);
+  if(miss.length){
+    m.textContent="Checking\u2026"; m.className="msg";
+    ovrStatus().then(function(j){
+      if(j.granted.indexOf(n)>=0) checkCode(n,inp,m,v,true);
+      else { m.textContent="Finish the required items first: "+miss.join(", ")+". Stuck? Ask your counselor to waive this page."; m.className="msg err"; askOverride(n,m,miss,m.parentNode); }
+    });
+    return;
+  }
+  checkCode(n,inp,m,v,false);
+}
+function checkCode(n,inp,m,v,waived){
   if((hash("aira:"+v)===HASHES[n-1] && v.length===n) || (n<8 && v.length===1 && hash("aira1:"+v)===SINGLES[n-1])){
-    if(n<8){ state.unlocked=n+1; save(); m.textContent="ACCESS GRANTED"; m.className="msg ok"; setTimeout(function(){ show("L"+(n+1)); },700); }
-    else { state.won=true; save(); m.textContent="ACCESS GRANTED"; m.className="msg ok"; renderL8win(); }
+    var note=waived?" (counselor override)":"";
+    if(n<8){ state.unlocked=n+1; save(); m.textContent="ACCESS GRANTED"+note; m.className="msg ok"; setTimeout(function(){ show("L"+(n+1)); },700); }
+    else { state.won=true; save(); m.textContent="ACCESS GRANTED"+note; m.className="msg ok"; renderL8win(); }
   } else {
     m.textContent="ACCESS DENIED. Type the code letters you have so far, in order (for example V then VE)."; m.className="msg err"; inp.classList.remove("shake"); void inp.offsetWidth; inp.classList.add("shake");
   }
@@ -806,9 +861,10 @@ function fallback(doc,subject,body){
   location.href="mailto:"+COUNSELOR_EMAIL+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body+"\n\n(Attach the PDF "+filename()+" that just downloaded.)");
   msg("PDF downloaded. In the email that opened, attach "+filename()+" and send.","ok");
 }
+function snapshot(){ return {app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,matched:state.matched,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,l2:state.l2,lv:state.lv}; }
 function saveJson(){
   if(needName()) return;
-  var data={app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,matched:state.matched,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,l2:state.l2,lv:state.lv};
+  var data=snapshot();
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="AIRA-Field-Log-"+slug(state.name)+".json";
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
