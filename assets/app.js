@@ -59,3 +59,35 @@
     })
     .catch(function () { box.remove(); });
 })();
+
+// First time a Scout opens a badge from the home page: a scary-looking (but harmless) training alert.
+// Shown once per device. If storage is blocked it just shows each time.
+(function () {
+  var doors = document.querySelectorAll("a.door");
+  if (!doors.length) return;
+  var KEY = "mbfk_link_alert_seen";
+  function seen() { try { return localStorage.getItem(KEY) === "1"; } catch (e) { return false; } }
+  function mark() { try { localStorage.setItem(KEY, "1"); } catch (e) {} }
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function show(href, opener) {
+    var wrap = document.createElement("div"); wrap.className = "hack"; wrap.setAttribute("role", "alertdialog"); wrap.setAttribute("aria-modal", "true"); wrap.setAttribute("aria-labelledby", "hack-t"); wrap.setAttribute("aria-describedby", "hack-d");
+    wrap.innerHTML = '<div class="hack-box"><h2 class="hack-title" id="hack-t">\u26A0 SYSTEM COMPROMISED \u26A0</h2>' +
+      '<div class="hack-log" aria-hidden="true"></div>' +
+      '<div class="hack-msg" id="hack-d"><p class="hack-step"><b>Just kidding. That was a training alert.</b> Real hackers use scary pop-ups just like this one to scare you into clicking fast.</p>' +
+      '<p class="hack-step"><b>Never click random links on the internet.</b> That includes texts, emails, ads, and pop-ups, even if they say your device is in danger or you won a prize. Check who sent it, read the web address, and ask a trusted adult if you are not sure.</p>' +
+      '<div class="hack-safe hack-step">\u2714 <b>This link is safe.</b> You are on badge.goss.quest, run by your counselor. You may continue.</div></div>' +
+      '<button type="button" class="hack-btn hack-step">I understand. Continue \u2192</button></div>';
+    document.body.appendChild(wrap);
+    var log = wrap.querySelector(".hack-log"), steps = wrap.querySelectorAll(".hack-step"), btn = wrap.querySelector(".hack-btn");
+    var lines = ["> scanning device...", "> 3 threats found!!", "> uploading your files... 100%", "> ...", "> just kidding."];
+    function reveal() { steps.forEach(function (s, k) { setTimeout(function () { s.classList.add("on"); }, reduce ? 0 : k * 450); }); }
+    if (reduce) { log.textContent = lines.join("\n"); reveal(); }
+    else { lines.forEach(function (l, k) { setTimeout(function () { var d = document.createElement("div"); d.textContent = l; log.appendChild(d); }, k * 450); }); setTimeout(reveal, lines.length * 450); }
+    btn.focus();
+    function close(go) { document.removeEventListener("keydown", key); wrap.remove(); if (go) { mark(); location.href = href; } else if (opener) opener.focus(); }
+    function key(e) { if (e.key === "Escape") close(false); else if (e.key === "Tab") { e.preventDefault(); btn.focus(); } }
+    document.addEventListener("keydown", key);
+    btn.addEventListener("click", function () { close(true); });
+  }
+  doors.forEach(function (a) { a.addEventListener("click", function (e) { if (seen()) return; e.preventDefault(); show(a.href, a); }); });
+})();

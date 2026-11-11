@@ -192,3 +192,19 @@ button.btn:disabled{opacity:.6;cursor:wait}
 .hunt .mailtext{white-space:pre-wrap;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px;font:15px/1.4 ui-monospace,Consolas,monospace}
 
 .hunt .resetrow{margin:8px 0 0}
+
+/* First-click "hacked" training alert */
+.hack{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.82)}
+.hack[hidden]{display:none}
+.hack-box{width:min(560px,100%);max-height:92vh;overflow:auto;background:#0b0505;color:#ffd9d9;border:3px solid #ff2b3d;border-radius:6px;padding:20px;font:15px/1.5 Consolas,"Courier New",monospace;box-shadow:0 0 40px rgba(255,43,61,.55),inset 0 0 30px rgba(255,43,61,.15);position:relative}
+.hack-box::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 3px)}
+.hack-title{margin:0 0 10px;font-size:clamp(20px,5vw,28px);color:#ff4a5a;letter-spacing:.05em;text-shadow:2px 0 #00e5ff,-2px 0 #ff2bd6;animation:glitch 2.2s steps(1) infinite}
+@keyframes glitch{0%,90%,100%{text-shadow:2px 0 #00e5ff,-2px 0 #ff2bd6;transform:none}93%{text-shadow:-4px 0 #00e5ff,4px 0 #ff2bd6;transform:translateX(2px)}96%{text-shadow:4px 0 #00e5ff,-4px 0 #ff2bd6;transform:translateX(-2px)}}
+.hack-log{margin:0 0 10px;color:#ff8c96;font-size:13px;min-height:4.2em}
+.hack-log div{white-space:pre-wrap}
+.hack-msg p{margin:0 0 10px}
+.hack-safe{margin:12px 0;padding:10px 12px;border:2px solid #34e08a;border-radius:6px;color:#bfffd9;background:rgba(52,224,138,.1)}
+.hack-btn{width:100%;font:800 17px Consolas,monospace;padding:14px;border:0;border-radius:6px;background:#34e08a;color:#04210f;cursor:pointer;min-height:48px}
+.hack-btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.hack-step{opacity:0;transition:opacity .5s}.hack-step.on{opacity:1}
+@media (prefers-reduced-motion:reduce){.hack-title{animation:none}.hack-step{opacity:1;transition:none}}

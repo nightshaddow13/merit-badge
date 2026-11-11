@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reporting for duty: A.I.R.A.</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/intro.css">
+</head>
+<body class="intro ai">
+<canvas id="bg" aria-hidden="true"></canvas><div class="scan" aria-hidden="true"></div>
+<main class="stage">
+<p class="kicker">Merit badge</p>
+<h1>A.I.R.A. Recon Agency</h1>
+<svg class="art" id="art" viewBox="0 0 200 200" role="img" aria-label="A radar scanning for signals"><defs><linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3CD7FF" stop-opacity="0"/><stop offset="1" stop-color="#3CD7FF" stop-opacity=".75"/></linearGradient></defs>
+<g fill="none" stroke="#3CD7FF" stroke-opacity=".6" stroke-width="1.5"><circle cx="100" cy="100" r="92"/><circle cx="100" cy="100" r="62"/><circle cx="100" cy="100" r="32"/><path d="M100 8V192M8 100H192"/></g>
+<path class="sweep" d="M100 100 L192 100 A92 92 0 0 0 100 8 Z" fill="url(#sw)" transform="rotate(0 100 100)"/>
+<g fill="#7CFFB0"><circle class="blip" cx="140" cy="60" r="5"/><circle class="blip" cx="64" cy="128" r="5"/><circle class="blip" cx="128" cy="146" r="5"/></g></svg>
+<div class="term" id="term" role="log" aria-label="Briefing"></div>
+<a class="go" id="go" href="/ai/">Report for duty</a>
+<a class="skip" id="skip" href="/ai/">Skip intro</a>
+</main>
+<script type="application/json" id="lines">[{"t": "> A.I.R.A. // ARTIFICIAL INTELLIGENCE RECON AGENCY"}, {"t": "> incoming transmission... source: MIRAGE (unverified)"}, {"t": "> mission: learn how AI works, test what it claims, and shut MIRAGE down"}, {"t": "> field log online. Your squad is waiting."}, {"t": "> BRIEFING COMPLETE. Report for duty, agent.", "ok": true, "pause": 400}]</script>
+<script src="/assets/intro.js"></script>
+</body>
+</html>
