@@ -160,7 +160,14 @@ function ok(v){return String(v||"").trim().length>=3}
   bar.appendChild(dl);bar.appendChild(rm);bar.appendChild(close);detail.appendChild(bar);
   var det=E("details");det.appendChild(E("summary",null,"Everything the Scout has written"));var d=E("div","dump");dump(d,j.state||{},0);det.appendChild(d);detail.appendChild(det);
   detail.scrollIntoView({behavior:"smooth",block:"start"})}
- load();timer=setInterval(function(){if(!document.hidden&&detail.hidden)load()},15000);
+ load();timer=setInterval(function(){
+  if(document.hidden)return;
+  if(detail.hidden){load();return}
+  // a log is open: refresh it in place, keeping the scroll position and the selected level highlights
+  var id=cur,y=window.scrollY; if(!id)return;
+  api("/api/fieldlog/log?id="+id).then(function(j){if(cur!==id)return;renderDetail(j);window.scrollTo(0,y)}).catch(function(){});
+  load();
+},15000);
 })();
 </script>
 <script src="/assets/app.js" defer></script>

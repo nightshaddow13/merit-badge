@@ -32,8 +32,7 @@ function createWwyd(store, rand) {
     const name = txt(body.name, 30);
     if (!NAME_RE.test(name)) return { status: 400, body: { error: "Use your first name and last initial only (like Sam K)." } };
     if (!isInt(body.scn, 0, SCENARIOS - 1) || !isInt(body.stance, 0, STANCES - 1)) return { status: 400, body: { error: "Those numbers are out of range." } };
-    const why = txt(body.why, 400);
-    if (why.length < 3) return { status: 400, body: { error: "Write your reason." } };
+    const why = txt(body.why, 400) || "(no reason given)";
     const g = await game();
     if (!g.active) return { status: 409, body: { error: "No class game is running right now." } };
     if (body.scn !== cur(g)) return { status: 409, body: { error: "The class has moved to a different scenario." } };
