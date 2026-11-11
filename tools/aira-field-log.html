@@ -92,6 +92,10 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 .mrow{margin:6px 0;font-size:14px}.mdone{margin-top:12px}.mdone summary{cursor:pointer;color:var(--ok);font-weight:700}
 @media(max-width:560px){.mgame{grid-template-columns:1fr}}
 .rec{margin:10px 0;padding:8px 12px;border:1px dashed var(--line);border-radius:8px}.rec summary{cursor:pointer;font-weight:700}
+.hvrule{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel2)}.hvrule b{display:block;color:var(--gold)}.hvrule span{font-size:14px}
+.hvtile{height:150px;border-radius:14px;display:grid;place-items:center;font:900 38px/1 Consolas,monospace;letter-spacing:.1em;margin:10px 0;border:3px solid rgba(255,255,255,.5)}
+.hvq{border:1px dashed var(--line);border-radius:10px;padding:10px;margin:8px 0}.hvres{margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
+.hvt{width:100%;border-collapse:collapse;font-size:15px}.hvt th,.hvt td{border-bottom:1px solid var(--line);padding:6px;text-align:left}
 .stephead{margin:18px 2px 4px;padding:8px 12px;border-left:4px solid var(--accent,#2f7d5b);background:rgba(47,125,91,.10);border-radius:6px;font-size:14px}.stephead b{display:block;font-size:15px}.stephead span{opacity:.85}
 </style>
 </head>
@@ -282,7 +286,7 @@ var TOOLS = [
   {label:"Sightengine AI-or-Not (images)", url:"https://sightengine.com/ai-or-not", alt:true}
 ];
 
-var state = { name:"", squad:"", squadSlot:0, scoutId:"", matched:[], answers:{}, unlocked:1, won:false, page:"L1", vault:{best:null,last:null}, games:{ai:{best:null,last:null}}, wwyd:[], l2:null };   // answers["L1|0"] = {def, ex}
+var state = { name:"", squad:"", squadSlot:0, scoutId:"", matched:[], hvm:null, answers:{}, unlocked:1, won:false, page:"L1", vault:{best:null,last:null}, games:{ai:{best:null,last:null}}, wwyd:[], l2:null };   // answers["L1|0"] = {def, ex}
 
 function load(){
   try { var s = JSON.parse(localStorage.getItem(STORE_KEY)||"null"); if(s && typeof s==="object") state = Object.assign(state,s); } catch(e){}
@@ -589,10 +593,12 @@ var FIVE=["Be specific","Give context and a role","Show an example","Set the for
 var LAW=["Trustworthy","Loyal","Helpful","Friendly","Courteous","Kind","Obedient","Cheerful","Thrifty","Brave","Clean","Reverent"];
 var LV={
 3:{secs:[
+ {k:"hvm",t:"hvm"},
  {k:"home",t:"rows",h:"3a \u00b7 Everyday automation",hint:"Ten examples of automation you see every day. Name what starts each one.",n:10,cols:[{k:"v",ph:"Example (like a motion-sensor light)"},{k:"t",ph:"Trigger: what starts it?"}]},
  {k:"work",t:"rows",h:"3b \u00b7 Automation at work",hint:"Five examples of automation helping people at work. Name what starts each one.",n:5,cols:[{k:"v",ph:"Example"},{k:"t",ph:"Trigger: what starts it?"}]},
  {k:"school",t:"rows",h:"3c \u00b7 Automation at school",hint:"Five ways automation can support school or your education. Name what starts each one.",n:5,cols:[{k:"v",ph:"Example"},{k:"t",ph:"Trigger: what starts it?"}]},
- {k:"hist",t:"rows",h:"3e \u00b7 Automation timeline",hint:"Five milestones in automation history, oldest first. Check each date with a second source.",n:5,cols:[{k:"y",ph:"Year",w:"86px",num:1},{k:"v",ph:"What happened?"}]}]},
+ {k:"hist",t:"rows",h:"3e \u00b7 Automation timeline",hint:"Five milestones in automation history, oldest first. Check each date with a second source.",n:5,cols:[{k:"y",ph:"Year",w:"86px",num:1},{k:"v",ph:"What happened?"}]},
+ {k:"boss",t:"form",h:"3f \u00b7 Boss Challenge: design a workflow",hint:"Pick a repetitive Scouting job, like reminders or sign-ups. Then defend your workflow to the room in 30 seconds. Your counselor scores it: full 50 XP if the trigger, three tasks, variable and defense are all clear.",f:[{k:"job",label:"1. The Scouting job (something repetitive)"},{k:"trig",label:"2. The trigger: what event starts it?"},{k:"t1",label:"3. Task 1: what does the machine do first?"},{k:"t2",label:"Task 2"},{k:"t3",label:"Task 3"},{k:"var",label:"4. The variable: what does it keep track of?"},{k:"def",label:"5. Your 30-second defense: why is this a clean workflow?",area:1},{k:"safe",label:"Safeguard: what happens if the trigger fires by mistake, and what would catch it?",area:1}]}]},
 4:{secs:[
  {k:"big",t:"form",h:"4a \u00b7 Ethical concerns",hint:"In a sentence or two each, describe the concern.",f:[{k:"bias",label:"Bias",area:1},{k:"priv",label:"Privacy",area:1},{k:"dec",label:"AI decision-making (who is responsible when it is wrong?)",area:1}]},
  {k:"game",t:"game"},
@@ -614,19 +620,19 @@ var LV={
  {k:"who",t:"form",h:"8b \u00b7 Interview an AI professional",hint:"Write notes from the press conference.",f:[{k:"role",label:"Who you interviewed (job title)"},{k:"day",label:"Daily work",area:1},{k:"chal",label:"Challenges",area:1},{k:"vis",label:"Vision for the field",area:1},{k:"train",label:"Training, education, certification, experience, and costs",area:1}]}]}
 };
 function lvNew(){ var o={}; Object.keys(LV).forEach(function(n){ o[n]={}; LV[n].secs.forEach(function(s){
-  if(s.t==="game"||s.t==="note") return;
+  if(s.t==="game"||s.t==="note"||s.t==="hvm") return;
   if(s.t==="rows") o[n][s.k]=Array.apply(null,Array(s.n)).map(function(){var r={};s.cols.forEach(function(c){r[c.k]="";});return r;});
   else if(s.t==="form"){ var f={}; s.f.forEach(function(x){f[x.k]="";}); o[n][s.k]=f; }
   else o[n][s.k]=s.items.map(function(){return false;}); }); }); return o; }
 function fixLv(raw){
   var o=lvNew(); if(!raw||typeof raw!=="object") return o;
-  Object.keys(LV).forEach(function(n){ var rn=raw[n]; if(!rn||typeof rn!=="object") return; LV[n].secs.forEach(function(s){ if(s.t==="game"||s.t==="note") return; var rs=rn[s.k]; if(rs==null) return;
+  Object.keys(LV).forEach(function(n){ var rn=raw[n]; if(!rn||typeof rn!=="object") return; LV[n].secs.forEach(function(s){ if(s.t==="game"||s.t==="note"||s.t==="hvm") return; var rs=rn[s.k]; if(rs==null) return;
     if(s.t==="rows"&&Array.isArray(rs)) rs.slice(0,s.n).forEach(function(r,i){ s.cols.forEach(function(c){ var v=String((r&&r[c.k])||"").slice(0,200); if(c.sel&&c.sel.indexOf(v)<0) v=""; o[n][s.k][i][c.k]=v; }); });
     else if(s.t==="form"&&typeof rs==="object") s.f.forEach(function(x){ var v=String(rs[x.k]||"").slice(0,500); if(x.sel&&x.sel.indexOf(v)<0) v=""; o[n][s.k][x.k]=v; });
     else if(s.t==="chk"&&Array.isArray(rs)) rs.slice(0,s.items.length).forEach(function(b,i){ o[n][s.k][i]=b===true; });
   }); }); return o; }
 function lvOk(v,sel){ v=String(v||"").trim(); return sel? v.length>0 : v.length>=3; }
-function lvSecCount(n,s){ var d=0,t=0; if(s.t==="game"||s.t==="note") return [0,0]; var v=state.lv[n][s.k];
+function lvSecCount(n,s){ var d=0,t=0; if(s.t==="game"||s.t==="note"||s.t==="hvm") return [0,0]; var v=state.lv[n][s.k];
   if(s.t==="rows"){ t=s.req||s.n; v.forEach(function(r){ if(s.cols.every(function(c){return lvOk(r[c.k],c.sel);})) d++; }); d=Math.min(d,t); }
   else if(s.t==="form"){ t=s.f.length; s.f.forEach(function(x){ if(lvOk(v[x.k],x.sel)) d++; }); }
   else { t=s.items.length; v.forEach(function(b){ if(b) d++; }); }
@@ -653,6 +659,7 @@ function mkField(n,s,kind,obj,key,def,ph){
 function buildLv(n,pg){
   var top=el("div","progress"); top.innerHTML='<div class="pl"><span id="lvl-'+n+'"></span><span id="lvp-'+n+'"></span></div><div class="bar"><i id="lvb-'+n+'"></i></div>'; pg.appendChild(top);
   LV[n].secs.forEach(function(s){
+    if(s.t==="hvm"){ pg.appendChild(buildHvm()); return; }
     if(s.t==="game"){ var wc=el("section","card"); var wh=el("h2",null,"4b \u00b7 What Would You Do? "); var ws=el("span","small"); ws.id="wwydst"; wh.appendChild(ws); wc.appendChild(wh); wc.appendChild(el("p","hint","Five scenarios. Discuss as a squad, pick a stance, and write your reason. Reasoning earns points, not the right answer. When you finish, come back to the Ethics worksheet tab for Steps 3 and 4 and the unlock.")); var wb=el("button","primary","Open the What Would You Do? tab \u2192"); wb.addEventListener("click",function(){ show("G4"); }); wc.appendChild(wb); pg.appendChild(wc); return; }
     if(s.t==="note"){ var nc=el("section","card"); nc.appendChild(el("h2",null,s.h)); if(s.hint) nc.appendChild(el("p","hint",s.hint)); if(s.link){ var la=el("a","primary",s.link[1]+" \u2197"); la.href=s.link[0]; la.target="_blank"; la.rel="noopener noreferrer"; la.style.cssText="display:inline-block;text-decoration:none;margin:2px 0 8px;padding:10px 14px;border-radius:8px;font-weight:700"; nc.appendChild(la); } pg.appendChild(nc); return; }
     var card=el("section","card"), h=el("h2",null,s.h+" "), cnt=el("span","small"); cnt.id="lvc-"+n+"-"+s.k; h.appendChild(cnt); card.appendChild(h);
@@ -742,6 +749,117 @@ function renderAion(){
   h.appendChild(vote); h.appendChild(fb); h.appendChild(more); var a=el("div","actions"); a.appendChild(nx); h.appendChild(a);
   nx.addEventListener("click",function(){ ai.i++; ai.locked=false; renderAion(); });
 }
+
+// ---- Level 3 game: Human vs. Machine ---------------------------------------------------------
+// A digital version of the class relay. The MACHINE follows three rules exactly (Trigger: the card is red.
+// Task: put it in bin A. Variable: add one to the red count). The HUMAN sorts by instinct while answering trivia.
+var HV_TRIVIA=[["What is the Scout motto?", "Be Prepared."], ["How many points are in the Scout Law?", "12."], ["What do you call the knot used to join two ropes of equal size?", "A square knot (reef knot)."], ["What planet is closest to the Sun?", "Mercury."], ["How many sides does a hexagon have?", "6."], ["What gas do plants take in from the air?", "Carbon dioxide."], ["What is 7 times 8?", "56."], ["What is the capital of Florida?", "Tallahassee."], ["What is the largest ocean?", "The Pacific."], ["How many minutes are in two hours?", "120."], ["What do the letters in the word AI stand for?", "Artificial intelligence."], ["What is the freezing point of water in Fahrenheit?", "32 degrees."], ["Name the first two points of the Scout Law.", "Trustworthy and Loyal."], ["How many continents are there?", "7."], ["What is the opposite of north on a compass?", "South."], ["What is 15 plus 27?", "42."], ["What is the hardest natural material?", "Diamond."], ["How many legs does a spider have?", "8."], ["Which direction does the sun rise?", "East."], ["How many players are on a standard soccer team on the field?", "11."], ["What color do you get from mixing blue and yellow?", "Green."], ["How many days are in a leap year?", "366."], ["What do bees make?", "Honey."], ["What is 100 divided by 4?", "25."]];
+var HV_COLORS={red:["#D92D3A","#fff"],blue:["#2F6FE0","#fff"],green:["#25A35A","#fff"],yellow:["#F0CF2B","#2a2300"],pink:["#FF8AD0","#3a0a2a"]};
+function fixHvm(o){
+  var n={machine:null,human:null,notes:{better:"",worse:"",why:""}}; if(!o||typeof o!=="object") return n;
+  function num(v,hi){ v=Number(v); return isFinite(v)?Math.max(0,Math.min(hi,v)):0; }
+  ["machine","human"].forEach(function(k){ var r=o[k]; if(r&&typeof r==="object") n[k]={sec:Math.round(num(r.sec,3600)*10)/10,wrong:Math.round(num(r.wrong,24)),count:Math.round(num(r.count,99)),trivia:Math.round(num(r.trivia,24)),pink:String(r.pink||"").slice(0,60)}; });
+  if(o.notes&&typeof o.notes==="object") ["better","worse","why"].forEach(function(k){ n.notes[k]=String(o.notes[k]||"").slice(0,400); });
+  return n;
+}
+function hvDeck(){ var d=[],add=function(c,k){ for(var i=0;i<k;i++) d.push(c); }; add("red",10); add("blue",5); add("green",5); add("yellow",3); add("pink",1); return shuffle(d); }
+function buildHvm(){
+  state.hvm=fixHvm(state.hvm);
+  var card=el("section","card"), h=el("h2",null,"Class game · Human vs. Machine "); var st=el("span","small"); st.id="hvmst"; h.appendChild(st); card.appendChild(h);
+  var host=el("div"); host.id="hvm"; card.appendChild(host);
+  var run=null, tick=null;
+  function stopTick(){ if(tick){ clearInterval(tick); tick=null; } }
+  function status(){ var m=state.hvm.machine,u=state.hvm.human; st.textContent=(m&&u)?"Both runs done":(m||u)?"One run done":"Not played"; }
+  function sec(t){ return Math.round(t/100)/10; }
+  function rules(){
+    var r=el("div"); r.style.cssText="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:8px 0";
+    [["Trigger","If the card is red"],["Task","Put it in bin A (not red: bin B)"],["Variable","Add one to the red count"]].forEach(function(x){ var b=el("div","hvrule"); b.appendChild(el("b",null,x[0])); b.appendChild(el("span",null,x[1])); r.appendChild(b); });
+    return r;
+  }
+  function intro(){
+    stopTick(); host.innerHTML=""; status();
+    host.appendChild(el("p","hint","A live demo of automation. One scout plays the MACHINE and follows the rules exactly. A teammate plays the HUMAN and sorts by instinct while answering trivia out loud. Play both runs, swap players, and compare speed and mistakes. Squads play on one device, passing it between runs."));
+    host.appendChild(rules());
+    var a=el("div","actions"); var bm=el("button","primary","Start MACHINE run"); var bh=el("button","secondary","Start HUMAN run");
+    bm.addEventListener("click",function(){ start("machine"); }); bh.addEventListener("click",function(){ start("human"); }); a.appendChild(bm); a.appendChild(bh); host.appendChild(a);
+    if(state.hvm.machine||state.hvm.human) results();
+    else host.appendChild(el("p","small","Tip: a different scout plays each run. The squad is the timer, counter, and judge."));
+  }
+  function start(mode){
+    run={mode:mode,deck:hvDeck(),i:0,wrong:0,count:0,trivia:0,answered:false,pink:"",t0:Date.now(),qs:shuffle(HV_TRIVIA)};
+    draw();
+  }
+  function bin(choice){
+    var c=run.deck[run.i], red=c==="red";
+    if(run.mode==="machine"){
+      if(choice==="A"){ if(!red) run.wrong++; run.count++; if(c==="pink") run.pink="Put it in bin A (guessed)"; }
+      else if(choice==="B"){ if(red) run.wrong++; if(c==="pink") run.pink="Bin B (pink is not red, by the rule)"; }
+      else { if(c!=="pink") run.wrong++; else run.pink="Froze: no rule for pink"; }
+    } else {
+      if(choice==="A"){ if(!red&&c!=="pink") run.wrong++; if(c==="pink") run.pink="Put it in bin A (judgment)"; }
+      else { if(red) run.wrong++; if(c==="pink") run.pink="Put it in bin B (judgment)"; }
+    }
+    run.i++; run.answered=false;
+    if(run.i>=24) finish(); else draw();
+  }
+  function finish(){
+    stopTick();
+    var secs=sec(Date.now()-run.t0);
+    state.hvm[run.mode]={sec:secs,wrong:run.wrong,count:run.mode==="machine"?run.count:run.count,trivia:run.trivia,pink:run.pink};
+    save(); run=null; intro(); host.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+  function draw(){
+    stopTick(); host.innerHTML=""; status();
+    var m=run.mode==="machine", c=run.deck[run.i];
+    var top=el("div"); top.style.cssText="display:flex;justify-content:space-between;gap:8px;font-weight:700;margin:4px 0";
+    var l=el("span",null,(m?"MACHINE":"HUMAN")+" · card "+(run.i+1)+" of 24"), t=el("span",null,"0.0 s"); top.appendChild(l); top.appendChild(t); host.appendChild(top);
+    tick=setInterval(function(){ if(!document.body.contains(t)){ stopTick(); return; } t.textContent=sec(Date.now()-run.t0).toFixed(1)+" s"; },100);
+    if(m){ host.appendChild(rules()); }
+    else host.appendChild(el("p","hint","Your only instruction: “Put the red cards in bin A.” Answer each trivia question out loud before you touch the next card. Your squad judges."));
+    var tile=el("div","hvtile"); tile.style.background=HV_COLORS[c][0]; tile.style.color=HV_COLORS[c][1]; tile.textContent=c.toUpperCase(); host.appendChild(tile);
+    if(m){ host.appendChild(el("p","small","Red count so far: "+run.count+". Follow the rules exactly. Do not think. Do not guess.")); }
+    else {
+      var q=run.qs[run.i%run.qs.length], qb=el("div","hvq"); qb.appendChild(el("b",null,"Trivia: "+q[0]));
+      if(!run.answered){
+        var j=el("div","actions"), ans=el("span","small"); ans.style.cssText="display:none;width:100%"; ans.textContent="Answer: "+q[1];
+        var sh=el("button","secondary","Judge: show answer"); sh.addEventListener("click",function(){ ans.style.display="block"; });
+        var ok=el("button","secondary","✔ Got it right"), no=el("button","secondary","✖ Missed it");
+        ok.addEventListener("click",function(){ run.trivia++; run.answered=true; draw(); }); no.addEventListener("click",function(){ run.answered=true; draw(); });
+        j.appendChild(sh); j.appendChild(ok); j.appendChild(no); qb.appendChild(j); qb.appendChild(ans);
+      } else qb.appendChild(el("p","small","Answered. Now sort the card."));
+      host.appendChild(qb);
+    }
+    var a=el("div","actions"), ba=el("button","primary",m?"Bin A (red) + add 1":"Bin A"), bb=el("button","secondary",m?"Bin B (not red)":"Bin B");
+    ba.addEventListener("click",function(){ bin("A"); }); bb.addEventListener("click",function(){ bin("B"); });
+    a.appendChild(ba); a.appendChild(bb);
+    if(m){ var fz=el("button","secondary","No rule for this card (freeze)"); fz.addEventListener("click",function(){ bin("F"); }); a.appendChild(fz); }
+    else { ba.disabled=bb.disabled=!run.answered; }
+    host.appendChild(a);
+    var q2=el("div","actions"); var quit=el("button","secondary","Stop and go back"); quit.addEventListener("click",function(){ run=null; intro(); }); q2.appendChild(quit); host.appendChild(q2);
+  }
+  function results(){
+    var m=state.hvm.machine,u=state.hvm.human, box=el("div","hvres");
+    box.appendChild(el("h3",null,"Results so far"));
+    var tb=el("table"); tb.className="hvt";
+    var hr=el("tr"); ["","Machine","Human"].forEach(function(x){ var th=el("th",null,x); th.scope="col"; hr.appendChild(th); }); tb.appendChild(hr);
+    function row(label,a,b){ var tr=el("tr"); var th=el("th",null,label); th.scope="row"; tr.appendChild(th); tr.appendChild(el("td",null,a)); tr.appendChild(el("td",null,b)); tb.appendChild(tr); }
+    row("Seconds to finish",m?m.sec.toFixed(1):"-",u?u.sec.toFixed(1):"-");
+    row("Cards in the wrong bin",m?String(m.wrong):"-",u?String(u.wrong):"-");
+    row("Trivia right","not asked",u?u.trivia+" of 24":"-");
+    row("Red count (real: 10)",m?String(m.count):"-","not counted");
+    row("The pink card",m?(m.pink||"-"):"-",u?(u.pink||"-"):"-");
+    box.appendChild(tb);
+    if(m&&u){
+      box.appendChild(el("p",null,(m.sec<u.sec?"The Machine was faster by "+(u.sec-m.sec).toFixed(1)+" s. ":"The Human was faster by "+(m.sec-u.sec).toFixed(1)+" s. ")+(m.wrong<u.wrong?"The Machine made fewer mistakes.":m.wrong>u.wrong?"The Human made fewer mistakes.":"Both made the same number of mistakes.")));
+      box.appendChild(el("p","hint","Did the Machine’s red count match the real number of red cards (10)? Where was the Machine better? Where was it worse? Pink is the exception: nobody wrote a rule for it. Why do real workflows still need humans?"));
+    }
+    var nf=[["better","Where was the machine better? (consistent, tireless)"],["worse","Where was it worse? (exceptions, judgment)"],["why","Why do real workflows still need humans?"]];
+    nf.forEach(function(x){ var lab=el("label",null,x[1]); lab.style.cssText="display:block;margin:10px 0 4px;font-size:14px"; var ta=el("textarea"); ta.rows=2; ta.maxLength=400; ta.value=state.hvm.notes[x[0]]; ta.setAttribute("aria-label",x[1]); ta.addEventListener("input",function(){ state.hvm.notes[x[0]]=ta.value; save(); }); box.appendChild(lab); box.appendChild(ta); });
+    host.appendChild(box);
+  }
+  intro();
+  return card;
+}
 var wq={qs:[],i:0,choice:"",rounds:[]};
 var STANCES=["Use it, with a human reviewing every decision","Use it, but only to help a person decide","Do not use AI for this"];
 function renderWwyd0(){ wq={qs:shuffle(WWYD).slice(0,5),i:0,choice:"",rounds:[]}; renderWwyd(); }
@@ -826,6 +944,10 @@ function makePdf(){
     if(state.l2.tlDone) state.l2.tlOrder.forEach(function(ci,i){ wrap((i+1)+". "+TLC[ci][0]+": "+TLC[ci][1],10,"normal",12); }); else if(tlCount()>=5) state.l2.tl.forEach(function(r,i){ wrap((i+1)+". "+(r.year.trim()||"----")+": "+(r.text.trim()||"(blank)"),10,"normal",12); }); else wrap("Drag-and-drop timeline not completed yet.",10,"normal",12); y+=6;
     wrap("AI or Not best score: "+(state.games.ai.best==null?"not played":state.games.ai.best+" / 10"),10,"normal",0); y+=8;
   })();
+  if(state.hvm&&(state.hvm.machine||state.hvm.human)){ var hv=state.hvm; need(60); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text("Level 3 - Human vs. Machine game",M,y); y+=14;
+    if(hv.machine) wrap("Machine: "+hv.machine.sec+" s, "+hv.machine.wrong+" wrong bin, red count "+hv.machine.count+". Pink: "+(hv.machine.pink||"-"),10,"normal",12);
+    if(hv.human) wrap("Human: "+hv.human.sec+" s, "+hv.human.wrong+" wrong bin, trivia "+hv.human.trivia+" of 24. Pink: "+(hv.human.pink||"-"),10,"normal",12);
+    wrap("Machine better: "+(hv.notes.better||"(blank)"),10,"normal",12); wrap("Machine worse: "+(hv.notes.worse||"(blank)"),10,"normal",12); wrap("Why humans are still needed: "+(hv.notes.why||"(blank)"),10,"normal",12); y+=8; }
   if(state.wwyd.length){
     need(40); doc.setFillColor(232,240,234); doc.rect(M-6,y-14,maxW+12,22,"F"); doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(22,53,43);
     doc.text("Level 4 - What Would You Do? (Requirement 4b)",M,y); doc.setTextColor(20,20,20); y+=22;
@@ -835,7 +957,7 @@ function makePdf(){
   Object.keys(LV).forEach(function(n){
     var c=lvCount(n); need(40); doc.setFillColor(232,240,234); doc.rect(M-6,y-14,maxW+12,22,"F"); doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor(22,53,43);
     doc.text("Level "+n+" - "+META[n-1][0]+" ("+META[n-1][2]+")",M,y); doc.setFont("helvetica","normal"); doc.setFontSize(10); doc.text(c[0]+" of "+c[1]+" done",W-M,y,{align:"right"}); doc.setTextColor(20,20,20); y+=22;
-    LV[n].secs.forEach(function(sc){ var v=state.lv[n][sc.k]; need(30); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text(sc.h.replace(/^Step \d \u00b7 /,"").replace(/\u00b7/g,"-"),M,y); y+=14;
+    LV[n].secs.forEach(function(sc){ if(sc.t==="game"||sc.t==="note"||sc.t==="hvm") return; var v=state.lv[n][sc.k]; need(30); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.text(sc.h.replace(/^Step \d \u00b7 /,"").replace(/\u00b7/g,"-"),M,y); y+=14;
       if(sc.t==="rows") v.forEach(function(r,i){ wrap((i+1)+". "+sc.cols.map(function(cc){ return r[cc.k].trim(); }).filter(Boolean).join(" - ")||((i+1)+". (blank)"),10,"normal",12); });
       else if(sc.t==="form") sc.f.forEach(function(x){ wrap(x.label.replace(/\u2019/g,"'")+": "+(v[x.k].trim()||"(blank)"),10,"normal",12); });
       else sc.items.forEach(function(it,i){ wrap((v[i]?"[x] ":"[ ] ")+it,10,"normal",12); });
@@ -868,7 +990,7 @@ function fallback(doc,subject,body){
   location.href="mailto:"+COUNSELOR_EMAIL+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body+"\n\n(Attach the PDF "+filename()+" that just downloaded.)");
   msg("PDF downloaded. In the email that opened, attach "+filename()+" and send.","ok");
 }
-function snapshot(){ return {app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,matched:state.matched,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,l2:state.l2,lv:state.lv}; }
+function snapshot(){ return {app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,matched:state.matched,hvm:state.hvm,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,l2:state.l2,lv:state.lv}; }
 function saveJson(){
   if(needName()) return;
   var data=snapshot();
@@ -898,7 +1020,7 @@ function applyData(d,label){
         if(m && +m[1]<max && v && typeof v==="object") clean[k]={def:String(v.def||"").slice(0,400),ex:String(v.ex||"").slice(0,300)};
       });
       var keepId=/^[a-f0-9]{16,32}$/.test(String(d.scoutId||""))?String(d.scoutId):state.scoutId, slotIn=parseInt(d.squadSlot,10);
-      state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,matched:(Array.isArray(d.matched)?d.matched.slice(0,max).map(function(v){return v===true;}):[]),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
+      state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,hvm:fixHvm(d.hvm),matched:(Array.isArray(d.matched)?d.matched.slice(0,max).map(function(v){return v===true;}):[]),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
       try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}
       lastSent=""; buildPages(); build(); renderL8win(); show("L1"); scheduleSync(); msg("Loaded "+label+". Your work is back.","ok");
     }catch(e){ msg("That doesn't look like an A.I.R.A. field log.","err"); }
@@ -918,7 +1040,7 @@ function recover(){
 function hasWork(){ return Object.keys(state.answers||{}).length>0 || (state.matched||[]).some(Boolean) || state.unlocked>1 || state.vault&&state.vault.best!=null || (state.name||"").trim().length>0; }
 function clearAll(){
   if(!confirm("Erase everything on this device and start over?")) return;
-  var keepId=state.scoutId; state={name:"",squad:"",squadSlot:0,scoutId:keepId,matched:[],answers:{},unlocked:1,won:false,page:"L1",vault:{best:null,last:null},games:{ai:{best:null,last:null}},wwyd:[],l2:null}; try{localStorage.removeItem(STORE_KEY);}catch(e){}
+  var keepId=state.scoutId; state={name:"",squad:"",squadSlot:0,scoutId:keepId,matched:[],hvm:null,answers:{},unlocked:1,won:false,page:"L1",vault:{best:null,last:null},games:{ai:{best:null,last:null}},wwyd:[],l2:null}; try{localStorage.removeItem(STORE_KEY);}catch(e){}
   location.reload();
 }
 $("recGo").addEventListener("click",recover); showCode();
@@ -935,7 +1057,7 @@ $("goVault").addEventListener("click",function(){ show("V1"); });
 $("bNext").addEventListener("click",bonusNext); $("bTimer").addEventListener("click",bonusTimer);
 (function(){ var h=$("tools"); TOOLS.forEach(function(t){ if(!t.url) return; var a=document.createElement("a"); a.href=t.url; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=t.label+" \u2197"; if(t.alt) a.className="alt"; h.appendChild(a); });
   if(!h.children.length) $("toolsCard").hidden=true; })();
-load(); ensureId(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page); loadSquads();
+load(); ensureId(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); state.hvm=fixHvm(state.hvm); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page); loadSquads();
 })();
 </script>
 </body>
