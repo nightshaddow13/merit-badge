@@ -124,5 +124,29 @@
   "how": "First squad to say VERIFIED earns 10 XP",
   "min": 0,
   "max": 10
+ },
+ {
+  "id": "vocab-vault-avg",
+  "name": "Vocab Vault (squad average)",
+  "how": "Automatic from Field Logs. Average of every Scout who joined the squad, 1 XP per correct answer (0 to 10 XP).",
+  "min": 0,
+  "max": 10,
+  "auto": true
+ },
+ {
+  "id": "terms-avg",
+  "name": "Level 1 terms (squad average)",
+  "how": "Automatic from Field Logs. Average of every Scout who joined, 1 XP per term marked done (0 to 16 XP).",
+  "min": 0,
+  "max": 16,
+  "auto": true
+ },
+ {
+  "id": "levels-avg",
+  "name": "Levels cleared (squad average)",
+  "how": "Automatic from Field Logs. Average of every Scout who joined, 5 XP per level the class has finished (0 to 40 XP).",
+  "min": 0,
+  "max": 40,
+  "auto": true
  }
 ]

@@ -3,6 +3,7 @@
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
 const { emptyData, hasRole, validate, getBoard } = require("../lib/scores");
+const { AUTO_ROWS } = require("../lib/boards");
 
 const TABLE = "cup";
 const PARTITION = "cup";
@@ -55,6 +56,12 @@ app.http("scores", {
       const result = validate(boardId, body);
       if (!result.ok) return { status: 400, headers: HEADERS, jsonBody: { error: result.error } };
 
+      // Rows filled in by the server (AI Field Log averages) always keep their stored values.
+      if (boardId === "ai") {
+        let stored = {};
+        try { stored = JSON.parse((await client.getEntity(PARTITION, board.rowKey)).data).scores || {}; } catch (e) { if (e.statusCode !== 404) throw e; }
+        for (const id of AUTO_ROWS) { delete result.value.scores[id]; if (stored[id]) result.value.scores[id] = stored[id]; }
+      }
       const saved = Object.assign({}, result.value, { updated: new Date().toISOString() });
       await client.createTable(); // no-op if it already exists
       await client.upsertEntity({ partitionKey: PARTITION, rowKey: board.rowKey, data: JSON.stringify(saved) }, "Replace");

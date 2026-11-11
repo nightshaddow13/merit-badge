@@ -21,7 +21,7 @@ h1{margin:0;font-size:24px;line-height:1.1}
 .card h2{margin:0 0 4px;font-size:18px;color:var(--gold)}
 .hint{color:var(--mut);font-size:14px;margin:0 0 12px}
 label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px;font-weight:600}
-input[type=text],textarea{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
+input[type=text],select,textarea{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
 textarea{min-height:68px;resize:vertical}
 input:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -98,14 +98,17 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
     <p class="hint">Only your first name and last initial. Nothing here is typed into an AI chatbot.</p>
     <div class="grid2">
       <div><label for="name">Agent name (first name + last initial)</label><input type="text" id="name" autocomplete="off" maxlength="40"></div>
-      <div><label for="squad">Squad name</label><input type="text" id="squad" autocomplete="off" maxlength="40"></div>
+      <div><label for="squad">Squad</label><select id="squad"><option value="">Loading squads&hellip;</option></select></div>
     </div>
+    <p class="hint" id="squadNote" role="status"></p>
+    <p class="hint" id="ptsNote" role="status"></p>
     <div class="safe"><b>Saved on this device only.</b> Your answers stay in this browser until you download the PDF and send it. You can also save them to a file and load them back. Counselor email: xgoss@live.com</div>
   </section>
 
   <section class="card" id="toolsCard">
     <h2>Agent tools</h2>
     <p class="hint">Opens in a new tab. Never type your name, school, address, or photos into a chatbot. Check what the AI tells you.</p>
+    <p class="hint">ChatGPT has its own age and parental-consent rules for people under 18. Ask a parent or guardian before you use it, and follow your counselor&rsquo;s directions.</p>
     <div class="tools" id="tools"></div>
   </section>
 
@@ -258,11 +261,12 @@ var QN = 10;
 // Links shown in the Agent tools card. Leave a url empty to hide that link.
 var TOOLS = [
   {label:"Open Scoutly", url:"https://scoutly.scouting.org/"},
+  {label:"Open ChatGPT", url:"https://chatgpt.com", alt:true},
   {label:"Scouting America ChatGPT agent", url:"", alt:true},
   {label:"Sightengine AI-or-Not (images)", url:"https://sightengine.com/ai-or-not", alt:true}
 ];
 
-var state = { name:"", squad:"", answers:{}, unlocked:1, won:false, page:"L1", vault:{best:null,last:null}, games:{ai:{best:null,last:null}}, wwyd:[], l2:null };   // answers["L1|0"] = {def, ex}
+var state = { name:"", squad:"", squadSlot:0, scoutId:"", answers:{}, unlocked:1, won:false, page:"L1", vault:{best:null,last:null}, games:{ai:{best:null,last:null}}, wwyd:[], l2:null };   // answers["L1|0"] = {def, ex}
 
 function load(){
   try { var s = JSON.parse(localStorage.getItem(STORE_KEY)||"null"); if(s && typeof s==="object") state = Object.assign(state,s); } catch(e){}
@@ -271,6 +275,60 @@ var saveTimer;
 function save(){
   clearTimeout(saveTimer);
   saveTimer = setTimeout(function(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }, 250);
+  scheduleSync();
+}
+
+// ---- Squad dropdown and squad points -------------------------------------------------
+// Squad names come from the class scoreboard. We keep the slot number (1 to 4) so a renamed squad
+// does not break saved progress. Only your first name + last initial, squad slot and three scores
+// (Vocab Vault best, Level 1 terms done, levels cleared) are ever sent. The server caps all of them.
+var squads = [], squadTimer, syncTimer, lastSent = "", syncing = false;
+function newId(){ var a=new Uint8Array(12); try{ crypto.getRandomValues(a); }catch(e){ for(var i=0;i<12;i++) a[i]=Math.floor(Math.random()*256); } return Array.prototype.map.call(a,function(b){ return ("0"+b.toString(16)).slice(-2); }).join(""); }
+function ensureId(){ if(!/^[a-f0-9]{16,32}$/.test(state.scoutId||"")) state.scoutId=newId(); }
+function renderSquads(){
+  var sel=$("squad"), note=$("squadNote"); if(!sel) return;
+  var named=squads.map(function(n,i){ return {slot:i+1,name:n}; }).filter(function(x){ return x.name; });
+  sel.innerHTML="";
+  var o0=document.createElement("option"); o0.value=""; sel.appendChild(o0);
+  if(!named.length){
+    o0.textContent="Squads not set up yet"; sel.disabled=true;
+    note.textContent="Squads not set up yet. Your counselor adds them on the scoreboard. This page will check again by itself."; return;
+  }
+  o0.textContent="Choose your squad\u2026"; sel.disabled=false;
+  named.forEach(function(x){ var o=document.createElement("option"); o.value=String(x.slot); o.textContent=x.name; sel.appendChild(o); });
+  // Legacy typed squad names: match by name once, then rely on the slot.
+  if(!state.squadSlot && state.squad){ var m=named.filter(function(x){ return x.name.toLowerCase()===state.squad.trim().toLowerCase(); })[0]; if(m){ state.squadSlot=m.slot; save(); } }
+  if(state.squadSlot && squads[state.squadSlot-1]){ sel.value=String(state.squadSlot); if(state.squad!==squads[state.squadSlot-1]){ state.squad=squads[state.squadSlot-1]; save(); } note.textContent=""; }
+  else if(state.squadSlot){ note.textContent="Your squad was removed from the list. Choose your squad again."; }
+  else note.textContent=state.squad?"Choose your squad from the list (you had typed \u201c"+state.squad+"\u201d).":"";
+}
+function loadSquads(){
+  return fetch("/api/scores/ai",{cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error(); return r.json(); })
+    .then(function(d){ squads=(d.lodges||[]).slice(0,4).map(function(x){ return String(x||"").trim(); }); })
+    .catch(function(){ squads=[]; })
+    .then(function(){ renderSquads(); clearTimeout(squadTimer); if(!squads.some(Boolean)) squadTimer=setTimeout(loadSquads,20000); scheduleSync(); });
+}
+function pointsNow(){
+  var n=LEVELS[0].items.length, t=0; for(var i=0;i<n;i++) if(isDone(0,i)) t++;
+  return { vault: state.vault&&Number.isInteger(state.vault.best)?Math.max(0,Math.min(10,state.vault.best)):0, terms:t, levels:state.won?8:Math.max(0,Math.min(8,state.unlocked-1)) };
+}
+var NAME_OK=/^[A-Za-z][A-Za-z'.\- ]{0,22}[A-Za-z.]$/;
+function ptsMsg(t){ var e=$("ptsNote"); if(e) e.textContent=t; }
+function scheduleSync(){ clearTimeout(syncTimer); syncTimer=setTimeout(syncPoints,3000); }
+function syncPoints(){
+  if(syncing) return scheduleSync();
+  var nm=(state.name||"").trim().replace(/\s+/g," ");
+  if(!state.squadSlot || !squads[state.squadSlot-1]){ ptsMsg(""); return; }
+  if(!NAME_OK.test(nm)){ ptsMsg("Enter your first name and last initial (like Sam K) to add your points to your squad."); return; }
+  ensureId();
+  var p=pointsNow(), body={id:state.scoutId,slot:state.squadSlot,name:nm,vault:p.vault,terms:p.terms,levels:p.levels}, sig=JSON.stringify(body);
+  if(sig===lastSent){ return; }
+  syncing=true;
+  fetch("/api/airalog",{method:"POST",headers:{"Content-Type":"application/json"},body:sig})
+    .then(function(r){ return r.json().catch(function(){return {};}).then(function(j){ if(!r.ok) throw new Error(j.error||"Could not send points."); return j; }); })
+    .then(function(j){ lastSent=sig; ptsMsg("Squad points updated "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})+". Your squad has "+j.members+" agent"+(j.members===1?"":"s")+" counted."); })
+    .catch(function(e){ ptsMsg(e.message+" Trying again soon."); if(!/roster|full|out of range|Use your|Choose|not set up/i.test(e.message)) syncTimer=setTimeout(syncPoints,30000); })
+    .then(function(){ syncing=false; });
 }
 function $(id){ return document.getElementById(id); }
 function key(l,i){ return LEVELS[l].id+"|"+i; }
@@ -290,7 +348,7 @@ function build(){
     function upd(){ state.answers[key(0,i)] = {def:$("d"+i).value, ex:$("e"+i).value}; refresh(); save(); }
     $("d"+i).addEventListener("input",upd); $("e"+i).addEventListener("input",upd);
   });
-  $("name").value = state.name||""; $("squad").value = state.squad||"";
+  $("name").value = state.name||""; renderSquads();
   refresh();
 }
 function refresh(){
@@ -686,7 +744,7 @@ function fallback(doc,subject,body){
 }
 function saveJson(){
   if(needName()) return;
-  var data={app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,l2:state.l2,lv:state.lv};
+  var data={app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,l2:state.l2,lv:state.lv};
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="AIRA-Field-Log-"+slug(state.name)+".json";
   document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
@@ -705,9 +763,10 @@ function loadJson(f){
         var m=/^L1\|(\d+)$/.exec(k), v=d.answers[k];
         if(m && +m[1]<max && v && typeof v==="object") clean[k]={def:String(v.def||"").slice(0,400),ex:String(v.ex||"").slice(0,300)};
       });
-      state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
+      var keepId=/^[a-f0-9]{16,32}$/.test(String(d.scoutId||""))?String(d.scoutId):state.scoutId, slotIn=parseInt(d.squadSlot,10);
+      state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
       try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}
-      buildPages(); build(); renderL8win(); show("L1"); msg("Loaded "+f.name+". Your work is back.","ok");
+      lastSent=""; buildPages(); build(); renderL8win(); show("L1"); scheduleSync(); msg("Loaded "+f.name+". Your work is back.","ok");
     }catch(e){ msg("That doesn't look like an A.I.R.A. field log file.","err"); }
   };
   r.onerror=function(){ msg("Couldn't read that file.","err"); };
@@ -715,11 +774,12 @@ function loadJson(f){
 }
 function clearAll(){
   if(!confirm("Erase everything on this device and start over?")) return;
-  state={name:"",squad:"",answers:{},unlocked:1,won:false,page:"L1",vault:{best:null,last:null},games:{ai:{best:null,last:null}},wwyd:[],l2:null}; try{localStorage.removeItem(STORE_KEY);}catch(e){}
+  var keepId=state.scoutId; state={name:"",squad:"",squadSlot:0,scoutId:keepId,answers:{},unlocked:1,won:false,page:"L1",vault:{best:null,last:null},games:{ai:{best:null,last:null}},wwyd:[],l2:null}; try{localStorage.removeItem(STORE_KEY);}catch(e){}
   location.reload();
 }
 $("name").addEventListener("input",function(){ state.name=this.value; save(); });
-$("squad").addEventListener("input",function(){ state.squad=this.value; save(); });
+$("squad").addEventListener("change",function(){ var v=parseInt(this.value,10)||0; state.squadSlot=v; state.squad=v?squads[v-1]||"":""; lastSent=""; save(); });
+window.addEventListener("focus",function(){ if(!squads.some(Boolean)) loadSquads(); });
 $("btnSave").addEventListener("click",saveJson);
 $("btnLoad").addEventListener("click",function(){ $("fileIn").click(); });
 $("fileIn").addEventListener("change",function(){ loadJson(this.files && this.files[0]); this.value=""; });
@@ -730,7 +790,7 @@ $("goVault").addEventListener("click",function(){ show("V1"); });
 $("bNext").addEventListener("click",bonusNext); $("bTimer").addEventListener("click",bonusTimer);
 (function(){ var h=$("tools"); TOOLS.forEach(function(t){ if(!t.url) return; var a=document.createElement("a"); a.href=t.url; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=t.label+" \u2197"; if(t.alt) a.className="alt"; h.appendChild(a); });
   if(!h.children.length) $("toolsCard").hidden=true; })();
-load(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page);
+load(); ensureId(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page); loadSquads();
 })();
 </script>
 </body>

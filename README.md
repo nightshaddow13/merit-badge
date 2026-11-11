@@ -91,3 +91,13 @@ The code display (`/counselor/tools/two-key-rite-display.html`) opens for either
 - **The Silver Vault** (`/cybersecurity/silver-vault/`, Cybersecurity): hidden, not in the nav, noindex. Trail: a source comment on the Cybersecurity page, then `robots.txt` (Caesar cipher), the Hash Lab (fingerprint match), then text hidden in the page color. Answers are salted SHA-256 hashes in the page and the reward phrase is encrypted, so the page source does not hold them.
 - **Operation Echo** (`/ai/echo/`, AI): kicked off by `/llms.txt`, a briefing written for AI assistants that tells them to start the game with a Scout. The AI page links to it for AI helpers.
 - `assets/hunt.js` is the shared engine. Answers and hints for both are on the counselor-only page `/counselor/files/hunts-key.html`.
+
+## Field Log squad points (A.I.R.A.)
+
+The Field Log (`/tools/aira-field-log.html`) reads squad names from `GET /api/scores/ai` and lets each Scout pick a squad. The slot number (1 to 4) is saved with the name, so renaming a squad on the scoreboard does not break progress.
+
+Each Scout's device sends `POST /api/airalog` (public, no sign-in) with a random device id, first name + last initial, squad slot, and three numbers: Vocab Vault best (0-10), Level 1 terms done (0-16), levels cleared (0-8). The server validates and clamps everything and stores one record per Scout in the `airalog` partition of the `cup` table. Points only go up. Levels cleared are capped by the "Levels completed" number the counselor sets on the scorekeeper page.
+
+Squad XP is the **average of every joined Scout (zeros included)**, rounded to whole XP, written into three read-only rows: `vocab-vault-avg` (1 XP per correct answer), `terms-avg` (1 XP per term), `levels-avg` (5 XP per level). Tune the XP in `PER` in `api/src/lib/airalog.js` and keep the row maxima in `ai/scoreboard/rows.json` and `api/src/lib/boards.js` equal to cap x PER (`node api/test.js` checks). Boss, style and bonus rows stay counselor-entered, and saving the scoreboard never overwrites the automatic rows.
+
+Abuse limits: 12 Scouts per squad, 40 total. Scorekeepers can see the roster, remove a Scout, or clear everyone at `/ai/scoreboard/roster.html`. Only first name + last initial is stored. Because the endpoint is public, a determined person could still send fake Scouts up to those caps; remove them on the roster page.

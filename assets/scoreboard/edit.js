@@ -46,7 +46,9 @@
           var cur = C.cellValue(data, a.id, i);
           var input = el("input", { type: "number", inputmode: "numeric", step: "1", min: String(a.min), max: String(a.max),
             "aria-label": a.name + ", " + B.entity.toLowerCase() + " " + (i + 1), value: cur === null ? "" : String(cur) });
+          if (a.auto) { input.readOnly = true; input.tabIndex = -1; input.title = "Filled in automatically from Field Logs"; tr.className = "auto-row"; }
           input.addEventListener("input", function () {
+            if (a.auto) return;
             var row = data.scores[a.id] || (data.scores[a.id] = Array(SLOTS).fill(null));
             row[i] = input.value === "" ? null : parseInt(input.value, 10);
             markDirty(); updateTotals();

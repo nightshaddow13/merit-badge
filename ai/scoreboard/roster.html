@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en" class="ai">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field Log roster: A.I.R.A.</title>
+<meta name="description" content="Enter scores.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/">Cybersecurity</a><a href="/ai/" aria-current="page">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">For counselors</p>
+  <h1>Field Log roster</h1>
+  <p class="lead">Scouts who joined a squad from their Field Log (first name and last initial only). Squad XP is the average of everyone listed. Remove a duplicate or a stray entry, or reset for a new class.</p>
+  <p class="jump"><a href="/ai/scoreboard/edit.html">Back to scorekeeper</a></p>
+</div></section>
+<div class="wrap">
+  <section><div id="roster"></div>
+  <div class="savebar"><button id="reset" class="btn ghost" type="button">Remove all Scouts</button><p id="msg" class="msg" role="status"></p></div></section>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<script>
+(function(){
+ var box=document.getElementById("roster"),msg=document.getElementById("msg"),rb=document.getElementById("reset"),armed=false,names=[];
+ function say(t){msg.textContent=t}
+ function api(path,body){return fetch(path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body||{})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||"Request failed ("+r.status+")");return j})})}
+ function td(t){var c=document.createElement("td");c.textContent=t;return c}
+ function paint(j){
+  box.textContent="";
+  if(!j.scouts.length){box.textContent="No Scouts have joined yet.";return}
+  var t=document.createElement("table");t.className="grid";
+  t.innerHTML="<thead><tr><th scope=col>Squad</th><th scope=col>Scout</th><th scope=col>Vault</th><th scope=col>Terms</th><th scope=col>Levels</th><th scope=col></th></tr></thead>";
+  var b=document.createElement("tbody");
+  j.scouts.forEach(function(s){var tr=document.createElement("tr");
+   tr.appendChild(td(names[s.slot-1]||("Squad "+s.slot)));tr.appendChild(td(s.name));tr.appendChild(td(s.vault));tr.appendChild(td(s.terms));tr.appendChild(td(s.levels));
+   var c=document.createElement("td"),bt=document.createElement("button");bt.type="button";bt.className="btn ghost";bt.textContent="Remove";bt.setAttribute("aria-label","Remove "+s.name);
+   bt.onclick=function(){api("/api/airalog/remove",{id:s.id}).then(function(r){paint(r);say(s.name+" removed.")}).catch(function(e){say(e.message)})};
+   c.appendChild(bt);tr.appendChild(c);b.appendChild(tr)});
+  t.appendChild(b);var w=document.createElement("div");w.className="tablewrap";w.appendChild(t);box.appendChild(w)}
+ rb.onclick=function(){if(!armed){armed=true;rb.textContent="Remove everyone? Press again";setTimeout(function(){armed=false;rb.textContent="Remove all Scouts"},5000);return}
+  armed=false;rb.textContent="Remove all Scouts";api("/api/airalog/reset",{}).then(function(r){paint(r);say("Roster cleared and the automatic rows emptied.")}).catch(function(e){say(e.message)})};
+ fetch("/api/scores/ai",{cache:"no-store"}).then(function(r){return r.json()}).then(function(d){names=(d.lodges||[]).map(String)}).catch(function(){}).then(function(){return api("/api/airalog/roster")}).then(paint).catch(function(e){say(e.message)});
+})();
+</script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>

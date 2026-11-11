@@ -35,7 +35,8 @@ function tableStore(client, partition) {
 }
 
 // The Cybersecurity scoreboard lives in the same table (partition "cup").
-function scoreboardAdapter(client, board, emptyData) {
+function scoreboardAdapter(client, board, emptyData, boardId) {
+  boardId = boardId || "cybersecurity";
   return {
     async load() {
       try {
@@ -44,7 +45,7 @@ function scoreboardAdapter(client, board, emptyData) {
         d.scores = d.scores || {};
         return d;
       } catch (e) {
-        if (e.statusCode === 404) return emptyData("cybersecurity");
+        if (e.statusCode === 404) return emptyData(boardId);
         throw e;
       }
     },

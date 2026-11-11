@@ -46,6 +46,43 @@
       ]
     },
     {
+      "route": "/api/airalog/roster",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/airalog/remove",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/airalog/reset",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/ai/scoreboard/roster.html",
+      "allowedRoles": [
+        "scorekeeper"
+      ],
+      "headers": {
+        "X-Robots-Tag": "noindex",
+        "Cache-Control": "private, no-store"
+      }
+    },
+    {
       "route": "/api/forge/round",
       "methods": [
         "POST"
