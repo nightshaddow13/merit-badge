@@ -6,7 +6,7 @@
 // Rows on the AI board that the server fills in from Field Log submissions (the squad average of
 // every joined Scout). Scorekeepers can see them but not edit them, and saving the scoreboard never
 // overwrites them. Their ranges must match the per-Scout caps in lib/airalog.js (test.js checks rows.json).
-const AUTO_ROWS = ["vocab-vault-avg", "terms-avg", "levels-avg"];
+const AUTO_ROWS = ["vocab-vault-avg", "terms-avg", "levels-avg", "hvm-avg"];
 
 const BOARDS = {
   cybersecurity: {
@@ -28,6 +28,7 @@ const BOARDS = {
       if (id === "vocab-vault-avg") return { min: 0, max: 10 };
       if (id === "terms-avg") return { min: 0, max: 16 };
       if (id === "levels-avg") return { min: 0, max: 40 };
+      if (id === "hvm-avg") return { min: 0, max: 10 };
       return null;
     },
   },

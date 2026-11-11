@@ -134,6 +134,15 @@
       }
     },
     {
+      "route": "/api/hvboard/reset",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/api/forge/round",
       "methods": [
         "POST"

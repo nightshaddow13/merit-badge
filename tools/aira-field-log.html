@@ -95,7 +95,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 .hvrule{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel2)}.hvrule b{display:block;color:var(--gold)}.hvrule span{font-size:14px}
 .hvtile{height:150px;border-radius:14px;display:grid;place-items:center;font:900 38px/1 Consolas,monospace;letter-spacing:.1em;margin:10px 0;border:3px solid rgba(255,255,255,.5)}
 .hvq{border:1px dashed var(--line);border-radius:10px;padding:10px;margin:8px 0}.hvres{margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
-.hvt{width:100%;border-collapse:collapse;font-size:15px}.hvt th,.hvt td{border-bottom:1px solid var(--line);padding:6px;text-align:left}
+.hvyou td{background:rgba(212,168,67,.2);font-weight:700}.hvt{width:100%;border-collapse:collapse;font-size:15px}.hvt th,.hvt td{border-bottom:1px solid var(--line);padding:6px;text-align:left}
 .stephead{margin:18px 2px 4px;padding:8px 12px;border-left:4px solid var(--accent,#2f7d5b);background:rgba(47,125,91,.10);border-radius:6px;font-size:14px}.stephead b{display:block;font-size:15px}.stephead span{opacity:.85}
 </style>
 </head>
@@ -786,6 +786,43 @@ function buildHvm(){
     bm.addEventListener("click",function(){ start("machine"); }); bh.addEventListener("click",function(){ start("human"); }); bv.addEventListener("click",matchMenu); a.appendChild(bm); a.appendChild(bh); a.appendChild(bv); host.appendChild(a);
     if(state.hvm.machine||state.hvm.human) results();
     else host.appendChild(el("p","small","Tip: a different scout plays each run. The squad is the timer, counter, and judge."));
+    boardBox=el("div","hvres"); host.appendChild(boardBox); setTimeout(loadBoard,300);
+    if(!bTimer) bTimer=setInterval(loadBoard,20000);
+  }
+  // ---- class leaderboard: everyone plays against everyone; squads get the average on the scoreboard ----
+  var boardBox=null, bTimer=null, bNote="";
+  function postBoard(mode,r){
+    var nm=(state.name||"").trim().replace(/\s+/g," ");
+    if(!state.squadSlot){ bNote="Choose your squad at the top of the page to put your scores on the class board."; return Promise.resolve(); }
+    if(!NAME_OK.test(nm)){ bNote="Enter your first name and last initial (like Sam K) at the top to put your scores on the class board."; return Promise.resolve(); }
+    ensureId(); bNote="";
+    return fetch("/api/hvboard",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.scoutId,slot:state.squadSlot,name:nm,mode:mode,sec:r.sec,wrong:r.wrong,trivia:r.trivia||0})})
+      .then(function(x){ return x.json().catch(function(){return {};}).then(function(j){ if(!x.ok) throw new Error(j.error||"Could not post your score."); bNote="Posted to the class board."; }); })
+      .catch(function(e){ bNote=e.message; });
+  }
+  function loadBoard(){
+    if(!boardBox||!document.body.contains(boardBox)){ if(bTimer){ clearInterval(bTimer); bTimer=null; } return Promise.resolve(); }
+    ensureId();
+    return fetch("/api/hvboard?id="+state.scoutId,{cache:"no-store"}).then(function(r){ return r.json().catch(function(){return {};}).then(function(j){ return {ok:r.ok,status:r.status,j:j}; }); })
+      .then(drawBoard).catch(function(){});
+  }
+  function drawBoard(x){
+    if(!boardBox||!document.body.contains(boardBox)) return;
+    boardBox.innerHTML=""; boardBox.appendChild(el("h3",null,"Class leaderboard"));
+    if(bNote) boardBox.appendChild(el("p","small",bNote));
+    if(!x.ok){ boardBox.appendChild(el("p","hint",x.status===403?"Play a run (with your name and squad filled in at the top) to see how the whole class is doing. Squads earn scoreboard XP from the average of everyone\u2019s points.":(x.j.error||"The leaderboard is not available right now."))); return; }
+    var b=x.j;
+    boardBox.appendChild(el("p",null,"Your game points: "+b.you.points+" of 10"+(b.you.squad?" \u00b7 Squad: "+b.you.squad:"")+". Each run earns 1 point for finishing plus up to 4 for accuracy (fewer wrong bins), Machine and Human runs separately. Your squad\u2019s scoreboard XP is the average of every Scout who played."));
+    function tbl(title,heads,rows){
+      boardBox.appendChild(el("h4",null,title)); if(!rows.length){ boardBox.appendChild(el("p","small","No runs yet.")); return; }
+      var t=el("table"); t.className="hvt"; var hr=el("tr"); heads.forEach(function(h){ var th=el("th",null,h); th.scope="col"; hr.appendChild(th); }); t.appendChild(hr);
+      rows.forEach(function(r){ var tr=el("tr"); if(r.you) tr.className="hvyou"; r.cells.forEach(function(c){ tr.appendChild(el("td",null,c)); }); t.appendChild(tr); });
+      var w=el("div"); w.style.overflowX="auto"; w.appendChild(t); boardBox.appendChild(w);
+    }
+    tbl("Squads (average points)",["#","Squad","Scouts","Avg points"],b.squads.map(function(q){ return {you:q.you,cells:[q.place,q.name,q.players,q.avg]}; }));
+    tbl("Machine runs",["#","Scout","Squad","Wrong","Seconds"],b.machine.map(function(q){ return {you:q.you,cells:[q.place,q.name,q.squad,q.wrong,q.sec.toFixed(1)]}; }));
+    tbl("Human runs",["#","Scout","Squad","Wrong","Trivia","Seconds"],b.human.map(function(q){ return {you:q.you,cells:[q.place,q.name,q.squad,q.wrong,q.trivia+"/24",q.sec.toFixed(1)]}; }));
+    boardBox.appendChild(el("p","small","Ranked by fewest wrong bins, then faster time. Updates every 20 seconds. "+b.players+" Scout"+(b.players===1?"":"s")+" played."));
   }
   function start(mode,match){
     var seed=match?match.seed:null;
@@ -809,7 +846,8 @@ function buildHvm(){
     stopTick();
     var secs=sec(Date.now()-run.t0);
     state.hvm[run.mode]={sec:secs,wrong:run.wrong,count:run.mode==="machine"?run.count:run.count,trivia:run.trivia,pink:run.pink};
-    save(); var mt=run.match, mine=state.hvm[run.mode]; run=null;
+    save(); var mt=run.match, mine=state.hvm[run.mode], md=run.mode; run=null;
+    postBoard(md,mine);
     if(mt){ submitMatch(mt,mine); } else { intro(); host.scrollIntoView({behavior:"smooth",block:"start"}); }
   }
   function draw(){
