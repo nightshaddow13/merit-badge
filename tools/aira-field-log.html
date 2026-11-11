@@ -91,11 +91,13 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 .mterm{font-weight:700}.mterm.sel{border-color:var(--accent,#2f7d5b);background:rgba(47,125,91,.22)}.mdef{font-size:14px}.mdef.bad{border-color:#e5484d;background:rgba(229,72,77,.2)}
 .mrow{margin:6px 0;font-size:14px}.mdone{margin-top:12px}.mdone summary{cursor:pointer;color:var(--ok);font-weight:700}
 @media(max-width:560px){.mgame{grid-template-columns:1fr}}
+.rec{margin:10px 0;padding:8px 12px;border:1px dashed var(--line);border-radius:8px}.rec summary{cursor:pointer;font-weight:700}
 .stephead{margin:18px 2px 4px;padding:8px 12px;border-left:4px solid var(--accent,#2f7d5b);background:rgba(47,125,91,.10);border-radius:6px;font-size:14px}.stephead b{display:block;font-size:15px}.stephead span{opacity:.85}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <p style="margin:0 0 10px"><a href="/" style="color:var(--gold);font-weight:700">&larr; Back to the main page</a></p>
   <header>
     <span class="badge">A.I.R.A.</span>
     <div><h1>Field Log</h1><p class="sub">Mission: AI Ready &middot; Artificial Intelligence merit badge</p></div>
@@ -111,6 +113,11 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
     </div>
     <p class="hint" id="squadNote" role="status"></p>
     <p class="hint" id="ptsNote" role="status"></p>
+    <details class="rec"><summary>Lost your progress? Recover it</summary>
+      <p class="hint">Your recovery code: <b id="recCode" style="font-family:Consolas,monospace;letter-spacing:.05em"></b>. Write it down or take a screenshot. If you close the page by mistake or switch devices, type it here to get your log back.</p>
+      <div class="row"><input type="text" id="recIn" autocomplete="off" spellcheck="false" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx-xxxx"><button class="secondary" id="recGo" type="button">Recover my field log</button></div>
+      <div class="msg" id="recMsg" role="status"></div>
+    </details>
     <div class="safe"><b>Saved on this device, with a backup for your counselor.</b> Your answers stay in this browser. A copy (your name, squad and answers) is also kept for your counselor so he can help if you get stuck. Download the PDF to send your log, or save to a file and load it back. Counselor email: xgoss@live.com</div>
   </section>
 
@@ -876,7 +883,14 @@ function loadJson(f){
   var r=new FileReader();
   r.onload=function(){
     try{
-      var d=JSON.parse(r.result);
+      applyData(JSON.parse(r.result),f.name);
+    }catch(e){ msg("That doesn't look like an A.I.R.A. field log file.","err"); }
+  };
+  r.onerror=function(){ msg("Couldn't read that file.","err"); };
+  r.readAsText(f);
+}
+function applyData(d,label){
+    try{
       if(!d || d.app!=="aira-field-log" || typeof d.answers!=="object" || d.answers===null) throw new Error("bad");
       var clean={}, max=LEVELS[0].items.length;
       Object.keys(d.answers).forEach(function(k){
@@ -886,17 +900,28 @@ function loadJson(f){
       var keepId=/^[a-f0-9]{16,32}$/.test(String(d.scoutId||""))?String(d.scoutId):state.scoutId, slotIn=parseInt(d.squadSlot,10);
       state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,matched:(Array.isArray(d.matched)?d.matched.slice(0,max).map(function(v){return v===true;}):[]),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
       try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}
-      lastSent=""; buildPages(); build(); renderL8win(); show("L1"); scheduleSync(); msg("Loaded "+f.name+". Your work is back.","ok");
-    }catch(e){ msg("That doesn't look like an A.I.R.A. field log file.","err"); }
-  };
-  r.onerror=function(){ msg("Couldn't read that file.","err"); };
-  r.readAsText(f);
+      lastSent=""; buildPages(); build(); renderL8win(); show("L1"); scheduleSync(); msg("Loaded "+label+". Your work is back.","ok");
+    }catch(e){ msg("That doesn't look like an A.I.R.A. field log.","err"); }
 }
+// Recovery code = your private device id, shown in groups of four. It brings your backup back on any device.
+function codeText(){ ensureId(); return state.scoutId.replace(/(.{4})/g,"$1-").replace(/-$/,""); }
+function showCode(){ var e=$("recCode"); if(e) e.textContent=codeText(); }
+function recover(){
+  var raw=$("recIn").value.toLowerCase().replace(/[^a-f0-9]/g,""), m=$("recMsg");
+  if(!/^[a-f0-9]{16,32}$/.test(raw)){ m.textContent="Type the whole recovery code (letters a-f and numbers)."; m.className="msg err"; return; }
+  if(hasWork() && !confirm("This replaces what is on this device right now with the backup. Continue?")) return;
+  m.textContent="Looking for your backup\u2026"; m.className="msg";
+  fetch("/api/fieldlog/restore?id="+raw,{cache:"no-store"}).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(r.status===404?"No backup found for that code. Check it and try again, or ask your counselor.":(j.error||"Could not recover.")); return j; }); })
+    .then(function(j){ j.state.scoutId=raw; applyData(j.state,"your backup"); showCode(); $("recMsg").textContent="Recovered. Your work is back."; $("recMsg").className="msg ok"; lastLogSig=""; })
+    .catch(function(e){ m.textContent=e.message; m.className="msg err"; });
+}
+function hasWork(){ return Object.keys(state.answers||{}).length>0 || (state.matched||[]).some(Boolean) || state.unlocked>1 || state.vault&&state.vault.best!=null || (state.name||"").trim().length>0; }
 function clearAll(){
   if(!confirm("Erase everything on this device and start over?")) return;
   var keepId=state.scoutId; state={name:"",squad:"",squadSlot:0,scoutId:keepId,matched:[],answers:{},unlocked:1,won:false,page:"L1",vault:{best:null,last:null},games:{ai:{best:null,last:null}},wwyd:[],l2:null}; try{localStorage.removeItem(STORE_KEY);}catch(e){}
   location.reload();
 }
+$("recGo").addEventListener("click",recover); showCode();
 $("name").addEventListener("input",function(){ state.name=this.value; save(); });
 $("squad").addEventListener("change",function(){ var v=parseInt(this.value,10)||0; state.squadSlot=v; state.squad=v?squads[v-1]||"":""; lastSent=""; save(); });
 window.addEventListener("focus",function(){ if(!squads.some(Boolean)) loadSquads(); });

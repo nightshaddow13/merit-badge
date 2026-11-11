@@ -46,6 +46,11 @@ const body = (n, o) => Object.assign({ id: hex(n), name: "Sam K", squad: "Owls",
   assert.strictEqual((await f.grant({ id: hex(1), level: 2, granted: "yes" })).status, 400);
   assert.strictEqual((await f.grant({ id: hex(55), level: 2, granted: true })).status, 404);
 
+  // recovery by code
+  assert.deepStrictEqual((await f.restore(hex(2))).body.state.l2.life, ["x"]);
+  assert.strictEqual((await f.restore(hex(99))).status, 404);
+  assert.strictEqual((await f.restore("nope")).status, 400);
+
   // delete, and roster cap
   await f.remove({ id: hex(1) });
   assert.strictEqual((await f.get(hex(1))).status, 404);

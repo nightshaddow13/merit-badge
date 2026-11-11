@@ -17,6 +17,7 @@ const staff = (request) => {
 // POST /api/fieldlog                 anyone: back up a Scout's Field Log (keyed by a private device id)
 // GET  /api/fieldlog/override?id=    anyone with the id: which level pages staff have waived
 // POST /api/fieldlog/override        anyone: ask staff to waive a level page
+// GET  /api/fieldlog/restore?id=    anyone with the recovery code: get that Scout's own backup
 // GET  /api/fieldlog/logs            staff: list every backed-up log with its summary
 // GET  /api/fieldlog/log?id=         staff: one full log
 // POST /api/fieldlog/grant           staff: { id, level, granted } waive or restore a page's requirements
@@ -37,6 +38,7 @@ app.http("fieldlog", {
       if (request.method === "GET") {
         const id = new URL(request.url).searchParams.get("id") || "";
         if (action === "override") r = await fl.overrideStatus(id);
+        else if (action === "restore") r = await fl.restore(id);
         else if (action === "logs" || action === "log") {
           if (!staff(request)) return deny;
           r = action === "logs" ? await fl.list() : await fl.get(id);

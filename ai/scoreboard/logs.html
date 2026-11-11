@@ -30,6 +30,12 @@
 </main>
 <footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
 <style>
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:8px 0 14px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--white)}.sv{font-size:22px;font-weight:800}.sv.good{color:#1B6B3A}.sl{font-size:13px;color:var(--mut)}
+.lvpanel{border:2px solid var(--ink);border-radius:12px;padding:14px;margin:14px 0;background:var(--white)}.lvpanel h3{margin:0 0 6px}.lvpanel h4{margin:16px 0 6px;font-size:16px}
+.ans{margin:4px 0;padding:6px 10px;border-left:3px solid var(--line);font-size:15px}.ans b{display:block;font-size:13px;color:var(--mut)}.muted{color:var(--mut)}.ans .pill{margin-left:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{padding:3px 10px;border-radius:99px;border:1px solid var(--line);font-size:14px;color:var(--mut)}.chip.yes{background:#BFEBD0;color:#0b3a1f;border-color:#8cd3a9}
+.tl{margin:6px 0 0 20px}.tl .yes{color:#1B6B3A;font-weight:700}.lvbox .btn.sel{outline:3px solid var(--ink)}
 .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:13px;font-weight:700;background:#E2EAE5;color:#14201B}
 .pill.warn{background:#FFE08A;color:#4a3300}.pill.ok{background:#BFEBD0;color:#0b3a1f}
 .lrow{cursor:pointer}.lrow:hover{background:rgba(47,125,91,.10)}
@@ -41,6 +47,8 @@
 </style>
 <script>
 (function(){
+ var SCHEMA={"3":[{"k":"home","h":"3a · Everyday automation","t":"rows","cols":["v"],"lab":""},{"k":"work","h":"3b · Automation at work","t":"rows","cols":["v"],"lab":""},{"k":"school","h":"3c · Automation at school","t":"rows","cols":["v"],"lab":""},{"k":"hist","h":"3e · Automation timeline","t":"rows","cols":["y","v"],"lab":""}],"4":[{"k":"big","h":"4a · Ethical concerns","t":"form","f":[{"k":"bias","l":"Bias"},{"k":"priv","l":"Privacy"},{"k":"dec","l":"AI decision-making (who is responsible when it is wrong?)"}]},{"k":"law","h":"4c · My guidelines for using AI","t":"rows","cols":["law","rule"],"lab":""},{"k":"tur","h":"4d · The Turing test","t":"form","f":[{"k":"exp","l":"Explain the Turing test in your own words."}]}],"5":[{"k":"what","h":"5a · What is a deepfake?","t":"form","f":[{"k":"def","l":"What is a deepfake?"},{"k":"aff","l":"How can it affect a person?"}]},{"k":"act","h":"5b · If a deepfake targets you or a friend","t":"form","f":[{"k":"steps","l":"What actions would you take?"}]}],"6":[{"k":"meth","h":"6b · Five ways to communicate with AI","t":"rows","cols":["v"],"lab":""},{"k":"why","h":"6c · Why prompt engineering matters","t":"form","f":[{"k":"why","l":"Why does a better prompt give better output?"}]},{"k":"pr","h":"6d · Three clear instructions for a school task","t":"rows","cols":["p"],"lab":"Prompt "}],"7":[{"k":"plan","h":"7a · Plan your AI project","t":"form","f":[{"k":"obj","l":"Objectives: what will your AI learn to do?"},{"k":"data","l":"Data requirements: what data will you use?"},{"k":"eth","l":"Ethical considerations: what could go wrong?"}]},{"k":"share","h":"7a · Share what you did","t":"form","f":[{"k":"steps","l":"What steps did you follow?"},{"k":"exp","l":"What went wrong, and what would you change?"}]}],"8":[{"k":"who","h":"8b · Interview an AI professional","t":"form","f":[{"k":"role","l":"Who you interviewed (job title)"},{"k":"day","l":"Daily work"},{"k":"chal","l":"Challenges"},{"k":"vis","l":"Vision for the field"},{"k":"train","l":"Training, education, certification, experience, and costs"}]}]},TERMS=["artificial intelligence (AI)","AI agents","automation","basic programming","bots","data","databases","digital workers","general AI","machine learning (ML)","narrow AI","superintelligent AI","tasks","triggers","workflows","variables"],TLC=[["1950","Can machines think?"],["1956","The field gets its name"],["1966","The first chatbot"],["1997","A machine beats the chess champion"],["2011","A computer wins the quiz show"],["2014","Talking to a machine at home"],["2016","A machine masters Go"],["2022","AI you can chat with"]],L2SEC=[["life","2a · AI in everyday life"],["work","2b · AI in the workplace"],["school","2c · AI at school"]];
+ var panelN=0;
  var list=document.getElementById("list"),detail=document.getElementById("detail"),msg=document.getElementById("msg"),cur=null,timer;
  var NAMES=["Key Concepts","AI Basics","Automation","Ethics in AI","Deepfakes","AI Skills","Train Your Own AI","Career Exploration"];
  function say(t){msg.textContent=t}
@@ -68,12 +76,61 @@
  function download(m,st){
   var data=Object.assign({app:"aira-field-log",version:1,saved:m.updated},st);
   var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.download="AIRA-Field-Log-"+(m.name||"scout").replace(/[^A-Za-z0-9]+/g,"-")+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)}
+function ok(v){return String(v||"").trim().length>=3}
+ function stat(label,value,cls){var d=E("div","stat");d.appendChild(E("div","sv"+(cls?" "+cls:""),value));d.appendChild(E("div","sl",label));return d}
+ function textRow(label,v){var d=E("div","ans");if(label)d.appendChild(E("b",null,label));var t=String(v||"").trim();if(!t)d.appendChild(E("span","muted","(blank)"));else{d.appendChild(E("span",null,t));if(t.length<10)d.appendChild(E("span","pill warn","very short"))}return d}
+ function levelPanel(n,j){
+  var st=j.state||{},s=(j.meta&&j.meta.summary)||{},p=E("section","lvpanel"),lvl=(s.levels||{})[n];
+  p.appendChild(E("h3",null,"Level "+n+" \u00b7 "+NAMES[n-1]+" highlights"));
+  var bar=E("div","stats");
+  bar.appendChild(stat("Items done",lvl?lvl[0]+" of "+lvl[1]:"-"));
+  var cleared=n<(s.unlocked||1)||(n===8&&s.won);
+  bar.appendChild(stat("Status",cleared?"Cleared":(n===(s.unlocked||1)?"Current level":"Locked"),cleared?"good":""));
+  if(n===1){
+   var mt=0,m=st.matched||[];for(var i=0;i<TERMS.length;i++){var o=st.answers&&st.answers["L1|"+i];if(m[i]||(o&&o.def&&o.def.trim().length>=8))mt++}
+   var v=st.vault||{};
+   bar.appendChild(stat("Terms matched",mt+" of "+TERMS.length));
+   bar.appendChild(stat("Vocab Vault best",v.best==null?"not taken":v.best+" / 10",v.best!=null&&v.best>=8?"good":""));
+   bar.appendChild(stat("Vocab Vault last",v.last==null?"-":v.last+" / 10"));
+   p.appendChild(bar);
+   var chips=E("div","chips");TERMS.forEach(function(t,i){var o=st.answers&&st.answers["L1|"+i];var yes=m[i]||(o&&o.def&&o.def.trim().length>=8);chips.appendChild(E("span","chip"+(yes?" yes":""),(yes?"\u2714 ":"")+t))});p.appendChild(chips);
+   var legacy=Object.keys(st.answers||{}).filter(function(k){var o=st.answers[k];return o&&((o.def&&o.def.trim())||(o.ex&&o.ex.trim()))});
+   if(legacy.length){p.appendChild(E("h4",null,"Written notes (older version of Level 1)"));legacy.forEach(function(k){var i=+k.split("|")[1],o=st.answers[k];p.appendChild(textRow(TERMS[i],(o.def||"")+(o.ex?" \u2014 Example: "+o.ex:"")))})}
+   return p}
+  if(n===2){
+   var g2=(st.games&&st.games.ai)||{},l2=st.l2||{};
+   bar.appendChild(stat("AI or Not best",g2.best==null?"not played":g2.best+" / 10",g2.best!=null&&g2.best>=8?"good":""));
+   bar.appendChild(stat("AI or Not last",g2.last==null?"-":g2.last+" / 10"));
+   bar.appendChild(stat("Timeline",l2.tlDone?"Solved":"Not solved",l2.tlDone?"good":""));
+   p.appendChild(bar);
+   L2SEC.forEach(function(sec){var arr=l2[sec[0]]||[],f=arr.filter(ok).length;p.appendChild(E("h4",null,sec[1]+" ("+f+" of "+arr.length+")"));arr.forEach(function(v,i){p.appendChild(textRow((i+1)+".",v))})});
+   p.appendChild(E("h4",null,"AI timeline"));
+   var ord=l2.tlOrder&&l2.tlOrder.length===8?l2.tlOrder:null;
+   if(!ord)p.appendChild(E("p","muted","Not started."));
+   else{var right=ord.filter(function(c,i){return c===i}).length;p.appendChild(E("p",null,l2.tlDone?"Solved: all 8 in order.":right+" of 8 in the right place right now."));
+    var ol=E("ol","tl");ord.forEach(function(c,i){ol.appendChild(E("li",c===i?"yes":"",(l2.tlDone?TLC[c][0]+" \u00b7 ":"")+TLC[c][1]))});p.appendChild(ol)}
+   return p}
+  var secs=SCHEMA[n]||[],lv=(st.lv||{})[n]||{};
+  if(n===4){var w=st.wwyd||[];bar.appendChild(stat("What Would You Do?",w.length+" of 5 rounds",w.length>=5?"good":""))}
+  p.appendChild(bar);
+  secs.forEach(function(sc){
+   var v=lv[sc.k];
+   if(sc.t==="rows"){var rows=Array.isArray(v)?v:[];var f=rows.filter(function(r){return sc.cols.every(function(c){return ok(r[c])})}).length;
+    p.appendChild(E("h4",null,sc.h+" ("+f+" of "+rows.length+")"));
+    rows.forEach(function(r,i){p.appendChild(textRow((i+1)+".",sc.cols.map(function(c){return r[c]||""}).filter(Boolean).join(" \u2014 ")))})}
+   else{var vv=v||{},f2=sc.f.filter(function(x){return ok(vv[x.k])}).length;
+    p.appendChild(E("h4",null,sc.h+" ("+f2+" of "+sc.f.length+")"));sc.f.forEach(function(x){p.appendChild(textRow(x.l,vv[x.k]))})}
+   if(n===4&&sc.k==="big"){p.appendChild(E("h4",null,"4b \u00b7 What Would You Do? ("+(st.wwyd||[]).length+" of 5)"));
+    (st.wwyd||[]).forEach(function(r,i){p.appendChild(textRow((i+1)+". "+(r.n||"")+" \u2014 stance: "+(r.choice||"-"),r.why))});}
+  });
+  return p}
  function openLog(id){
   api("/api/fieldlog/log?id="+id).then(function(j){cur=id;renderDetail(j)}).catch(function(e){say(e.message)})}
  function renderDetail(j){
   var m=j.meta,s=m.summary||{},ov=j.overrides||{};
   detail.hidden=false;detail.textContent="";
   detail.appendChild(E("h2",null,(m.name||"(no name)")+(m.squad?" · "+m.squad:"")));
+  detail.appendChild(E("p","small","Recovery code (give it to the Scout if they lost it): "+m.id.replace(/(.{4})/g,"$1-").replace(/-$/,"")));
   detail.appendChild(E("p",null,"Last saved "+when(m.updated)+". "+(s.won?"MIRAGE shut down.":"Unlocked up to level "+(s.unlocked||1)+" of 8.")+" Vocab Vault best: "+(s.vault==null?"not taken":s.vault+" / 10")+". AI or Not best: "+(s.aiOrNot==null?"not played":s.aiOrNot+" / 10")+"."));
   var g=E("div","lvgrid");
   for(var n=1;n<=8;n++)(function(n){
@@ -83,10 +140,12 @@
    if(n<(s.unlocked||1)||(n===8&&s.won))box.appendChild(E("span","pill ok","Cleared"));
    if(o&&o.status==="pending"){box.appendChild(E("span","pill warn","Override requested "+when(o.requestedAt)));if(o.missing&&o.missing.length)box.appendChild(E("div","small","Missing: "+o.missing.join("; ")))}
    if(o&&o.status==="granted")box.appendChild(E("span","pill ok","Requirements waived"));
+   var vb=E("button","btn ghost"+(panelN===n?" sel":""),"View highlights");vb.type="button";vb.onclick=function(){panelN=(panelN===n?0:n);renderDetail(j)};box.appendChild(vb);
    var bt=E("button","btn"+(o&&o.status==="granted"?" ghost":""),o&&o.status==="granted"?"Restore requirements":"Waive requirements");bt.type="button";
    bt.onclick=function(){bt.disabled=true;api("/api/fieldlog/grant",{id:cur,level:n,granted:!(o&&o.status==="granted")}).then(function(){say("Level "+n+(o&&o.status==="granted"?" requirements restored.":" requirements waived. The Scout can now enter the code letter.")+"");return openLog(cur)}).then(load).catch(function(e){say(e.message);bt.disabled=false})};
    box.appendChild(bt);g.appendChild(box)})(n);
   detail.appendChild(g);
+  if(panelN)detail.appendChild(levelPanel(panelN,j));
   var bar=E("div","savebar"),dl=E("button","btn ghost","Download as .json (loads in the Field Log)"),rm=E("button","btn ghost","Delete this log"),close=E("button","btn ghost","Close");
   dl.type=rm.type=close.type="button";dl.onclick=function(){download(m,j.state||{})};close.onclick=function(){detail.hidden=true;cur=null};
   var armed=false;rm.onclick=function(){if(!armed){armed=true;rm.textContent="Delete for good? Press again";return}api("/api/fieldlog/delete",{id:cur}).then(function(){detail.hidden=true;cur=null;say("Deleted.");return load()}).catch(function(e){say(e.message)})};

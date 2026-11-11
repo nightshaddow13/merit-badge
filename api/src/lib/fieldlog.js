@@ -73,6 +73,14 @@ function createFieldLog(stores) {
     return overrideStatus(body.id);
   }
 
+  // Public (the id is the Scout's private recovery code). Returns the Scout's own backup.
+  async function restore(id) {
+    if (typeof id !== "string" || !ID_RE.test(id)) return { status: 400, body: { error: "Missing recovery code." } };
+    const rec = await logs.get("log-" + id);
+    if (!rec || !rec.state) return { status: 404, body: { error: "No backup found." } };
+    return { status: 200, body: { state: rec.state } };
+  }
+
   // ---- staff only (the caller checks the role) ----
   async function list() {
     const ovrs = new Map((await ovr.list()).map((r) => [r.rowKey.slice(2), r.data]));
@@ -105,7 +113,7 @@ function createFieldLog(stores) {
     return { status: 200, body: { removed: true } };
   }
 
-  return { save, overrideStatus, requestOverride, list, get, grant, remove };
+  return { save, restore, overrideStatus, requestOverride, list, get, grant, remove };
 }
 
 module.exports = { createFieldLog, MAX_STATE, MAX_LOGS };
