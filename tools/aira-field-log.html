@@ -177,7 +177,6 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
       <p class="hint">Five scenarios. Discuss as a squad, pick a stance, and write your reason. Strong reasoning earns points, not the &ldquo;right&rdquo; answer.</p>
       <div id="wwyd"></div>
     </section>
-    <div class="nextrow"><button class="primary" id="nextG4">Next: Ethics worksheet &rarr;</button></div>
   </div>
 
   <div id="extraPages"></div>
@@ -447,26 +446,19 @@ function refresh(){
   $("ppct").textContent=pct+"%"; $("pbar").style.width=pct+"%";
 }
 function curPage(){ return state.page||"L1"; }
-function show(p){
-  var ids=["L1","V1","L2","L3","L4","G4","L5","L6","L7","L8","send"];
-  if(p==="G2") p="L2";
-  if(ids.indexOf(p)<0) p="L1";
-  var n=parseInt(p.slice(1),10); if(p!=="send" && n>state.unlocked) p="L"+state.unlocked;
-  state.page=p; save();
-  ids.forEach(function(id){ var el=$("p-"+id); if(el){ el.hidden=(id!==p); if(id===p){ el.style.animation="none"; void el.offsetWidth; el.style.animation=""; } } });
-  renderNav(); window.scrollTo({top:0,behavior:"smooth"});
-}
-var SUBS={L1:[["L1","Terms"],["V1","Vocab Vault"]],L4:[["G4","What Would You Do?"],["L4","Ethics worksheet"]]};
+var SUBS={L1:[["L1","Terms"],["V1","Vocab Vault"]]};
 // Levels whose long page is split into in-page tabs. Order follows the Requirement order (and the slides).
 var PANES={
  3:[["Class Race",["hvm"]],["3a\u20133c Examples",["home","work","school"]],["3e Timeline",["hist"]],["3f Boss Challenge",["boss"]]],
+ 4:[["What Would You Do?",["wwyd"]],["Scout Law meets AI",["lawnote","law","charter","lawdisc"]],["Ethics worksheet",["big","tur"]]],
  5:[["5a What is a deepfake?",["what"]],["5b If it targets you",["act"]],["Spot the Fake",["sf"]]],
  6:[["6b Five ways",["meth"]],["6c Why it matters",["why"]],["6d Your prompts",["pr"]]],
  7:[["7a Plan it",["plan"]],["Build it",["tm"]],["7a Share it",["share"]]],
  8:[["8b Interview",["who"]]]};
 var paneSel={}, paneLbl={};
-function lvPage(i){ return i===4?"G4":"L"+i; }
+function lvPage(i){ return "L"+i; }
 function parentLevel(p){ return p==="V1"?"L1":p==="G4"?"L4":p; }
+var wwydSec=null;
 function setPane(n,i){ paneSel[n]=i; applyPanes(n); renderSub(); window.scrollTo({top:0,behavior:"smooth"}); }
 function applyPanes(n){ var pg=$("p-L"+n); if(!pg) return; var cur=paneSel[n]||0;
   [].forEach.call(pg.querySelectorAll("[data-pane]"),function(e){ e.hidden=(parseInt(e.dataset.pane,10)!==cur); }); }
@@ -497,8 +489,8 @@ function setupPanes(n,pg){
   applyPanes(n);
 }
 function show(p){
-  var ids=["L1","V1","L2","L3","L4","G4","L5","L6","L7","L8","send"];
-  if(p==="G2") p="L2";
+  var ids=["L1","V1","L2","L3","L4","L5","L6","L7","L8","send"];
+  if(p==="G2") p="L2"; if(p==="G4") p="L4";
   if(ids.indexOf(p)<0) p="L1";
   var n=parseInt(p.slice(1),10); if(p!=="send" && n>state.unlocked) p=lvPage(state.unlocked);
   state.page=p; save();
@@ -664,7 +656,10 @@ var LV={
  {k:"boss",t:"form",h:"3f \u00b7 Boss Challenge: design a workflow",hint:"Pick a repetitive Scouting job, like reminders or sign-ups. Then defend your workflow to the room in 30 seconds. Your counselor scores it: full 50 XP if the trigger, three tasks, variable and defense are all clear.",f:[{k:"job",label:"1. The Scouting job (something repetitive)"},{k:"trig",label:"2. The trigger: what event starts it?"},{k:"t1",label:"3. Task 1: what does the machine do first?"},{k:"t2",label:"Task 2"},{k:"t3",label:"Task 3"},{k:"var",label:"4. The variable: what does it keep track of?"},{k:"def",label:"5. Your 30-second defense: why is this a clean workflow?",area:1},{k:"safe",label:"Safeguard: what happens if the trigger fires by mistake, and what would catch it?",area:1}]}]},
 4:{secs:[
  {k:"big",t:"form",h:"4a \u00b7 Ethical concerns",hint:"In a sentence or two each, describe the concern.",f:[{k:"bias",label:"Bias",area:1},{k:"priv",label:"Privacy",area:1},{k:"dec",label:"AI decision-making (who is responsible when it is wrong?)",area:1}]},
+ {k:"lawnote",t:"note",h:"Scout Law meets AI",hint:"Each of you writes one personal rule for using AI and ties it to a point of the Scout Law. For example: Trustworthy, I always say when AI helped me. Courteous, I don\u2019t use AI to make fun of anyone. Brave, I speak up when I see AI used to hurt someone."},
  {k:"law",t:"rows",h:"4c \u00b7 My guidelines for using AI",hint:"Three rules for how you will use AI, each tied to a point of the Scout Law.",n:3,cols:[{k:"law",sel:LAW,w:"130px"},{k:"rule",ph:"My rule"}]},
+ {k:"charter",t:"rows",opt:1,h:"Squad charter \u00b7 five rules (optional)",hint:"Your squad combines its best rules into a five-rule charter. One scout types it in, then your counselor collects or photographs the charter.",n:5,cols:[{k:"law",sel:LAW,w:"130px"},{k:"rule",ph:"Charter rule"}]},
+ {k:"lawdisc",t:"note",h:"Discuss",hint:"Which rule would be hardest to follow when you are tired and homework is due? What does \u2018honest\u2019 look like when AI helps you write?"},
  {k:"tur",t:"form",h:"4d \u00b7 The Turing test",hint:"",f:[{k:"exp",label:"Explain the Turing test in your own words.",area:1}]}]},
 5:{secs:[
  {k:"what",t:"form",h:"5a \u00b7 What is a deepfake?",hint:"",f:[{k:"def",label:"What is a deepfake?",area:1},{k:"aff",label:"How can it affect a person?",area:1}]},
@@ -694,7 +689,7 @@ function fixLv(raw){
     else if(s.t==="chk"&&Array.isArray(rs)) rs.slice(0,s.items.length).forEach(function(b,i){ o[n][s.k][i]=b===true; });
   }); }); return o; }
 function lvOk(v,sel){ v=String(v||"").trim(); return sel? v.length>0 : v.length>=3; }
-function lvSecCount(n,s){ var d=0,t=0; if(s.t==="game"||s.t==="note"||s.t==="hvm") return [0,0]; var v=state.lv[n][s.k];
+function lvSecCount(n,s){ var d=0,t=0; if(s.opt) return [0,0]; if(s.t==="game"||s.t==="note"||s.t==="hvm") return [0,0]; var v=state.lv[n][s.k];
   if(s.t==="rows"){ t=s.req||s.n; v.forEach(function(r){ if(s.cols.every(function(c){return lvOk(r[c.k],c.sel);})) d++; }); d=Math.min(d,t); }
   else if(s.t==="form"){ t=s.f.length; s.f.forEach(function(x){ if(lvOk(v[x.k],x.sel)) d++; }); }
   else { t=s.items.length; v.forEach(function(b){ if(b) d++; }); }
@@ -750,6 +745,8 @@ function buildPages(){
     if(n===8){ var w=document.createElement("section"); w.className="card win"; w.id="win8"; w.hidden=true; w.innerHTML='<h2>MIRAGE SHUT DOWN</h2><p>Code word cracked. Tell your counselor, then head to <b>Send &amp; save</b> to email your log.</p>'; pg.appendChild(w); }
     host.appendChild(pg); if(n>=3) lvRefresh(n);
   }
+  if(!wwydSec){ var g4=$("p-G4"); wwydSec=g4&&g4.querySelector("section"); if(g4) g4.remove(); }
+  if(wwydSec){ wwydSec.dataset.sk="wwyd"; var l4=$("p-L4"), pr=l4.querySelector(".progress"); l4.insertBefore(wwydSec,pr?pr.nextSibling:l4.firstChild); }
   // unlock boxes: after level n content (L1 page is static, others are stubs)
   var oldCb=$("cb1"); if(oldCb) oldCb.remove();
   for(var k=1;k<=8;k++){ var box=codeBox(k); (k===1?$("p-V1"):$("p-L"+k)).appendChild(box); }
@@ -886,6 +883,11 @@ function buildHvm(){
     tbl("Scouts",["#","Scout","Squad","Wrong","Seconds","Pts"],b.racers.map(function(q){ return {you:q.you,cells:[q.place,q.name,q.squad,q.wrong,q.sec.toFixed(1),q.points]}; }));
     boardBox.appendChild(el("p","small","Ranked by fewest wrong bins, then faster time. Updates every 20 seconds. "+b.players+" Scout"+(b.players===1?"":"s")+" raced."));
   }
+  document.addEventListener("keydown",function(e){
+    if(!run||!document.body.contains(host)||e.ctrlKey||e.metaKey||e.altKey) return;
+    var t=e.target&&e.target.tagName; if(t==="INPUT"||t==="TEXTAREA"||t==="SELECT") return;
+    var k=e.key; if(k==="a"||k==="A"||k==="ArrowLeft"){ e.preventDefault(); bin("A"); } else if(k==="b"||k==="B"||k==="ArrowRight"){ e.preventDefault(); bin("B"); }
+  });
   function start(){
     run={deck:hvDeck(),i:0,wrong:0,count:0,pink:"",t0:Date.now()};
     draw();
@@ -893,8 +895,7 @@ function buildHvm(){
   function bin(choice){
     var c=run.deck[run.i], red=c==="red";
     if(choice==="A"){ if(!red) run.wrong++; run.count++; if(c==="pink") run.pink="Put it in bin A (guessed)"; }
-    else if(choice==="B"){ if(red) run.wrong++; if(c==="pink") run.pink="Bin B (pink is not red, by the rule)"; }
-    else { if(c!=="pink") run.wrong++; else run.pink="Froze: no rule for pink"; }
+    else { if(red) run.wrong++; if(c==="pink") run.pink="Bin B (pink is not red, by the rule)"; }
     run.i++;
     if(run.i>=24) finish(); else draw();
   }
@@ -916,11 +917,10 @@ function buildHvm(){
     tick=setInterval(function(){ if(!document.body.contains(t)){ stopTick(); return; } t.textContent=sec(Date.now()-run.t0).toFixed(1)+" s"; },100);
     host.appendChild(rules());
     var tile=el("div","hvtile"); tile.style.background=HV_COLORS[c][0]; tile.style.color=HV_COLORS[c][1]; tile.textContent=c.toUpperCase(); host.appendChild(tile);
-    host.appendChild(el("p","small","Red count so far: "+run.count+". Follow the rules exactly. Do not think. Do not guess."));
-    var a=el("div","actions"), ba=el("button","primary","Bin A (red) + add 1"), bb=el("button","secondary","Bin B (not red)"), fz=el("button","secondary","No rule for this card (freeze)");
-    ba.addEventListener("click",function(){ bin("A"); }); bb.addEventListener("click",function(){ bin("B"); }); fz.addEventListener("click",function(){ bin("F"); });
-    a.appendChild(ba); a.appendChild(bb); a.appendChild(fz); host.appendChild(a);
-    var q2=el("div","actions"); var quit=el("button","secondary","Stop and go back"); quit.addEventListener("click",function(){ run=null; intro(); }); q2.appendChild(quit); host.appendChild(q2);
+    host.appendChild(el("p","small","Red count so far: "+run.count+". Follow the rules exactly. Do not think. Do not guess. Keyboard: A or \u2190 for bin A, B or \u2192 for bin B."));
+    var a=el("div","actions"), ba=el("button","primary","Bin A (red) + add 1  [A or \u2190]"), bb=el("button","secondary","Bin B (not red)  [B or \u2192]");
+    ba.addEventListener("click",function(){ bin("A"); }); bb.addEventListener("click",function(){ bin("B"); });
+    a.appendChild(ba); a.appendChild(bb); host.appendChild(a);
   }
   function results(){
     var m=state.hvm.run, box=el("div","hvres");
@@ -939,8 +939,78 @@ function buildHvm(){
 }
 var wq={qs:[],i:0,choice:"",rounds:[]};
 var STANCES=["Use it, with a human reviewing every decision","Use it, but only to help a person decide","Do not use AI for this"];
-function renderWwyd0(){ wq={qs:shuffle(WWYD).slice(0,5),i:0,choice:"",rounds:[]}; renderWwyd(); }
-function startWwyd(){ wq={qs:shuffle(WWYD).slice(0,5),i:0,choice:"",rounds:[]}; state.wwyd=[]; save(); renderWwyd(); }
+// ---- What Would You Do?: class game run by the counselor (falls back to solo practice when none is running) ----
+var cls={timer:null,key:"",view:null,hold:null,choice:-1,draft:"",msg:"",solo:false,wasActive:false};
+function clsStop(){ if(cls.timer){ clearInterval(cls.timer); cls.timer=null; } }
+function clsFetch(){ ensureId(); return fetch("/api/wwyd?id="+state.scoutId,{cache:"no-store"}).then(function(r){ return r.ok?r.json():null; }).catch(function(){ return null; }); }
+function clsPoll(){
+  var h=$("wwyd"); if(!h||!document.body.contains(h)){ clsStop(); return; }
+  clsFetch().then(function(s){
+    if(!$("wwyd")) return;
+    if(!s||!s.active){
+      var was=cls.wasActive; cls.wasActive=false; cls.hold=null; cls.view=null;
+      if(was){ cls.key="ended"; renderClsEnded(); return; }
+      if(cls.key!=="solo"){ cls.key="solo"; if(!wq.qs.length) wq={qs:shuffle(WWYD).slice(0,5),i:0,choice:"",rounds:[]}; renderWwyd(); }
+      return; }
+    cls.wasActive=true;
+    if(state.wwydGid!==s.gid){ state.wwydGid=s.gid; state.wwyd=[]; cls.hold=null; cls.view=null; save(); }
+    if(!cls.view||cls.view.gid!==s.gid){ cls.view={gid:s.gid,round:s.round}; cls.hold=null; cls.choice=-1; cls.draft=""; cls.msg=""; }
+    if(cls.view.round<s.round && !cls.hold) { cls.view.round=s.round; cls.choice=-1; cls.draft=""; cls.msg=""; }
+    if(s.mine && s.scn!=null && !state.wwyd.some(function(x){ return x.n===WWYD[s.scn][0]; })){ state.wwyd.push({n:WWYD[s.scn][0],choice:STANCES[s.mine.stance],why:s.mine.why}); save(); }
+    var onCur=(cls.view.round===s.round);
+    if(onCur&&s.revealed) cls.hold=s;
+    var key=[s.gid,s.round,cls.view.round,s.revealed,!!s.mine,s.answers?s.answers.length:0,cls.msg].join("|");
+    if(key===cls.key) return; cls.key=key;
+    renderCls(s,onCur);
+  });
+}
+function clsAnswers(box,s){
+  var tally=el("div"); tally.style.cssText="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0";
+  STANCES.forEach(function(t,i){ var n=s.answers.filter(function(a){ return a.stance===i; }).length; var c=el("span","small",n+" \u00b7 "+t); c.style.cssText="padding:3px 10px;border:1px solid var(--line);border-radius:99px"; tally.appendChild(c); }); box.appendChild(tally);
+  s.answers.forEach(function(a){ var r=el("div","sc"); r.appendChild(el("div","small",(a.name||"A Scout")+(a.squad?" ("+a.squad+")":"")+(a.you?" \u00b7 you":"")+" \u00b7 "+STANCES[a.stance])); r.appendChild(el("div",null,a.why)); box.appendChild(r); });
+}
+function renderCls(s,onCur){
+  var h=$("wwyd"); h.innerHTML="";
+  var shown=onCur?s:cls.hold, q=WWYD[shown.scn];
+  var tag=el("div","small","Class game \u00b7 Scenario "+(shown.round+1)+" of "+shown.total); h.appendChild(tag);
+  var card=el("div","sc"); card.appendChild(el("h3",null,q[0])); card.appendChild(el("div",null,q[1])); h.appendChild(card);
+  if(!shown.revealed){
+    if(s.mine){
+      h.appendChild(el("div","fb ok","Locked in: "+STANCES[s.mine.stance]+". Your reason: "+s.mine.why));
+      h.appendChild(el("p","hint","Waiting for your counselor to reveal everyone\u2019s answers\u2026 ("+s.answered+" locked in so far)"));
+      return; }
+    h.appendChild(el("label",null,"Your stance")); var st=el("div","stance");
+    STANCES.forEach(function(t,i){ var b=el("button","secondary"+(cls.choice===i?" sel":""),t); b.addEventListener("click",function(){ cls.choice=i; [].forEach.call(st.children,function(x){ x.classList.toggle("sel",x===b); }); }); st.appendChild(b); }); h.appendChild(st);
+    var l=el("label",null,"Why? Use a Scout Law point."); l.setAttribute("for","wwhy"); h.appendChild(l);
+    var ta=el("textarea"); ta.id="wwhy"; ta.maxLength=400; ta.value=cls.draft; ta.addEventListener("input",function(){ cls.draft=ta.value; }); h.appendChild(ta);
+    var fb=el("div","fb"); if(cls.msg){ fb.textContent=cls.msg; fb.className="fb err"; } h.appendChild(fb);
+    var go=el("button","primary","Lock in my answer"); var a=el("div","actions"); a.appendChild(go); h.appendChild(a);
+    go.addEventListener("click",function(){
+      if(cls.choice<0){ fb.textContent="Pick a stance first."; fb.className="fb err"; return; }
+      if(ta.value.trim().length<8){ fb.textContent="Write your reason (a sentence)."; fb.className="fb err"; return; }
+      var nm=(state.name||"").trim().replace(/\s+/g," ");
+      if(!state.squadSlot||!NAME_OK.test(nm)){ fb.textContent="Add your first name and last initial and pick your squad at the top of the page first."; fb.className="fb err"; return; }
+      go.disabled=true; ensureId();
+      fetch("/api/wwyd",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.scoutId,slot:state.squadSlot,name:nm,scn:s.scn,stance:cls.choice,why:ta.value.trim()})})
+        .then(function(r){ return r.json().catch(function(){return {};}).then(function(j){ if(!r.ok) throw new Error(j.error||"Could not lock in."); }); })
+        .then(function(){ state.wwyd=state.wwyd.filter(function(x){ return x.n!==q[0]; }); state.wwyd.push({n:q[0],choice:STANCES[cls.choice],why:ta.value.trim()}); save(); cls.msg=""; cls.key=""; clsPoll(); })
+        .catch(function(e){ cls.msg=e.message; cls.key=""; go.disabled=false; fb.textContent=e.message; fb.className="fb err"; }); });
+    return; }
+  // revealed
+  clsAnswers(h,shown);
+  var box=el("div","sc"); box.appendChild(el("div","small","Think about")); box.appendChild(el("div",null,q[2])); box.appendChild(el("div","small","Scout Law connections")); box.appendChild(el("div",null,q[3]));
+  box.appendChild(el("div","small","Discuss")); var ul=el("ul"); q[4].split("|").forEach(function(t){ ul.appendChild(el("li",null,t)); }); box.appendChild(ul); h.appendChild(box);
+  if(onCur){ var last=shown.round+1>=shown.total;
+    h.appendChild(el("p","hint",last?"That was the last scenario. Wait for your counselor to end the game.":"Talk it over. Your counselor will open the next scenario when the class is ready.")); }
+  else { var nx=el("button","primary","Next scenario \u2192"); nx.style.marginTop="10px"; nx.addEventListener("click",function(){ cls.hold=null; cls.view={gid:s.gid,round:s.round}; cls.choice=-1; cls.draft=""; cls.msg=""; cls.key=""; clsPoll(); h.scrollIntoView({behavior:"smooth",block:"start"}); }); h.appendChild(nx); }
+}
+function renderClsEnded(){
+  var h=$("wwyd"); h.innerHTML=""; var n=state.wwyd.length;
+  h.appendChild(el("div","score","Game over")); var p=el("p",null,"The class game has ended. You locked in "+n+" answer"+(n===1?"":"s")+", saved in your log and PDF. Show your counselor."); p.style.textAlign="center"; h.appendChild(p);
+  var b=el("button","secondary","Practice on your own"); b.addEventListener("click",function(){ cls.key=""; startWwyd(); }); var w=el("div","actions"); w.style.justifyContent="center"; w.appendChild(b); h.appendChild(w);
+}
+function renderWwyd0(){ clsStop(); cls.key=""; cls.wasActive=false; cls.view=null; cls.hold=null; clsPoll(); cls.timer=setInterval(clsPoll,3000); }
+function startWwyd(){ cls.key="solo"; wq={qs:shuffle(WWYD).slice(0,5),i:0,choice:"",rounds:[]}; state.wwyd=[]; save(); renderWwyd(); }
 function renderWwyd(){
   var h=$("wwyd"); h.innerHTML=""; var q=wq.qs[wq.i];
   if(!q){ h.appendChild(el("div","score","Done!")); var p=el("p",null,"Five scenarios finished. Your reasons are saved in your log and PDF. Show your counselor."); p.style.textAlign="center"; h.appendChild(p);
@@ -1066,7 +1136,7 @@ function fallback(doc,subject,body){
   location.href="mailto:"+COUNSELOR_EMAIL+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body+"\n\n(Attach the PDF "+filename()+" that just downloaded.)");
   msg("PDF downloaded. In the email that opened, attach "+filename()+" and send.","ok");
 }
-function snapshot(){ return {app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,matched:state.matched,hvm:state.hvm,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,l2:state.l2,lv:state.lv}; }
+function snapshot(){ return {app:"aira-field-log",version:1,saved:new Date().toISOString(),name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,matched:state.matched,hvm:state.hvm,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,wwydGid:state.wwydGid||0,l2:state.l2,lv:state.lv}; }
 function saveJson(){
   if(needName()) return;
   var data=snapshot();
@@ -1096,7 +1166,7 @@ function applyData(d,label){
         if(m && +m[1]<max && v && typeof v==="object") clean[k]={def:String(v.def||"").slice(0,400),ex:String(v.ex||"").slice(0,300)};
       });
       var keepId=/^[a-f0-9]{16,32}$/.test(String(d.scoutId||""))?String(d.scoutId):state.scoutId, slotIn=parseInt(d.squadSlot,10);
-      state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,hvm:fixHvm(d.hvm),matched:(Array.isArray(d.matched)?d.matched.slice(0,max).map(function(v){return v===true;}):[]),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
+      state={name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,hvm:fixHvm(d.hvm),matched:(Array.isArray(d.matched)?d.matched.slice(0,max).map(function(v){return v===true;}):[]),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwydGid:(Number.isInteger(d.wwydGid)?d.wwydGid:0),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
       try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}
       lastSent=""; buildPages(); build(); renderL8win(); show("L1"); scheduleSync(); msg("Loaded "+label+". Your work is back.","ok");
     }catch(e){ msg("That doesn't look like an A.I.R.A. field log.","err"); }
@@ -1131,7 +1201,6 @@ $("btnMail").addEventListener("click",mail);
 $("btnClear").addEventListener("click",clearAll);
 $("topTog").addEventListener("click",function(){ topHide=!topHide; try{ localStorage.setItem("aira_top_hidden",topHide?"1":"0"); }catch(e){} renderTop(); });
 $("goVault").addEventListener("click",function(){ show("V1"); });
-$("nextG4").addEventListener("click",function(){ show("L4"); });
 $("bNext").addEventListener("click",bonusNext); $("bTimer").addEventListener("click",bonusTimer);
 (function(){ var h=$("tools"); TOOLS.forEach(function(t){ if(!t.url) return; var a=document.createElement("a"); a.href=t.url; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=t.label+" \u2197"; if(t.alt) a.className="alt"; h.appendChild(a); });
   if(!h.children.length) $("toolsCard").hidden=true; })();

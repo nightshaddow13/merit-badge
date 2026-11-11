@@ -22,14 +22,44 @@
   <p class="jump"><a id="editlink" href="/ai/scoreboard/edit.html" hidden>Edit scores</a></p>
 </div></section>
 <div class="wrap">
+  <section id="wwydLive" class="wl" hidden aria-live="polite"></section>
+  <div id="boardWrap">
   <section id="code" class="codeblock" aria-live="polite"></section>
   <section><div id="board" aria-live="polite"><p class="empty">Loading standings…</p></div></section>
   <section id="detail"></section>
   <p class="note">Tied squads are listed in squad order until the counselor settles the tie.</p>
   <p id="status" class="note" role="status"></p>
+  </div>
 </div>
 </main>
 <footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<style>
+.wl{border:3px solid var(--ink);border-radius:16px;padding:22px;margin:18px 0;background:var(--white)}
+.wl .rd{font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:14px;color:var(--mut)}
+.wl h2{font-size:clamp(28px,5vw,48px);margin:6px 0}.wl .pr{font-size:clamp(18px,2.6vw,26px);margin:0 0 14px}
+.wl .wait{font-size:18px;font-weight:700}.wl .tally{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.wl .tally span{padding:5px 14px;border-radius:99px;border:1px solid var(--line);font-size:16px;font-weight:700}
+.wl .ans{margin:6px 0;padding:8px 12px;border-left:4px solid var(--line);font-size:18px}.wl .ans b{display:block;font-size:14px;color:var(--mut)}
+</style>
+<script>
+(function(){
+ var SCN=[["School admissions","An AI system reviews student applications to decide who gets into a school program."],["AI healthcare assistant","A hospital uses AI to decide which emergency room patients are treated first, using vital signs and symptoms."],["AI in law enforcement","Police use AI to predict high-crime areas from past crime data and decide where to send patrols."],["AI essay grading","A school uses AI to grade essays on writing quality, content, and creativity."],["Environmental monitoring","An AI system controls water use, energy use, and waste management for a community."],["Social media moderation","An AI system filters content and monitors interactions on a platform for young people."],["Self-driving car safety","An autonomous vehicle must make split-second decisions in possible accident situations."],["Loan approvals","An AI system approves or denies loan applications by judging creditworthiness and risk."],["Job application screening","An AI system screens job applications and resumes."],["Personal privacy","An AI system collects and analyzes personal data to personalize and improve a service."]];
+ var STANCES=["Use it, with a human reviewing every decision","Use it, but only to help a person decide","Do not use AI for this"];
+ var box=document.getElementById("wwydLive"),wrap=document.getElementById("boardWrap");
+ function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+ function paint(j){
+  if(!j.active){ box.hidden=true; wrap.hidden=false; return; }
+  box.hidden=false; wrap.hidden=true; box.textContent="";
+  var d=SCN[j.scn]||["Scenario",""];
+  box.appendChild(E("div","rd","What Would You Do? \u00b7 Scenario "+(j.round+1)+" of "+j.total));
+  box.appendChild(E("h2",null,d[0])); box.appendChild(E("p","pr",d[1]));
+  if(!j.revealed){ box.appendChild(E("p","wait",j.answered+" Scout"+(j.answered===1?"":"s")+" locked in. Answers appear when your counselor reveals them.")); return; }
+  var t=E("div","tally"); STANCES.forEach(function(s,i){ var n=j.answers.filter(function(a){return a.stance===i}).length; t.appendChild(E("span",null,n+" \u00b7 "+s)); }); box.appendChild(t);
+  j.answers.forEach(function(a){ var r=E("div","ans"); r.appendChild(E("b",null,(a.squad||"Squad")+" \u00b7 "+STANCES[a.stance])); r.appendChild(E("span",null,a.why)); box.appendChild(r); });
+ }
+ function poll(){ fetch("/api/wwyd",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){ if(j) paint(j); }).catch(function(){}); }
+ poll(); setInterval(poll,4000);
+})();
+</script>
 <script>window.BOARD={"id": "ai", "entity": "Squad", "slots": 4, "rowsUrl": "/ai/scoreboard/rows.json", "snapshotUrl": "/data/scoreboard-ai.json", "unit": "XP"};</script>
 <script src="/assets/scoreboard/common.js"></script>
 <script src="/assets/scoreboard/board.js" defer></script>

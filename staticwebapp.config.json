@@ -134,6 +134,46 @@
       }
     },
     {
+      "route": "/api/wwyd/all",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/wwyd/control",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/wwyd/clear",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/ai/scoreboard/wwyd.html",
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ],
+      "headers": {
+        "X-Robots-Tag": "noindex",
+        "Cache-Control": "private, no-store"
+      }
+    },
+    {
       "route": "/api/hvboard/reset",
       "methods": [
         "POST"

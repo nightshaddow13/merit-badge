@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" class="ai">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What Would You Do dashboard: A.I.R.A.</title>
+<meta name="description" content="Enter scores.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/">Cybersecurity</a><a href="/ai/" aria-current="page">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">For counselors</p>
+  <h1>What Would You Do? live game</h1>
+  <p class="lead">Press <b>Start game</b> to pick five scenarios. Each scenario shows on the public scoreboard page while Scouts lock in their answers. Press <b>Reveal</b> to show the answers (names stay private on the scoreboard), and Scouts can only move on once you press <b>Next scenario</b>. <b>End game</b> brings the scoreboard back.</p>
+  <p class="jump"><a href="/ai/scoreboard/" target="_blank" rel="noopener">Open the scoreboard to project</a> &middot; <a href="/ai/scoreboard/edit.html">Scorekeeper</a> &middot; <a href="/ai/scoreboard/logs.html">Field Log dashboard</a></p>
+</div></section>
+<div class="wrap">
+  <p id="msg" class="msg" role="status"></p>
+  <div class="savebar"><button id="bStart" class="btn" type="button">Start game</button><button id="bRev" class="btn" type="button">Reveal answers</button><button id="bNext" class="btn" type="button">Next scenario</button><button id="bEnd" class="btn ghost" type="button">End game</button><span id="state" class="pill"></span></div>
+  <div id="now"></div>
+  <div class="savebar"><button id="clr" class="btn ghost" type="button">Clear all answers</button></div>
+  <h2>All answers</h2>
+  <div id="out"></div>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouting America merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<style>
+.ans{margin:4px 0;padding:6px 10px;border-left:3px solid var(--line);font-size:15px}.ans b{display:block;font-size:13px;color:var(--mut)}
+.scn{border:2px solid var(--ink);border-radius:12px;padding:14px;margin:14px 0;background:var(--white)}.scn h3{margin:0 0 4px}.scn p{margin:0 0 8px;color:var(--mut)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:14px;font-weight:700;background:#E2EAE5;color:#14201B}.pill.ok{background:#BFEBD0;color:#0b3a1f}.pill.warn{background:#FFE08A;color:#4a3300}
+.small{font-size:13px;color:var(--mut)}.tally{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.tally span{padding:3px 10px;border-radius:99px;border:1px solid var(--line);font-size:14px}
+</style>
+<script>
+(function(){
+ var SCN=[["School admissions","An AI system reviews student applications to decide who gets into a school program."],["AI healthcare assistant","A hospital uses AI to decide which emergency room patients are treated first, using vital signs and symptoms."],["AI in law enforcement","Police use AI to predict high-crime areas from past crime data and decide where to send patrols."],["AI essay grading","A school uses AI to grade essays on writing quality, content, and creativity."],["Environmental monitoring","An AI system controls water use, energy use, and waste management for a community."],["Social media moderation","An AI system filters content and monitors interactions on a platform for young people."],["Self-driving car safety","An autonomous vehicle must make split-second decisions in possible accident situations."],["Loan approvals","An AI system approves or denies loan applications by judging creditworthiness and risk."],["Job application screening","An AI system screens job applications and resumes."],["Personal privacy","An AI system collects and analyzes personal data to personalize and improve a service."]];
+ var STANCES=["Use it, with a human reviewing every decision","Use it, but only to help a person decide","Do not use AI for this"];
+ var msg=document.getElementById("msg"),out=document.getElementById("out"),now=document.getElementById("now"),st=document.getElementById("state"),G=null,armed=false;
+ function say(t){msg.textContent=t}
+ function E(tag,cls,t){var e=document.createElement(tag);if(cls)e.className=cls;if(t!=null)e.textContent=t;return e}
+ function api(path,body){return fetch(path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||"Request failed ("+r.status+")");return j})})}
+ function ctl(action){ return api("/api/wwyd/control",{action:action}).then(function(){ say(""); return load(); }).catch(function(e){ say(e.message); }); }
+ function cards(list,box){
+  list.forEach(function(s){
+   var sec=E("section","scn"), d=SCN[s.scn]||["Scenario "+(s.scn+1),""];
+   sec.appendChild(E("h3",null,d[0])); sec.appendChild(E("p",null,d[1]));
+   var tally=E("div","tally"); STANCES.forEach(function(t,i){ var n=s.answers.filter(function(a){return a.stance===i}).length; tally.appendChild(E("span",null,n+" \u00b7 "+t)); }); sec.appendChild(tally);
+   s.answers.forEach(function(a){ var r=E("div","ans"); r.appendChild(E("b",null,a.name+(a.squad?" ("+a.squad+")":"")+" \u00b7 "+STANCES[a.stance])); r.appendChild(E("span",null,a.why)); sec.appendChild(r); });
+   box.appendChild(sec); });
+ }
+ function paint(j){
+  G=j.game; var g=G;
+  st.textContent=g.active?("Round "+(g.round+1)+" of "+g.total+(g.revealed?" \u00b7 revealed":" \u00b7 collecting answers")):"No game running"; st.className="pill "+(g.active?(g.revealed?"ok":"warn"):"");
+  var last=g.active&&g.round+1>=g.total;
+  document.getElementById("bStart").textContent=g.active?"Restart (clears answers)":"Start game";
+  document.getElementById("bRev").hidden=!g.active; document.getElementById("bRev").textContent=g.revealed?"Hide answers":"Reveal answers";
+  document.getElementById("bNext").hidden=!g.active||last; document.getElementById("bNext").disabled=!g.revealed;
+  document.getElementById("bEnd").hidden=!g.active;
+  now.textContent=""; if(g.active){ var d=SCN[g.scn]||["",""], sec=E("section","scn"); sec.appendChild(E("div","small","On the scoreboard now \u00b7 "+g.answered+" locked in")); sec.appendChild(E("h3",null,d[0])); sec.appendChild(E("p",null,d[1])); now.appendChild(sec); }
+  out.textContent=""; out.appendChild(E("p",null,j.count+" answer"+(j.count===1?"":"s")+" from "+j.scouts+" Scout"+(j.scouts===1?"":"s")+" this game."));
+  if(!j.scenarios.length) out.appendChild(E("p","muted","No answers yet.")); cards(j.scenarios,out);
+ }
+ function load(){ return api("/api/wwyd/all").then(paint).catch(function(e){ say(e.message); }); }
+ document.getElementById("bStart").onclick=function(){ ctl("start"); };
+ document.getElementById("bRev").onclick=function(){ ctl(G&&G.revealed?"hide":"reveal"); };
+ document.getElementById("bNext").onclick=function(){ ctl("next"); };
+ document.getElementById("bEnd").onclick=function(){ ctl("end"); };
+ var clr=document.getElementById("clr");
+ clr.onclick=function(){ if(!armed){ armed=true; clr.textContent="Delete every answer? Press again"; setTimeout(function(){ armed=false; clr.textContent="Clear all answers"; },5000); return; }
+  armed=false; clr.textContent="Clear all answers"; api("/api/wwyd/clear",{}).then(function(){ say("All answers cleared."); return load(); }).catch(function(e){ say(e.message); }); };
+ load(); setInterval(load,5000);
+})();
+</script>
+</body>
+</html>
