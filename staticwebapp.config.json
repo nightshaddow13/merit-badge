@@ -403,6 +403,16 @@
         "counselor",
         "scorekeeper"
       ]
+    },
+    {
+      "route": "/api/fieldlog/signoff",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
     }
   ],
   "globalHeaders": {

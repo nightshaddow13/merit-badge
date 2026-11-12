@@ -159,3 +159,11 @@ API (`api/src/functions/wardenlog.js`, `api/src/lib/wardenlog.js`, tables `warde
 | `POST /api/wardenlog/signoff`, `/grant`, `/delete`, `/reset` | staff | sign off or undo (`{id, req, signed}`), approve or revoke a waiver, delete one log, remove everything (`{confirm:"RESET"}`) |
 
 The dashboard has a class grid (Wardens down, requirements across), a lodge filter, one-click and "sign every finished requirement" sign-off, a printable view and `.json` per Warden, a CSV of all sign-offs, and Reset all Warden Logs (two confirmations). Run `node api/test-wardenlog.js` for the library tests. Sign-offs and waivers live in their own rows, so a Warden's autosave can never create or erase one.
+
+## Requirement tracking (both badges)
+
+`assets/requirements.js` is the single list of requirements: the 24 Cybersecurity requirement codes (1a to 9, paraphrased from `counselor/files/cybersecurity/warden-sign-off-tracker.xlsx`; confirm official wording in Scoutbook) and the 8 A.I.R.A. level requirements. `api/test-wardenlog.js` checks the API's code list matches it.
+
+- **Cybersecurity.** The Warden Log has a "My requirements" checklist. Requirements with a worksheet check themselves as **Ready for counselor** when the Warden finishes it (4e breach report, 4f attack surface, 6c Press the Seal, 7 Enchanted Objects, 9 career worksheet). The rest are class activities and are signed by the counselor. The dashboard grid has a column per requirement: a finished worksheet shows a dot, a class activity shows an open circle you can tap to sign, and a tick means signed (tap to undo). "Sign every finished requirement" only signs the auto-detected ones.
+- **A.I.R.A.** A level requirement (1 to 8) is **Ready** when every required item on that level page is done, or the Scout has unlocked past it (including a waiver). The Field Log's Send & save page shows the checklist; `ai/scoreboard/logs.html` has Req 1 to 8 columns (tap to sign or undo) and a sign-off list on each Scout's detail. Sign-offs use `POST /api/fieldlog/signoff` (`{id, req: 1-8, signed}`, staff only) and are returned by `GET /api/fieldlog/override?id=` as `signed`.
+- Sign-offs are stored in the staff-written override rows, so a Scout's autosave can never create or erase one. Auto-checking never marks anything signed: only a counselor's tap does.

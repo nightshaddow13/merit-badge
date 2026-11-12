@@ -9,6 +9,9 @@ const { tableStore, bigStore } = require("../lib/tablestore");
 const TABLE = "cup";
 const HEADERS = { "Content-Type": "application/json", "Cache-Control": "no-store" };
 
+const who = (request) => {
+  try { return JSON.parse(Buffer.from(request.headers.get("x-ms-client-principal"), "base64").toString("utf8")).userDetails || ""; } catch (e) { return ""; }
+};
 const staff = (request) => {
   const h = request.headers.get("x-ms-client-principal");
   return hasRole(h, "counselor") || hasRole(h, "scorekeeper");
@@ -21,6 +24,7 @@ const staff = (request) => {
 // GET  /api/fieldlog/logs            staff: list every backed-up log with its summary
 // GET  /api/fieldlog/log?id=         staff: one full log
 // POST /api/fieldlog/grant           staff: { id, level, granted } waive or restore a page's requirements
+// POST /api/fieldlog/signoff         staff: { id, req (1-8), signed } sign off or undo an A.I.R.A. requirement
 // POST /api/fieldlog/delete          staff: remove one log
 app.http("fieldlog", {
   methods: ["GET", "POST"],
@@ -50,9 +54,9 @@ app.http("fieldlog", {
         try { body = JSON.parse(text); } catch (e) { return { status: 400, headers: HEADERS, jsonBody: { error: "Send valid JSON." } }; }
         if (action === "") r = await fl.save(body);
         else if (action === "override") r = await fl.requestOverride(body);
-        else if (action === "grant" || action === "delete") {
+        else if (action === "grant" || action === "delete" || action === "signoff") {
           if (!staff(request)) return deny;
-          r = action === "grant" ? await fl.grant(body) : await fl.remove(body);
+          r = action === "grant" ? await fl.grant(body) : action === "signoff" ? await fl.signoff(body, who(request)) : await fl.remove(body);
         } else return { status: 404, headers: HEADERS, jsonBody: { error: "Not found." } };
       }
       return { status: r.status, headers: HEADERS, jsonBody: r.body };
