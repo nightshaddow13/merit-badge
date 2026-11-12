@@ -24,6 +24,7 @@
 </div></section>
 <div class="wrap">
   <p id="msg" class="msg" role="status"></p>
+  <section class="lvpanel" id="queue" aria-live="polite"></section>
   <div id="list"></div>
   <section id="detail" hidden></section>
   <section class="lvpanel" id="hnn"><h3>Human Neural Network mystery cards</h3>
@@ -54,11 +55,12 @@
 .lvbox h3{margin:0 0 4px;font-size:16px}.lvbox .btn{display:block;margin-top:8px;font-size:15px;padding:8px 12px}.lvbox .pill{margin:4px 4px 2px 0}
 .dump{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;background:var(--white)}
 .dump div{margin:2px 0;padding-left:12px;border-left:2px solid var(--line)}.dump b{font-weight:700}
+.qrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line,#ccc)}.qrow:first-of-type{border-top:0}.qtxt{flex:1 1 280px}.qchk{display:inline-flex;align-items:center;gap:4px;margin:2px 10px 2px 0;font-size:15px}.qchk input{width:20px;height:20px}
 </style>
 <script>
 (function(){
  var SCHEMA={"3":[{"k":"home","h":"3a · Everyday automation","t":"rows","cols":["v","t"],"lab":""},{"k":"work","h":"3b · Automation at work","t":"rows","cols":["v","t"],"lab":""},{"k":"school","h":"3c · Automation at school","t":"rows","cols":["v","t"],"lab":""},{"k":"hist","h":"3e · Automation timeline","t":"rows","cols":["y","v"],"lab":""},{"k":"boss","h":"3f \u00b7 Boss Challenge: design a workflow","t":"form","f":[{"k":"job","l":"The Scouting job"},{"k":"trig","l":"Trigger"},{"k":"t1","l":"Task 1"},{"k":"t2","l":"Task 2"},{"k":"t3","l":"Task 3"},{"k":"var","l":"Variable"},{"k":"def","l":"30-second defense"},{"k":"safe","l":"Safeguard if the trigger fires by mistake"}]}],"4":[{"k":"big","h":"4a · Ethical concerns","t":"form","f":[{"k":"bias","l":"Bias"},{"k":"priv","l":"Privacy"},{"k":"dec","l":"AI decision-making (who is responsible when it is wrong?)"}]},{"k":"law","h":"4c · My guidelines for using AI","t":"rows","cols":["law","rule"],"lab":""},{"k":"charter","h":"Squad charter (optional)","t":"rows","cols":["law","rule"],"lab":""},{"k":"tur","h":"4d · The Turing test","t":"form","f":[{"k":"exp","l":"Explain the Turing test in your own words."}]}],"5":[{"k":"what","h":"5a · What is a deepfake?","t":"form","f":[{"k":"def","l":"What is a deepfake?"},{"k":"aff","l":"How can it affect a person?"}]},{"k":"act","h":"5b · If a deepfake targets you or a friend","t":"form","f":[{"k":"steps","l":"What actions would you take?"}]}],"6":[{"k":"meth","h":"6b · Five ways to communicate with AI","t":"rows","cols":["v"],"lab":""},{"k":"why","h":"6c · Why prompt engineering matters","t":"form","f":[{"k":"why","l":"Why does a better prompt give better output?"}]},{"k":"pr","h":"6d · Three clear instructions for a school task","t":"rows","cols":["p"],"lab":"Prompt "}],"7":[{"k":"plan","h":"7a · Plan your AI project","t":"form","f":[{"k":"obj","l":"Objectives: what will your AI learn to do?"},{"k":"data","l":"Data requirements: what data will you use?"},{"k":"eth","l":"Ethical considerations: what could go wrong?"}]},{"k":"share","h":"7a · Share what you did","t":"form","f":[{"k":"steps","l":"What steps did you follow?"},{"k":"exp","l":"What went wrong, and what would you change?"}]}],"8":[{"k":"who","h":"8b · Interview an AI professional","t":"form","f":[{"k":"role","l":"Who you interviewed (job title)"},{"k":"day","l":"Daily work"},{"k":"chal","l":"Challenges"},{"k":"vis","l":"Vision for the field"},{"k":"train","l":"Training, education, certification, experience, and costs"}]}]},TERMS=["artificial intelligence (AI)","AI agents","automation","basic programming","bots","data","databases","digital workers","general AI","machine learning (ML)","narrow AI","superintelligent AI","tasks","triggers","workflows","variables"],TLC=[["1950","Can machines think?"],["1956","The field gets its name"],["1966","The first chatbot"],["1997","A machine beats the chess champion"],["2011","A computer wins the quiz show"],["2014","Talking to a machine at home"],["2016","A machine masters Go"],["2022","AI you can chat with"]],L2SEC=[["life","2a · AI in everyday life"],["work","2b · AI in the workplace"],["school","2c · AI at school"]];
- var panelN=0;
+ var panelN=0;function $(i){return document.getElementById(i)}
  var list=document.getElementById("list"),detail=document.getElementById("detail"),msg=document.getElementById("msg"),cur=null,timer;
  var NAMES=["Key Concepts","AI Basics","Automation","Ethics in AI","Deepfakes","AI Skills","Train Your Own AI","Career Exploration"];
  function say(t){msg.textContent=t}
@@ -69,8 +71,39 @@
  function reqSigned(l,n){return !!(l.signed&&l.signed[n])}
  function signReq(l,n,on){return api("/api/fieldlog/signoff",{id:l.id,req:n,signed:on}).then(function(j){l.signed=j.signed;return j})}
  function pending(l){return Object.keys(l.overrides||{}).filter(function(n){return l.overrides[n].status==="pending"})}
+
+ // ---- "Needs you": every waive request and every finished-but-unsigned requirement in one place ----
+ function paintQueue(waives,groups){
+  var host=$("queue");host.textContent="";
+  var n=waives.length+groups.reduce(function(a,g){return a+g.items.length},0);
+  host.appendChild(E("h3",null,n?"Needs you ("+n+")":"Needs you"));
+  if(!n){host.appendChild(E("p","muted","Nothing is waiting for you. Waive requests and finished requirements show up here."));return}
+  waives.forEach(function(w){
+   var row=E("div","qrow");var t=E("div","qtxt");t.appendChild(E("b",null,w.who));t.appendChild(document.createTextNode(" asks to waive "+w.label+(w.reason?" ("+w.reason+")":"")));row.appendChild(t);
+   var ok=E("button","btn","Waive and sign off");ok.type="button";var no=E("button","btn ghost","Decline");no.type="button";
+   ok.onclick=function(){ok.disabled=no.disabled=true;w.approve().then(function(){say("Waived and signed "+w.label+" for "+w.who+".");return load()}).catch(function(e){say(e.message);ok.disabled=no.disabled=false})};
+   no.onclick=function(){ok.disabled=no.disabled=true;w.decline().then(function(){say("Declined "+w.label+" for "+w.who+".");return load()}).catch(function(e){say(e.message);ok.disabled=no.disabled=false})};
+   row.appendChild(ok);row.appendChild(no);host.appendChild(row)});
+  groups.forEach(function(g){if(!g.items.length)return;
+   var row=E("div","qrow");var t=E("div","qtxt");t.appendChild(E("b",null,g.label));t.appendChild(document.createTextNode(" finished: "));
+   var boxes=g.items.map(function(it){var lb=E("label","qchk"),cb=document.createElement("input");cb.type="checkbox";cb.checked=true;lb.appendChild(cb);lb.appendChild(document.createTextNode(" "+it.who));t.appendChild(lb);return {cb:cb,it:it}});
+   row.appendChild(t);var go=E("button","btn","");go.type="button";
+   function upd(){var k=boxes.filter(function(b){return b.cb.checked}).length;go.textContent="Sign "+k;go.disabled=!k}
+   boxes.forEach(function(b){b.cb.onchange=upd});upd();
+   go.onclick=function(){var pick=boxes.filter(function(b){return b.cb.checked});go.disabled=true;
+    pick.reduce(function(p,b){return p.then(function(){return b.it.sign()})},Promise.resolve()).then(function(){say("Signed "+g.label+" for "+pick.length+".");return load()}).catch(function(e){say(e.message);load()})};
+   row.appendChild(go);host.appendChild(row)});
+ }
+
+ function queueData(logs){
+  var waives=[],groups=NAMES.map(function(nm,i){return {label:"Req "+(i+1)+" "+nm,items:[]}});
+  logs.forEach(function(l){var who=l.name||"(no name)";
+   for(var n=1;n<=8;n++)(function(n){var o=(l.overrides||{})[n];
+    if(o&&o.status==="pending"){waives.push({who:who,label:"Level "+n+" ("+NAMES[n-1]+")",reason:o.missing&&o.missing.length?"missing: "+o.missing.join("; "):"",approve:function(){return api("/api/fieldlog/grant",{id:l.id,level:n,granted:true}).then(function(){return signReq(l,n,true)})},decline:function(){return api("/api/fieldlog/grant",{id:l.id,level:n,granted:false})}});return}
+    if(reqDone(l,n)&&!reqSigned(l,n))groups[n-1].items.push({who:who,sign:function(){return signReq(l,n,true)}})})(n)});
+  paintQueue(waives,groups)}
  function paintList(logs){
-  list.textContent="";
+  queueData(logs);list.textContent="";
   if(!logs.length){list.textContent="No Field Logs backed up yet. They appear a few seconds after a Scout enters a name and starts working.";return}
   var t=E("table","grid"),h=E("thead"),hr=E("tr");["Scout","Squad","Level","Vault","Updated","Needs you","1","2","3","4","5","6","7","8"].forEach(function(x,i){var th=E("th",null,x);th.scope="col";if(i>5)th.title="Requirement "+x+": "+NAMES[i-6];hr.appendChild(th)});h.appendChild(hr);t.appendChild(h);
   var b=E("tbody");

@@ -27,6 +27,7 @@
   <div class="bar2"><label for="flt">Lodge</label><select id="flt"><option value="">All lodges</option></select>
    <button id="vGrid" class="btn" type="button" aria-pressed="true">Class grid</button><button id="vList" class="btn ghost" type="button" aria-pressed="false">List</button>
    <button id="csv" class="btn ghost" type="button">Download all as CSV</button><button id="signAll" class="btn ghost" type="button">Sign every finished requirement</button></div>
+  <section class="lvpanel" id="queue" aria-live="polite"></section>
   <div id="list"></div>
   <section id="detail" hidden></section>
   <section class="lvpanel"><h3>New class</h3><p class="muted">Removes every Warden Log, sign-off and waiver. Download the CSV first.</p><div class="savebar"><button id="resetAll" class="btn ghost" type="button">Reset all Warden Logs&hellip;</button></div></section>
@@ -45,6 +46,7 @@
 .cell{min-width:40px;padding:0 2px;min-height:44px;border:2px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink);font:700 20px/1 inherit;font-family:inherit;cursor:pointer}
 .cell.s{background:#BFEBD0;border-color:#1B6B3A;color:#0b3a1f}.cell.d{border-color:#B77900;color:#B77900}.cell.o{border-style:dashed;color:var(--mut)}.cell.n{color:var(--mut);cursor:default;border-style:dashed}.cell.w{border-color:#B77900;background:#FFE08A;color:#4a3300;font-size:14px}
 .cell:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.qrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line,#ccc)}.qrow:first-of-type{border-top:0}.qtxt{flex:1 1 280px}.qchk{display:inline-flex;align-items:center;gap:4px;margin:2px 10px 2px 0;font-size:15px}.qchk input{width:20px;height:20px}
 .legend{font-size:14px;color:var(--mut);margin:8px 0}
 .ans{margin:4px 0;padding:6px 10px;border-left:3px solid var(--line);font-size:15px;white-space:pre-wrap}.ans b{display:block;font-size:13px;color:var(--mut)}
 .secbox{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0;background:var(--white)}.secbox h4{margin:0 0 6px;font-size:17px}
@@ -80,8 +82,40 @@
  function needs(l){return REQS.some(function(q){return isDone(l,q[0])&&!(l.signed&&l.signed[q[0]])})}
  function fillFilter(){var sel=$("flt"),cur0=sel.value,names={};logs.forEach(function(l){if(l.lodge)names[l.lodge]=1});sel.textContent="";sel.appendChild(new Option("All lodges",""));Object.keys(names).sort().forEach(function(n){sel.appendChild(new Option(n,n))});sel.value=names[cur0]?cur0:"";flt=sel.value}
  function sign(l,r,on){return api("/api/wardenlog/signoff",{id:l.id,req:r,signed:on}).then(function(j){l.signed=j.signed;return j})}
+
+ // ---- "Needs you": every waive request and every finished-but-unsigned requirement in one place ----
+ function paintQueue(waives,groups){
+  var host=$("queue");host.textContent="";
+  var n=waives.length+groups.reduce(function(a,g){return a+g.items.length},0);
+  host.appendChild(E("h3",null,n?"Needs you ("+n+")":"Needs you"));
+  if(!n){host.appendChild(E("p","muted","Nothing is waiting for you. Waive requests and finished requirements show up here."));return}
+  waives.forEach(function(w){
+   var row=E("div","qrow");var t=E("div","qtxt");t.appendChild(E("b",null,w.who));t.appendChild(document.createTextNode(" asks to waive "+w.label+(w.reason?" ("+w.reason+")":"")));row.appendChild(t);
+   var ok=E("button","btn","Waive and sign off");ok.type="button";var no=E("button","btn ghost","Decline");no.type="button";
+   ok.onclick=function(){ok.disabled=no.disabled=true;w.approve().then(function(){say("Waived and signed "+w.label+" for "+w.who+".");return load()}).catch(function(e){say(e.message);ok.disabled=no.disabled=false})};
+   no.onclick=function(){ok.disabled=no.disabled=true;w.decline().then(function(){say("Declined "+w.label+" for "+w.who+".");return load()}).catch(function(e){say(e.message);ok.disabled=no.disabled=false})};
+   row.appendChild(ok);row.appendChild(no);host.appendChild(row)});
+  groups.forEach(function(g){if(!g.items.length)return;
+   var row=E("div","qrow");var t=E("div","qtxt");t.appendChild(E("b",null,g.label));t.appendChild(document.createTextNode(" finished: "));
+   var boxes=g.items.map(function(it){var lb=E("label","qchk"),cb=document.createElement("input");cb.type="checkbox";cb.checked=true;lb.appendChild(cb);lb.appendChild(document.createTextNode(" "+it.who));t.appendChild(lb);return {cb:cb,it:it}});
+   row.appendChild(t);var go=E("button","btn","");go.type="button";
+   function upd(){var k=boxes.filter(function(b){return b.cb.checked}).length;go.textContent="Sign "+k;go.disabled=!k}
+   boxes.forEach(function(b){b.cb.onchange=upd});upd();
+   go.onclick=function(){var pick=boxes.filter(function(b){return b.cb.checked});go.disabled=true;
+    pick.reduce(function(p,b){return p.then(function(){return b.it.sign()})},Promise.resolve()).then(function(){say("Signed "+g.label+" for "+pick.length+".");return load()}).catch(function(e){say(e.message);load()})};
+   row.appendChild(go);host.appendChild(row)});
+ }
+
+ function nameOf(l){return l.name||"(no name)"}
+ function queueData(){
+  var waives=[],groups=REQS.map(function(q){return {label:q[1]+" "+q[5],items:[]}}),idx={};REQS.forEach(function(q,i){idx[q[0]]=i});
+  shown().forEach(function(l){
+   REQS.forEach(function(q){var r=q[0],wv=l.waive&&l.waive[r];
+    if(wv&&wv.status==="pending"){waives.push({who:nameOf(l),label:q[1]+" "+q[5],reason:wv.reason,approve:function(){return api("/api/wardenlog/grant",{id:l.id,req:r,granted:true}).then(function(x){l.waive=x.waive;return sign(l,r,true)})},decline:function(){return api("/api/wardenlog/grant",{id:l.id,req:r,granted:false}).then(function(x){l.waive=x.waive})}});return}
+    if(isDone(l,r)&&!(l.signed&&l.signed[r]))groups[idx[r]].items.push({who:nameOf(l),sign:function(){return sign(l,r,true)}})})});
+  paintQueue(waives,groups)}
  function paint(){
-  list.textContent="";var rows=shown();
+  queueData();list.textContent="";var rows=shown();
   if(!logs.length){list.textContent="No Warden Logs backed up yet. They appear a few seconds after a Warden enters a name and starts working.";return}
   if(!rows.length){list.textContent="No Wardens in that lodge.";return}
   var t=E("table","grid"),h=E("thead"),hr=E("tr");
