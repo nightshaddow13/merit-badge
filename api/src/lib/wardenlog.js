@@ -8,6 +8,8 @@
 //
 // stores: { logs: big store ({meta,state}), ovr: small store }
 
+// Same file as assets/warden-rules.js (the Azure API deploys on its own, so it keeps a copy; test-wardenlog.js checks they match).
+const rules = require("./wardenrules");
 const ID_RE = /^[a-f0-9]{16,32}$/;
 const MAX_STATE = 150000;
 const MAX_LOGS = 80;
@@ -56,8 +58,12 @@ function createWardenLog(stores) {
     if (JSON.stringify(body.state).length > MAX_STATE) return { status: 413, body: { error: "That log is too large." } };
     const state = clean(body.state, 0);
     const key = "log-" + body.id;
-    if (!(await logs.get(key)) && (await logs.list()).length >= MAX_LOGS) return { status: 409, body: { error: "The class backup is full. Ask your counselor." } };
-    const meta = { id: body.id, name: txt(body.name, 40), lodge: txt(body.lodge, 40), updated: new Date().toISOString(), summary: cleanSummary(body.summary) };
+    const old = await logs.get(key);
+    if (!old && (await logs.list()).length >= MAX_LOGS) return { status: 409, body: { error: "The class backup is full. Ask your counselor." } };
+    // A counselor edit is newer than anything this device has seen: do not overwrite it; the device pulls it first.
+    if (old && old.meta.editedAt && body.seenEdit !== old.meta.editedAt) return { status: 409, body: { error: "Your counselor updated your log.", edited: true, editedAt: old.meta.editedAt } };
+    const meta = { id: body.id, name: txt(body.name, 40), lodge: txt(body.lodge, 40), memberId: typeof body.memberId === "string" ? body.memberId.replace(/\D/g, "").slice(0, 12) : "", updated: new Date().toISOString(), summary: cleanSummary(body.summary) };
+    if (old && old.meta.editedAt) { meta.editedAt = old.meta.editedAt; meta.editedBy = old.meta.editedBy; }
     await logs.put(key, { meta, state });
     return { status: 200, body: { saved: true, updated: meta.updated } };
   }
@@ -67,7 +73,8 @@ function createWardenLog(stores) {
     if (badId(id)) return { status: 400, body: { error: "Missing recovery code." } };
     const r = await row(id), waive = {};
     Object.keys(r.waive).forEach((k) => (waive[k] = r.waive[k].status));
-    return { status: 200, body: { signed: r.signed, waive } };
+    const rec = await logs.get("log-" + id);
+    return { status: 200, body: { signed: r.signed, waive, editedAt: (rec && rec.meta.editedAt) || "" } };
   }
 
   // Public. A Warden who is blocked asks staff to waive one requirement.
@@ -87,7 +94,7 @@ function createWardenLog(stores) {
     if (badId(id)) return { status: 400, body: { error: "Missing recovery code." } };
     const rec = await logs.get("log-" + id);
     if (!rec || !rec.state) return { status: 404, body: { error: "No backup found." } };
-    return { status: 200, body: { state: rec.state } };
+    return { status: 200, body: { state: rec.state, name: rec.meta.name || "", lodge: rec.meta.lodge || "", memberId: rec.meta.memberId || "", editedAt: rec.meta.editedAt || "" } };
   }
 
   // ---- staff only (the caller checks the role) ----
@@ -128,6 +135,26 @@ function createWardenLog(stores) {
     await ovr.put("o-" + body.id, r);
     return { status: 200, body: { waive: r.waive } };
   }
+  // Staff: fix identity or written answers. body: { id, name?, lodge?, memberId?, data?: { section: {...} } }
+  // Only known sections are replaced (each cleaned like a normal save); the summary is recomputed from the answers.
+  async function edit(body, by) {
+    if (!body || badId(body.id)) return { status: 400, body: { error: "Missing id." } };
+    const rec = await logs.get("log-" + body.id);
+    if (!rec) return { status: 404, body: { error: "No such log." } };
+    const meta = rec.meta, state = rec.state && typeof rec.state === "object" ? rec.state : {};
+    if (typeof body.name === "string") meta.name = txt(body.name, 40);
+    if (typeof body.lodge === "string") meta.lodge = txt(body.lodge, 40);
+    if (typeof body.memberId === "string") meta.memberId = body.memberId.replace(/\D/g, "").slice(0, 12);
+    if (body.data !== undefined) {
+      if (!body.data || typeof body.data !== "object" || Array.isArray(body.data)) return { status: 400, body: { error: "data must be an object of sections." } };
+      Object.keys(body.data).forEach((k) => { if (SECTIONS.includes(k) && body.data[k] && typeof body.data[k] === "object" && !Array.isArray(body.data[k])) state[k] = clean(body.data[k], 1); });
+    }
+    if (JSON.stringify(state).length > MAX_STATE) return { status: 413, body: { error: "That log is too large." } };
+    meta.summary = cleanSummary(rules.states(state));
+    meta.updated = new Date().toISOString(); meta.editedAt = meta.updated; meta.editedBy = txt(by, 60) || "counselor";
+    await logs.put("log-" + body.id, { meta, state });
+    return { status: 200, body: { meta, state } };
+  }
   async function remove(body) {
     if (!body || badId(body.id)) return { status: 400, body: { error: "Missing id." } };
     await logs.remove("log-" + body.id); await ovr.remove("o-" + body.id);
@@ -141,7 +168,7 @@ function createWardenLog(stores) {
     return { status: 200, body: { removed: n } };
   }
 
-  return { save, status, requestWaive, restore, list, get, signoff, grant, remove, resetAll };
+  return { save, status, requestWaive, restore, list, get, signoff, grant, edit, remove, resetAll };
 }
 
 module.exports = { createWardenLog, MAX_STATE, MAX_LOGS, REQS, SECTIONS, SECTION_REQ };

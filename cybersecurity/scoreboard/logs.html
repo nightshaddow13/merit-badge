@@ -35,12 +35,14 @@
 <footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
 <div id="pv" aria-hidden="true"></div>
 <style>
+/* Staff dashboards use the full width of a large screen so every requirement column fits without scrolling. */
+@media (min-width:1000px){main .wrap{max-width:min(1800px,calc(100vw - 48px))}.grid{min-width:0}.grid th,.grid td{padding:6px 4px}}
 .bar2{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0 14px}.bar2 select{min-height:44px;font:inherit;padding:0 10px}.bar2 label{font-weight:700}
 .lvpanel{border:2px solid var(--ink);border-radius:12px;padding:14px;margin:18px 0;background:var(--white)}.lvpanel h3{margin:0 0 6px}.muted{color:var(--mut)}
 .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:13px;font-weight:700;background:#E2EAE5;color:#14201B;margin:2px 4px 2px 0}
 .pill.warn{background:#FFE08A;color:#4a3300}.pill.ok{background:#BFEBD0;color:#0b3a1f}
 .lrow{cursor:pointer}.lrow:hover{background:rgba(122,30,58,.08)}
-.cell{min-width:44px;padding:0 4px;min-height:44px;border:2px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink);font:700 20px/1 inherit;font-family:inherit;cursor:pointer}
+.cell{min-width:40px;padding:0 2px;min-height:44px;border:2px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink);font:700 20px/1 inherit;font-family:inherit;cursor:pointer}
 .cell.s{background:#BFEBD0;border-color:#1B6B3A;color:#0b3a1f}.cell.d{border-color:#B77900;color:#B77900}.cell.o{border-style:dashed;color:var(--mut)}.cell.n{color:var(--mut);cursor:default;border-style:dashed}.cell.w{border-color:#B77900;background:#FFE08A;color:#4a3300;font-size:14px}
 .cell:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .legend{font-size:14px;color:var(--mut);margin:8px 0}
@@ -134,15 +136,45 @@
  }
  function renderDetail(j){
   detail.hidden=false;detail.textContent="";var m=j.meta;
-  detail.appendChild(E("h2",null,(m.name||"(no name)")+" · "+(m.lodge||"no lodge")));detail.appendChild(E("p","muted","Last updated "+when(m.updated)));
+  detail.appendChild(E("h2",null,(m.name||"(no name)")+" · "+(m.lodge||"no lodge")));detail.appendChild(E("p","muted","Last updated "+when(m.updated)+(m.memberId?" \u00b7 Scouting America member ID: "+m.memberId:"")));
   var rq=E("div");rq.id="reqs";detail.appendChild(rq);paintReqs();
   var bar=E("div","savebar");
   var dl=E("button","btn ghost","Download .json");dl.type="button";dl.onclick=function(){var bl=new Blob([JSON.stringify({app:"warden-log",version:1,saved:m.updated,name:m.name,lodge:m.lodge,data:j.state},null,2)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download="Warden-Log-"+(m.name||"warden").replace(/[^a-z0-9]+/gi,"-")+".json";document.body.appendChild(a);a.click();a.remove()};
   var pr=E("button","btn ghost","Print this log");pr.type="button";pr.onclick=function(){printOne(j)};
   var rm=E("button","btn ghost","Delete this log");rm.type="button";var armed=false;rm.onclick=function(){if(!armed){armed=true;rm.textContent="Delete for good? Press again";setTimeout(function(){armed=false;rm.textContent="Delete this log"},5000);return}api("/api/wardenlog/delete",{id:m.id}).then(function(){detail.hidden=true;cur=null;say("Deleted.");return load()}).catch(function(e){say(e.message)})};
   var cl=E("button","btn ghost","Close");cl.type="button";cl.onclick=function(){detail.hidden=true;cur=null};
-  [dl,pr,rm,cl].forEach(function(x){bar.appendChild(x)});detail.appendChild(bar);
+  var ed=E("button","btn","Edit this log");ed.type="button";ed.onclick=function(){renderEdit(j)};
+  [ed,dl,pr,rm,cl].forEach(function(x){bar.appendChild(x)});detail.appendChild(bar);
   SEC.forEach(function(s){var box=E("div","secbox");box.appendChild(E("h4",null,s[1]));dump(box,s[0],j.state);if(box.children.length===1)box.appendChild(E("p","muted","Nothing written yet."));detail.appendChild(box)});
+ }
+// Field types for the editor: t = text (one line), a = textarea, l = one item per line, s = choose one, r = the four device rows.
+ var EDIT={career:[["careers","l"],["chosen","t"],["daily","a"],["why","a"],["education","a"],["certs","a"],["experience","a"],["expenses","a"],["prospects","a"],["salary","t"],["advancement","a"],["sources","a"],["learned","t"]],
+  surface:[["items","l"],["risk","t"],["riskText","a"],["protect","a"]],breach:[["headline","t"],["url","t"],["what","a"],["how","a"],["cost","a"],["stop","a"],["oneline","t"]],
+  seal:[["tool","s",["","Wax Seal Lab","PowerShell","Terminal","Other"]],["toolOther","t"],["msgA","t"],["hashA","t"],["msgB","t"],["hashB","t"],["match","s",["","Yes","No"]],["changed","t"],["whichChar","t"],["told","a"],["hashVsEnc","a"]],
+  objects:[["list","a"],["rows","r"],["share","t"],["shareProtect","t"]],forgery:[["fake","s",["","Document 1","Document 2","Document 3","Document 4"]],["how","a"]],reflect:[["learned","a"],["lodge","a"],["next","a"]]};
+ function renderEdit(j){
+  var m=j.meta,state=j.state||{},ctl=[];detail.hidden=false;detail.textContent="";
+  detail.appendChild(E("h2",null,"Editing "+(m.name||"(no name)")));
+  detail.appendChild(E("p","muted","Changes are saved to the backup and appear on the Warden's device the next time it checks in. If the Warden types at the same moment, your version wins."));
+  var id=0;function lab(par,text,forId){var l=E("label",null,text);l.htmlFor=forId;l.style.cssText="display:block;font-weight:700;margin:10px 0 4px";par.appendChild(l)}
+  function mkIn(par,text,val,kind,opts,max){var i="e"+(++id),c;lab(par,text,i);
+   if(kind==="a"||kind==="l"){c=E("textarea");c.rows=kind==="l"?5:3;c.maxLength=kind==="l"?1500:1000}else if(kind==="s"){c=E("select");(opts||[]).forEach(function(o){var op=E("option",null,o||"(none)");op.value=o;c.appendChild(op)})}else{c=E("input");c.type="text";c.maxLength=max||200}
+   c.id=i;c.style.cssText="width:100%;min-height:44px;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink)";c.value=val==null?"":val;par.appendChild(c);return c}
+  var idBox=E("div","secbox");idBox.appendChild(E("h4",null,"Warden"));
+  var nm=mkIn(idBox,"Name",m.name,"t",null,40),lg=mkIn(idBox,"Lodge",m.lodge,"t",null,40),mi=mkIn(idBox,"Scouting America member ID",m.memberId,"t",null,12);detail.appendChild(idBox);
+  SEC.forEach(function(sc){var sec=sc[0],d=state[sec]||{},box=E("div","secbox");box.appendChild(E("h4",null,sc[1]));var lb=LBL[sec];
+   EDIT[sec].forEach(function(f){var k=f[0],kind=f[1],txt=lb[k]||k,v=d[k],c;
+    if(kind==="l"){c=mkIn(box,txt+" (one per line)",(v||[]).filter(function(x){return x&&String(x).trim()}).join("\n"),"l");ctl.push(function(o){o[sec]=o[sec]||{};o[sec][k]=c.value.split("\n").map(function(x){return x.trim()}).filter(Boolean).slice(0,k==="careers"?3:12)})}
+    else if(kind==="r"){var rows=(v||[]).slice(0,4);while(rows.length<4)rows.push({device:"",why:"",risk:"",protect:""});var ins=[];box.appendChild(E("div","muted",txt+": device | why useful | risk | protection"));
+     rows.forEach(function(r,ri){var line=E("div");line.style.cssText="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;margin:6px 0";var cs=["device","why","risk","protect"].map(function(c2){var inp=E("input");inp.type="text";inp.maxLength=120;inp.setAttribute("aria-label",c2+" row "+(ri+1));inp.value=r[c2]||"";inp.style.cssText="min-height:44px;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink)";line.appendChild(inp);return inp});ins.push(cs);box.appendChild(line)});
+     ctl.push(function(o){o[sec]=o[sec]||{};o[sec][k]=ins.map(function(cs){return{device:cs[0].value,why:cs[1].value,risk:cs[2].value,protect:cs[3].value}})})}
+    else{c=mkIn(box,txt,v,kind,f[2],kind==="t"?(k==="url"?300:200):1000);ctl.push(function(o){o[sec]=o[sec]||{};o[sec][k]=c.value})}});
+   detail.appendChild(box)});
+  var bar=E("div","savebar"),sv=E("button","btn","Save changes"),cn=E("button","btn ghost","Cancel");sv.type=cn.type="button";bar.appendChild(sv);bar.appendChild(cn);detail.appendChild(bar);
+  cn.onclick=function(){renderDetail(j)};
+  sv.onclick=function(){sv.disabled=true;var data={};ctl.forEach(function(f){f(data)});
+   api("/api/wardenlog/edit",{id:m.id,name:nm.value,lodge:lg.value,memberId:mi.value,data:data}).then(function(x){j.meta=x.meta;j.state=x.state;say("Saved your changes to "+(x.meta.name||"the log")+".");renderDetail(j);return load()}).catch(function(e){say(e.message);sv.disabled=false})};
+  detail.scrollIntoView({behavior:"smooth"});
  }
  function printOne(j){
   var pv=$("pv");pv.textContent="";pv.appendChild(E("h1",null,"Warden Log: "+(j.meta.name||"")));pv.appendChild(E("p",null,"Lodge: "+(j.meta.lodge||"-")));
@@ -153,8 +185,8 @@
  }
  function csv(){
   var q=function(v){v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-  var head=["Warden","Lodge","Sections done (of 7)"].concat(REQS.map(function(r){return "Req "+r[1]+" signed"})).concat(["Signed by (most recent)","Last updated"]);
-  var rows=[head].concat(shown().map(function(l){var s=l.signed||{},ks=Object.keys(s).sort(function(a,b){return s[a].at<s[b].at?1:-1});return [l.name,l.lodge,counts(l).done].concat(REQS.map(function(r){return s[r[0]]?"Yes":"No"})).concat([ks.length?s[ks[0]].by:"",l.updated])}));
+  var head=["Warden","Scouting America ID","Lodge","Sections done (of 7)"].concat(REQS.map(function(r){return "Req "+r[1]+" signed"})).concat(["Signed by (most recent)","Last updated"]);
+  var rows=[head].concat(shown().map(function(l){var s=l.signed||{},ks=Object.keys(s).sort(function(a,b){return s[a].at<s[b].at?1:-1});return [l.name,l.memberId||"",l.lodge,counts(l).done].concat(REQS.map(function(r){return s[r[0]]?"Yes":"No"})).concat([ks.length?s[ks[0]].by:"",l.updated])}));
   var bl=new Blob([rows.map(function(r){return r.map(q).join(",")}).join("\r\n")+"\r\n"],{type:"text/csv"});var a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download="Warden-Log-signoffs.csv";document.body.appendChild(a);a.click();a.remove();say("CSV downloaded"+(flt?" for "+flt:"")+".");
  }
  $("flt").onchange=function(){flt=this.value;paint()};

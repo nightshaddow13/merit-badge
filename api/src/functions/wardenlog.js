@@ -25,6 +25,7 @@ const who = (request) => {
 // GET  /api/wardenlog/log?id=        staff: one full log
 // POST /api/wardenlog/signoff        staff: { id, req, signed }
 // POST /api/wardenlog/grant          staff: { id, req, granted } approve or revoke a waiver
+// POST /api/wardenlog/edit           staff: { id, name?, lodge?, memberId?, data? } fix identity or written answers
 // POST /api/wardenlog/delete         staff: remove one log
 // POST /api/wardenlog/reset          staff: { confirm: "RESET" } remove every log
 app.http("wardenlog", {
@@ -55,9 +56,9 @@ app.http("wardenlog", {
         try { body = JSON.parse(text); } catch (e) { return { status: 400, headers: HEADERS, jsonBody: { error: "Send valid JSON." } }; }
         if (action === "") r = await wl.save(body);
         else if (action === "waive") r = await wl.requestWaive(body);
-        else if (["signoff", "grant", "delete", "reset"].includes(action)) {
+        else if (["signoff", "grant", "edit", "delete", "reset"].includes(action)) {
           if (!staff(request)) return deny;
-          r = action === "signoff" ? await wl.signoff(body, who(request)) : action === "grant" ? await wl.grant(body) : action === "delete" ? await wl.remove(body) : await wl.resetAll(body);
+          r = action === "signoff" ? await wl.signoff(body, who(request)) : action === "edit" ? await wl.edit(body, who(request)) : action === "grant" ? await wl.grant(body) : action === "delete" ? await wl.remove(body) : await wl.resetAll(body);
         } else return { status: 404, headers: HEADERS, jsonBody: { error: "Not found." } };
       }
       return { status: r.status, headers: HEADERS, jsonBody: r.body };

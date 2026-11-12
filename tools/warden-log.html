@@ -22,7 +22,7 @@ a{color:var(--gold)}
 label,.lbl{display:block;font-size:14px;color:var(--mut);margin:12px 0 4px;font-weight:600}
 input[type=text],input[type=number],select,textarea{width:100%;min-height:44px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
 textarea{min-height:84px;resize:vertical}
-input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visible,.sec:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
 .opt{font-weight:400;color:var(--mut);font-size:12px;margin-left:6px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:560px){.grid2{grid-template-columns:1fr}}
@@ -36,13 +36,17 @@ input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visib
 .bar{height:10px;border-radius:6px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
 .bar>i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
 .pl{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-bottom:6px}
-.jumps{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.jumps a{display:inline-flex;align-items:center;min-height:36px;padding:0 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;font-size:13px;color:var(--ink)}
-.jumps a.d{border-color:var(--ok);color:var(--ok)}
-details.sec{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.25),0 6px 16px rgba(0,0,0,.28)}
-details.sec[data-st="2"]{border-color:var(--ok)}
-details.sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;min-height:56px}
-details.sec>summary::-webkit-details-marker{display:none}
+.tabs{display:flex;gap:6px;margin-top:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.tabs button{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--panel2);color:var(--ink);font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.tabs button .dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--mut);flex:none}
+.tabs button.p .dot{border-color:var(--gold);background:linear-gradient(90deg,var(--gold) 50%,transparent 50%)}
+.tabs button.d .dot{border-color:var(--ok);background:var(--ok)}
+.tabs button[aria-selected=true]{background:var(--gold);color:#17112B;border-color:var(--gold);font-weight:700}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.25),0 6px 16px rgba(0,0,0,.28)}
+.sec[hidden],#reqPanel[hidden]{display:none}
+.sec[data-st="2"]{border-color:var(--ok)}
+.sh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;min-height:56px}
+.nextrow{display:flex;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap}
 .n{background:var(--gold);color:var(--bg);width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-size:14px;font-weight:800;flex:none}
 .st{font-size:18px;font-weight:700}
 .req{font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
@@ -63,6 +67,7 @@ details.sec>summary::-webkit-details-marker{display:none}
 .rq .s.ok{border-color:var(--ok);color:var(--ok)}.rq .s.rdy{border-color:var(--gold);color:var(--gold)}
 .rq small{display:block;color:var(--mut)}
 .rgrp{margin:12px 0 2px;font-size:13px;font-weight:800;color:var(--gold);letter-spacing:.03em}
+.rec{margin:10px 0;padding:6px 12px;border:1px dashed var(--line);border-radius:8px}.rec summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700}
 .sign{margin-top:14px;padding:10px 12px;border-radius:8px;font-size:14px;border:1px solid var(--line);background:var(--panel2)}
 .sign.ok{border-color:var(--ok);color:var(--ok)}
 .sign.wait{color:var(--mut)}
@@ -107,30 +112,33 @@ code.rc{font:16px Consolas,monospace;letter-spacing:.05em;word-break:break-all}
     <div><label for="nm">Warden name <span class="opt">(first name and last initial)</span></label><input type="text" id="nm" maxlength="40" autocomplete="off" placeholder="Sam K"></div>
     <div><label for="lg">Lodge</label><select id="lg"><option value="">Not sure yet</option></select></div>
   </div>
+  <label for="mid">Scouting America member ID <span class="opt">(optional)</span></label><input type="text" id="mid" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Numbers only. Helps your counselor with advancement.">
   <div class="safe"><b>Seal your findings, keep your secrets.</b> Never write a password, a private detail, an email address or a phone number here. Types only: write &ldquo;phone&rdquo;, not your PIN. Your counselor signs off each requirement once you are done. You do not sign it yourself.</div>
-  <details style="margin-top:10px"><summary style="cursor:pointer;min-height:44px;display:flex;align-items:center">Your recovery code, other devices, and save/print</summary>
-    <p class="hint" style="margin-top:8px">Your recovery code: <code class="rc" id="rc"></code>. Write it down or take a screenshot. Type it on another device (or after clearing this browser) to get your log back. Keep it private: it is the only key to your backup.</p>
+  <div class="safe" id="recBox"><b>Your recovery code:</b> <code class="rc" id="rc"></code><br>Write it down or take a screenshot. It brings your log back on another device or if this browser is cleared. Keep it private: it is the only key to your backup.</div>
+  <details class="rec" id="recDet"><summary>Lost your progress? Recover it</summary>
     <div class="row"><input type="text" id="recIn" autocomplete="off" spellcheck="false" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx-xxxx" aria-label="Recovery code"><button class="btn ghost" id="recGo" type="button">Recover my log</button></div>
-    <div class="row"><button class="btn ghost" id="exp" type="button">Save to a file</button><label class="btn ghost" style="margin:0;cursor:pointer" for="imp">Load a file</label><input type="file" id="imp" accept=".json,application/json" hidden><button class="btn ghost" id="prn" type="button">Print my log</button></div>
-    <div class="msg" id="recMsg" role="status"></div>
   </details>
+  <div class="row"><button class="btn ghost" id="exp" type="button">Save to a file</button><label class="btn ghost" style="margin:0;cursor:pointer" for="imp">Load a file</label><input type="file" id="imp" accept=".json,application/json" hidden><button class="btn ghost" id="prn" type="button">Print my log</button></div>
+  <div class="msg" id="recMsg" role="status"></div>
 </section>
 
 <div class="progress" aria-live="polite">
   <div class="pl"><span id="pt">0 of 7 sections done</span><span id="status">Saved on this device</span></div>
   <div class="bar"><i id="pb"></i></div>
-  <nav class="jumps" id="jumps" aria-label="Sections"></nav>
+  <div class="tabs" id="tabs" role="tablist" aria-label="Worksheets"></div>
 </div>
 
+<div id="reqPanel" role="tabpanel" hidden>
 <section class="card" id="reqCard"><h2>My requirements</h2><p class="hint" id="reqSum"></p><div id="reqList"></div><p class="hint" style="margin-top:10px">A requirement turns green when your counselor signs it off. Worksheets here check themselves as &ldquo;Ready for counselor&rdquo; when you finish them; the rest happen in class. Wording is paraphrased: your counselor has the official text.</p></section>
 
-<div id="secs"></div>
-
 <section class="card"><h2>All done?</h2><p class="hint">When a section says <b>Done</b>, find your counselor. He signs it off here on his own screen. A paper backup of every page is also available.</p><div class="row"><button class="btn" id="prn2" type="button">Print my log</button></div></section>
+</div>
+<div id="secs"></div>
 <div id="printView" aria-hidden="true"></div>
 </div>
 
 <script src="/assets/requirements.js"></script>
+<script src="/assets/warden-rules.js"></script>
 <script>
 (function(){
 "use strict";
@@ -160,8 +168,7 @@ var SPEC=[
    {f:"sources",label:"Sources (website names or addresses, or the person you interviewed)",type:"area"},
    {f:"learned",label:"One specific fact I will share in class",type:"text",max:200}
   ],
-  need:function(d){return d.careers.every(has)&&["chosen","daily","why","education","certs","experience","expenses","prospects","salary","advancement","sources","learned"].every(function(k){return has(d[k])})},
-  any:function(d){return d.careers.some(has)||["chosen","daily","why","education","certs","experience","expenses","prospects","salary","advancement","sources","learned"].some(function(k){return has(d[k])})}},
+  },
  {k:"surface",n:2,title:"My Attack Surface",req:"4f",reqLabel:"Req 4f",
   inst:"List the devices and accounts you use. Write types only, such as “phone”, “game console” or “email”. Never write passwords or private details.",
   blocks:[
@@ -169,8 +176,7 @@ var SPEC=[
    {t:"risk"},
    {f:"protect",label:"One way I will protect it",type:"area"}
   ],
-  need:function(d){return d.items.some(has)&&has(d.risk)&&has(d.protect)},
-  any:function(d){return d.items.some(has)||has(d.risk)||has(d.riskText)||has(d.protect)}},
+  },
  {k:"breach",n:3,title:"My Breach News Report",req:"4e",reqLabel:"Req 4e",
   inst:"Find a news article about a real data breach or cyber attack and report on it.",
   blocks:[
@@ -182,8 +188,7 @@ var SPEC=[
    {f:"stop",label:"One thing that could have stopped it",type:"area"},
    {f:"oneline",label:"My report in one sentence",type:"text",max:200}
   ],
-  need:function(d){return ["headline","what","how","cost","stop","oneline"].every(function(k){return has(d[k])})},
-  any:function(d){return ["headline","url","what","how","cost","stop","oneline"].some(function(k){return has(d[k])})}},
+  },
  {k:"seal",n:4,title:"Press the Seal",req:"6c",reqLabel:"Req 6c",
   inst:"Hashing: seal a message, change one character, and watch the seal change.",
   blocks:[
@@ -205,8 +210,7 @@ var SPEC=[
    {f:"told",label:"What did the checksum tell you?",type:"area"},
    {f:"hashVsEnc",label:"One difference between hashing and encryption",type:"area"}
   ],
-  need:function(d){return has(d.tool)&&["msgA","hashA","msgB","hashB","match","changed","whichChar","told","hashVsEnc"].every(function(k){return has(d[k])})},
-  any:function(d){return ["tool","msgA","hashA","msgB","hashB","match","changed","whichChar","told","hashVsEnc"].some(function(k){return has(d[k])})}},
+  },
  {k:"objects",n:5,title:"Enchanted Objects: connected device draft",req:"7",reqLabel:"Req 7",
   inst:"Connected devices are handy and risky. Work as a lodge in three rounds.",
   blocks:[
@@ -218,16 +222,14 @@ var SPEC=[
    {f:"share",label:"Our lodge will share…",type:"text",max:200},
    {f:"shareProtect",label:"and protect it by…",type:"text",max:200}
   ],
-  need:function(d){return d.rows.filter(function(r){return has(r.device)&&has(r.why)&&has(r.risk)&&has(r.protect)}).length>=2&&has(d.list)&&has(d.share)&&has(d.shareProtect)},
-  any:function(d){return has(d.list)||has(d.share)||has(d.shareProtect)||d.rows.some(function(r){return has(r.device)||has(r.why)||has(r.risk)||has(r.protect)})}},
+  },
  {k:"forgery",n:6,title:"Spot the Forgery",req:"",reqLabel:"Class activity",optional:true,nosign:true,
   inst:"Optional. In class, four documents are checked by comparing hashes, and one is a forgery.",
   blocks:[
    {f:"fake",label:"Which document was forged?",type:"select",opts:["Document 1","Document 2","Document 3","Document 4"]},
    {f:"how",label:"How I know",type:"area"}
   ],
-  need:function(d){return has(d.fake)&&has(d.how)},
-  any:function(d){return has(d.fake)||has(d.how)}},
+  },
  {k:"reflect",n:7,title:"Class reflection",req:"",reqLabel:"Optional",optional:true,nosign:true,
   inst:"Three quick prompts at the end of class. Not signed by the counselor.",
   blocks:[
@@ -235,12 +237,12 @@ var SPEC=[
    {f:"lodge",label:"How my lodge worked together",type:"area"},
    {f:"next",label:"One habit I will change tonight",type:"area"}
   ],
-  need:function(d){return has(d.learned)&&has(d.lodge)&&has(d.next)},
-  any:function(d){return has(d.learned)||has(d.lodge)||has(d.next)}}
+  }
 ];
-function has(v){return typeof v==="string"&&v.trim().length>0}
+function has(v){return window.WARDEN_RULES.has(v)}
+SPEC.forEach(function(sp){sp.need=window.WARDEN_RULES.rules[sp.k].need;sp.any=window.WARDEN_RULES.rules[sp.k].any});
 function blank(){
-  return {v:1,id:"",rev:0,name:"",lodge:"",data:{
+  return {v:1,id:"",rev:0,name:"",lodge:"",memberId:"",seenEdit:"",data:{
    career:{careers:["","",""],chosen:"",daily:"",why:"",education:"",certs:"",experience:"",expenses:"",prospects:"",salary:"",advancement:"",sources:"",learned:""},
    surface:{items:["","","","",""],risk:"",riskText:"",protect:""},
    breach:{headline:"",url:"",what:"",how:"",cost:"",stop:"",oneline:""},
@@ -264,7 +266,7 @@ function merge(dst,src){
 }
 function newId(){var a=new Uint8Array(12);(window.crypto||{getRandomValues:function(x){for(var i=0;i<x.length;i++)x[i]=Math.floor(Math.random()*256)}}).getRandomValues(a);return Array.prototype.map.call(a,function(b){return("0"+b.toString(16)).slice(-2)}).join("")}
 function load(){
-  try{var s=JSON.parse(localStorage.getItem(KEY)||"null"); if(s&&typeof s==="object"){ var b=blank(); b.id=ID_RE.test(String(s.id))?s.id:""; b.rev=+s.rev||0; b.name=String(s.name||"").slice(0,40); b.lodge=String(s.lodge||"").slice(0,40); b.data=merge(b.data,s.data); state=b; }}catch(e){}
+  try{var s=JSON.parse(localStorage.getItem(KEY)||"null"); if(s&&typeof s==="object"){ var b=blank(); b.id=ID_RE.test(String(s.id))?s.id:""; b.rev=+s.rev||0; b.name=String(s.name||"").slice(0,40); b.lodge=String(s.lodge||"").slice(0,40); b.memberId=String(s.memberId||"").replace(/\D/g,"").slice(0,12); b.seenEdit=String(s.seenEdit||"").slice(0,40); b.data=merge(b.data,s.data); state=b; }}catch(e){}
   if(!state.id){ state.id=newId(); persist(); }
 }
 var dirty=false;
@@ -290,16 +292,23 @@ function backup(){
   if(!dirty) return Promise.resolve();
   if(!navigator.onLine){setStatus("Saved on this device. Backup waits for Wi-Fi.");return Promise.resolve()}
   sending=true; var rev=state.rev;
-  return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.id,name:state.name,lodge:state.lodge,summary:summary(),state:state.data})})
-   .then(function(r){ if(!r.ok) throw new Error(String(r.status)); if(rev===state.rev) dirty=false; setStatus("Saved and backed up"); })
+  return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.id,name:state.name,lodge:state.lodge,memberId:state.memberId,seenEdit:state.seenEdit,summary:summary(),state:state.data})})
+   .then(function(r){ if(r.status===409) return r.json().then(function(j){ if(j&&j.edited){ sending=false; return pullEdit(j.editedAt); } throw new Error("409"); }); if(!r.ok) throw new Error(String(r.status)); if(rev===state.rev) dirty=false; setStatus("Saved and backed up"); })
    .catch(function(){setStatus("Saved on this device. Backup will retry.");setTimeout(scheduleBackup,15000)})
    .then(function(){sending=false});
 }
 window.addEventListener("online",function(){if(dirty)backup();pollStatus()});
+// Your counselor can fix your log from his dashboard. Pull his version (his edit wins over anything not yet backed up).
+function pullEdit(at){
+  return fetch(API+"/restore?id="+state.id,{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
+    if(!j) return; applyState({name:j.name||state.name,lodge:j.lodge||state.lodge,memberId:j.memberId||state.memberId,data:j.state,seenEdit:j.editedAt||at||"",clean:true},state.id);
+    setStatus("Your counselor updated your log");
+  }).catch(function(){});
+}
 function pollStatus(){
   if(!navigator.onLine) return;
   fetch(API+"/status?id="+state.id,{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
-    if(!j) return; var a=JSON.stringify([signed,waive]); signed=j.signed||{}; waive=j.waive||{};
+    if(!j) return; if(j.editedAt&&j.editedAt!==state.seenEdit&&!dirty) pullEdit(j.editedAt); var a=JSON.stringify([signed,waive]); signed=j.signed||{}; waive=j.waive||{};
     if(JSON.stringify([signed,waive])!==a) refresh();
   }).catch(function(){});
 }
@@ -468,8 +477,8 @@ function renderReqs(){
 function build(){
   var host=$("secs");host.textContent="";uid=0;
   SPEC.forEach(function(sp,idx){
-    var det=el("details",{"class":"sec",id:"s-"+sp.k}); det.dataset.sec=sp.k;
-    var sm=el("summary");sm.appendChild(el("span",{"class":"n"},String(sp.n)));sm.appendChild(el("span",{"class":"st"},sp.title));
+    var det=el("section",{"class":"sec",id:"s-"+sp.k,role:"tabpanel",tabindex:"-1","aria-labelledby":"t-"+sp.k}); det.dataset.sec=sp.k; det.hidden=true;
+    var sm=el("div",{"class":"sh"});sm.appendChild(el("span",{"class":"n"},String(sp.n)));sm.appendChild(el("span",{"class":"st"},sp.title));
     sm.appendChild(el("span",{"class":"req"},sp.reqLabel+(sp.home?" · can start at home":"")));sm.appendChild(el("span",{"class":"chip"}));
     det.appendChild(sm);
     var body=el("div",{"class":"body"});body.appendChild(el("p",{"class":"inst"},sp.inst));
@@ -484,11 +493,13 @@ function build(){
       else body.appendChild(field(sp,b));
     });
     body.appendChild(signBox(sp));
+    var nr=el("div",{"class":"nextrow"}), ord=TABS.map(function(t){return t.k}), at=ord.indexOf(sp.k);
+    var pb=el("button",{type:"button","class":"btn ghost"},"\u2190 "+TABS[at-1].label); pb.onclick=function(){setTab(ord[at-1],true)}; nr.appendChild(pb);
+    if(at<ord.length-1){ var nb=el("button",{type:"button","class":"btn"},"Next: "+TABS[at+1].label+" \u2192"); nb.onclick=function(){setTab(ord[at+1],true)}; nr.appendChild(nb); }
+    body.appendChild(nr);
     det.appendChild(body);host.appendChild(det);
   });
-  var first=SPEC.findIndex(function(sp){return secState(sp)<2});
-  var d0=$("secs").children[first<0?0:first]; if(d0) d0.open=true;
-  refresh();
+  refresh(); setTab(curTab||startTab(),false);
 }
 function refresh(){
   var done=0;
@@ -499,20 +510,44 @@ function refresh(){
     chip.className="chip"+(st===2?" d":st===1?" p":"");
     if(st===2) done++;
     paintSign(sp,det.querySelector(".sign"));
-    var j=document.querySelector('#jumps a[data-k="'+sp.k+'"]'); if(j) j.className=st===2?"d":"";
+    var tb=document.getElementById("t-"+sp.k); if(tb) tb.className=st===2?"d":st===1?"p":"";
   });
   renderReqs();
   $("pt").textContent=done+" of "+SPEC.length+" sections done";
   $("pb").style.width=Math.round(done/SPEC.length*100)+"%";
 }
-function jumps(){
-  var n=$("jumps");SPEC.forEach(function(sp){var a=el("a",{href:"#s-"+sp.k,"data-k":sp.k},sp.n+". "+sp.title.split(":")[0]);a.onclick=function(e){e.preventDefault();var d=$("s-"+sp.k);d.open=true;d.scrollIntoView({behavior:"smooth",block:"start"})};n.appendChild(a)});
+var TABS=[{k:"req",label:"My requirements"}].concat(SPEC.map(function(sp){return {k:sp.k,label:sp.n+". "+sp.title.split(":")[0].replace(/^My /,"")}}));
+var curTab="";
+function startTab(){
+  var h=(location.hash||"").replace("#s-",""); if(TABS.some(function(t){return t.k===h})) return h;
+  try{var v=localStorage.getItem("warden_tab"); if(v&&TABS.some(function(t){return t.k===v})) return v;}catch(e){}
+  var f=SPEC.findIndex(function(sp){return secState(sp)<2}); return f<0?"req":SPEC[f].k;
 }
+function setTab(k,scroll){
+  if(!TABS.some(function(t){return t.k===k})) k="req"; curTab=k;
+  TABS.forEach(function(t){ var b=$("t-"+t.k); if(b){ b.setAttribute("aria-selected",t.k===k?"true":"false"); b.tabIndex=t.k===k?0:-1; } });
+  $("reqPanel").hidden=k!=="req"; document.querySelectorAll("#secs .sec").forEach(function(d){ d.hidden=d.dataset.sec!==k; });
+  try{localStorage.setItem("warden_tab",k)}catch(e){}
+  var sel=$("t-"+k); if(sel&&sel.scrollIntoView) sel.scrollIntoView({inline:"center",block:"nearest"});
+  if(scroll) window.scrollTo({top:0,behavior:"smooth"});
+}
+function jumps(){
+  var n=$("tabs");
+  TABS.forEach(function(t,i){
+    var b=el("button",{type:"button",role:"tab",id:"t-"+t.k,"aria-selected":"false","aria-controls":t.k==="req"?"reqPanel":"s-"+t.k});
+    b.appendChild(el("span",{"class":"dot"})); b.appendChild(document.createTextNode(t.label));
+    b.onclick=function(){setTab(t.k,false)};
+    b.onkeydown=function(e){ var d=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0; if(!d) return; e.preventDefault(); var nx=TABS[(i+d+TABS.length)%TABS.length]; setTab(nx.k,false); $("t-"+nx.k).focus(); };
+    n.appendChild(b);
+  });
+}
+window.addEventListener("hashchange",function(){var h=(location.hash||"").replace("#s-","");if(TABS.some(function(t){return t.k===h}))setTab(h,true)});
 
 // ---- header fields, lodges ----
 function setupHeader(){
   $("nm").value=state.name;
   $("nm").addEventListener("input",function(){state.name=$("nm").value;changed()});
+  $("mid").value=state.memberId; $("mid").addEventListener("input",function(){var v=$("mid").value.replace(/\D/g,"").slice(0,12);if(v!==$("mid").value)$("mid").value=v;state.memberId=v;changed()});
   $("lg").addEventListener("change",function(){state.lodge=$("lg").value;changed()});
   $("rc").textContent=state.id.replace(/(.{4})/g,"$1-").replace(/-$/,"");
   fetch("/api/scores/cybersecurity",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
@@ -526,8 +561,8 @@ function setupHeader(){
 // ---- recover, export/import, print ----
 function slug(s){return (s||"warden").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"warden"}
 function applyState(obj,keepId){
-  var b=blank(); b.id=keepId||state.id; b.name=String(obj.name||"").slice(0,40); b.lodge=String(obj.lodge||"").slice(0,40); b.data=merge(b.data,obj.data||obj.state); b.rev=state.rev+1; state=b; persist(); dirty=true;
-  $("nm").value=state.name; var sel=$("lg"); if(state.lodge&&![].some.call(sel.options,function(o){return o.value===state.lodge})) sel.appendChild(el("option",{value:state.lodge},state.lodge)); sel.value=state.lodge;
+  var b=blank(); b.id=keepId||state.id; b.name=String(obj.name||"").slice(0,40); b.lodge=String(obj.lodge||"").slice(0,40); b.memberId=String(obj.memberId||state.memberId||"").replace(/\D/g,"").slice(0,12); b.data=merge(b.data,obj.data||obj.state); b.seenEdit=obj.seenEdit!==undefined?String(obj.seenEdit):state.seenEdit; b.rev=state.rev+1; state=b; persist(); dirty=!obj.clean;
+  $("nm").value=state.name; $("mid").value=state.memberId; var sel=$("lg"); if(state.lodge&&![].some.call(sel.options,function(o){return o.value===state.lodge})) sel.appendChild(el("option",{value:state.lodge},state.lodge)); sel.value=state.lodge;
   $("rc").textContent=state.id.replace(/(.{4})/g,"$1-").replace(/-$/,""); build(); scheduleBackup(); pollStatus();
 }
 function recover(){
@@ -537,11 +572,11 @@ function recover(){
   if(hasWork&&!confirm("This replaces what is on this device with the backup. Continue?")) return;
   m.textContent="Looking for your backup…";m.className="msg";
   fetch(API+"/restore?id="+raw,{cache:"no-store"}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(r.status===404?"No backup found for that code. Check it and try again, or ask your counselor.":(j.error||"Could not recover."));return j})})
-   .then(function(j){ applyState({name:state.name,lodge:state.lodge,data:j.state},raw); m.textContent="Recovered. Your work is back.";m.className="msg ok"})
+   .then(function(j){ applyState({name:j.name||state.name,lodge:j.lodge||state.lodge,memberId:j.memberId||state.memberId,data:j.state,seenEdit:j.editedAt||"",clean:true},raw); m.textContent="Recovered. Your work is back.";m.className="msg ok"})
    .catch(function(e){m.textContent=e.message;m.className="msg err"});
 }
 function exportJson(){
-  var blob=new Blob([JSON.stringify({app:"warden-log",version:1,saved:new Date().toISOString(),name:state.name,lodge:state.lodge,data:state.data},null,2)],{type:"application/json"});
+  var blob=new Blob([JSON.stringify({app:"warden-log",version:1,saved:new Date().toISOString(),name:state.name,lodge:state.lodge,memberId:state.memberId,data:state.data},null,2)],{type:"application/json"});
   var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Warden-Log-"+slug(state.name)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
   $("recMsg").textContent="Saved "+a.download+".";$("recMsg").className="msg ok";
 }
@@ -552,7 +587,7 @@ function importJson(f){
 }
 function printLog(){
   var pv=$("printView");pv.textContent="";
-  pv.appendChild(el("h1",null,"Warden Log: "+(state.name||"")));pv.appendChild(el("p",null,"Lodge: "+(state.lodge||"not sure yet")+"   |   Printed "+new Date().toLocaleDateString()));
+  pv.appendChild(el("h1",null,"Warden Log: "+(state.name||"")));pv.appendChild(el("p",null,"Lodge: "+(state.lodge||"not sure yet")+(state.memberId?"   |   Member ID: "+state.memberId:"")+"   |   Printed "+new Date().toLocaleDateString()));
   SPEC.forEach(function(sp){
     var s=el("section");s.appendChild(el("h2",null,sp.n+". "+sp.title+(sp.req?" ("+sp.reqLabel+")":"")));
     var dl=el("dl"),d=state.data[sp.k];
