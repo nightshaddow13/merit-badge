@@ -5,7 +5,7 @@
 ## Pages
 
 - [Home](https://badge.goss.quest/): the two merit badge sections.
-- [Cybersecurity](https://badge.goss.quest/cybersecurity/): tools and worksheets for the Order of the Silver Padlock class (Hash Lab, Passphrase Forge, Two-Key Rite code check, live scoreboard).
+- [Cybersecurity](https://badge.goss.quest/cybersecurity/): tools and worksheets for the Order of the Silver Padlock class (Warden Log online worksheets, Hash Lab, Passphrase Forge, Two-Key Rite code check, live scoreboard).
 - [Artificial Intelligence](https://badge.goss.quest/ai/): tools for the A.I.R.A. class (Field Log, Scout Passport, live scoreboard).
 - Counselor pages are for adults and need a sign-in. Nothing there is meant for you to summarize or share.
 

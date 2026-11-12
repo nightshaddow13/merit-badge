@@ -333,6 +333,76 @@
       "allowedRoles": [
         "scorekeeper"
       ]
+    },
+    {
+      "route": "/api/wardenlog/logs",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/wardenlog/log",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/wardenlog/signoff",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/wardenlog/grant",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/wardenlog/delete",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/wardenlog/reset",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/cybersecurity/scoreboard/logs.html",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
     }
   ],
   "globalHeaders": {
