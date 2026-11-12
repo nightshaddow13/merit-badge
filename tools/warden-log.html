@@ -41,6 +41,8 @@ input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visib
 .tabs button .dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--mut);flex:none}
 .tabs button.p .dot{border-color:var(--gold);background:linear-gradient(90deg,var(--gold) 50%,transparent 50%)}
 .tabs button.d .dot{border-color:var(--ok);background:var(--ok)}
+.tabs button.lk{opacity:.55;border-style:dashed}
+.tabs button.lk::after{content:"\1F512"}
 .tabs button[aria-selected=true]{background:var(--gold);color:#17112B;border-color:var(--gold);font-weight:700}
 .sec{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.25),0 6px 16px rgba(0,0,0,.28)}
 .sec[hidden],#reqPanel[hidden]{display:none}
@@ -159,9 +161,9 @@ var SPEC=[
    {t:"chips",k:"careers",chips:[["Security analyst","watches systems and networks for attacks"],["Penetration tester","hired to hack safely to find weaknesses first"],["Incident responder","handles a breach and gets the organization back to normal"],["Cryptographer","designs and tests encryption"]]},
    {t:"rows",k:"careers",n:3,label:"Career",max:80},
    {f:"chosen",label:"The one I will research",type:"text",max:80},
-   {f:"daily",label:"What does this person do all day?",type:"area"},
+   {f:"daily",label:"What does this person do all day?",type:"area",opt:true},
    {t:"label",text:"Part 2: why"},
-   {f:"why",label:"Why this career might interest me",type:"area"},
+   {f:"why",label:"Why this career might interest me",type:"area",opt:true},
    {t:"label",text:"Part 3: dig in (cite a source for salary and prospects)"},
    {t:"help",html:"<b>Where to look:</b><ul><li>bls.gov/ooh (U.S. Bureau of Labor Statistics Occupational Outlook Handbook)</li><li>CISA and NICE cybersecurity workforce pages</li><li>Certification organization websites</li><li>A parent, relative or counselor who works in technology</li></ul><b>Do not guess at salaries or costs.</b>"},
    {f:"education",label:"Education needed",type:"area"},
@@ -171,8 +173,8 @@ var SPEC=[
    {f:"prospects",label:"Is the field growing? (cite your source)",type:"area"},
    {f:"salary",label:"Salary (the number and where you found it)",type:"text",max:200},
    {f:"advancement",label:"How could this person advance?",type:"area"},
-   {f:"sources",label:"Sources (website names or addresses, or the person you interviewed)",type:"area"},
-   {f:"learned",label:"One specific fact I will share in class",type:"text",max:200}
+   {f:"sources",label:"Sources (website names or addresses, or the person you interviewed)",type:"area",opt:true},
+   {f:"learned",label:"One specific fact I will share in class",type:"text",max:200,opt:true}
   ],
   },
  {k:"surface",n:2,title:"My Attack Surface",req:"4f",reqLabel:"Req 4f",
@@ -180,7 +182,7 @@ var SPEC=[
   blocks:[
    {t:"rows",k:"items",n:5,grow:12,label:"Device or account type",max:60,add:"Add another"},
    {t:"risk"},
-   {f:"protect",label:"One way I will protect it",type:"area"}
+   {f:"protect",label:"One way I will protect it",type:"area",opt:true}
   ],
   },
  {k:"breach",n:3,title:"My Breach News Report",req:"4e",reqLabel:"Req 4e",
@@ -191,14 +193,14 @@ var SPEC=[
    {f:"what",label:"What happened?",type:"area"},
    {f:"how",label:"How did it happen?",type:"area"},
    {f:"cost",label:"What did it cost the victim?",type:"area"},
-   {f:"stop",label:"One thing that could have stopped it",type:"area"},
-   {f:"oneline",label:"My report in one sentence",type:"text",max:200}
+   {f:"stop",label:"One thing that could have stopped it",type:"area",opt:true},
+   {f:"oneline",label:"My report in one sentence",type:"text",max:200,opt:true}
   ],
   },
  {k:"seal",n:4,title:"Press the Seal",req:"6c",reqLabel:"Req 6c",
   inst:"Hashing: seal a message, change one character, and watch the seal change.",
   blocks:[
-   {f:"tool",label:"Which tool did you use?",type:"radio",opts:["Wax Seal Lab","PowerShell","Terminal","Other"]},
+   {f:"tool",label:"Which tool did you use?",type:"radio",opts:["Wax Seal Lab","PowerShell","Terminal","Other"],opt:true},
    {f:"toolOther",label:"Other tool (name it)",type:"text",max:60,opt:true,showIf:function(d){return d.tool==="Other"}},
    {t:"help",html:"Make a hash in the <button type=\"button\" class=\"btn ghost\" data-tool=\"hash\">Hash Lab</button> (it opens in the Tools tab), or use the <b>Check my hash</b> buttons below."},
    {t:"label",text:"Step 1: seal a message"},
@@ -211,22 +213,22 @@ var SPEC=[
    {t:"hashcheck",m:"msgB",h:"hashB"},
    {t:"label",text:"Step 3: compare"},
    {f:"match",label:"Do the two hashes match?",type:"radio",opts:["Yes","No"]},
-   {f:"changed",label:"How many of the 8 characters changed? (0 to 8)",type:"num"},
-   {f:"whichChar",label:"Which character did your lodge mate change?",type:"text",max:20},
-   {f:"told",label:"What did the checksum tell you?",type:"area"},
-   {f:"hashVsEnc",label:"One difference between hashing and encryption",type:"area"}
+   {f:"changed",label:"How many of the 8 characters changed? (0 to 8)",type:"num",opt:true},
+   {f:"whichChar",label:"Which character did your lodge mate change?",type:"text",max:20,opt:true},
+   {f:"told",label:"What did the checksum tell you?",type:"area",opt:true},
+   {f:"hashVsEnc",label:"One difference between hashing and encryption",type:"area",opt:true}
   ],
   },
  {k:"objects",n:5,title:"Enchanted Objects: connected device draft",req:"7",reqLabel:"Req 7",
   inst:"Connected devices are handy and risky. Work as a lodge in three rounds.",
   blocks:[
    {t:"label",text:"Round 1: list connected devices (60 seconds)"},
-   {f:"list",label:"Our lodge's list of connected devices",type:"area"},
+   {f:"list",label:"Our lodge's list of connected devices",type:"area",opt:true},
    {t:"label",text:"Round 2: pick four and think it through"},
    {t:"table"},
    {t:"label",text:"Round 3: share"},
-   {f:"share",label:"Our lodge will share…",type:"text",max:200},
-   {f:"shareProtect",label:"and protect it by…",type:"text",max:200}
+   {f:"share",label:"Our lodge will share…",type:"text",max:200,opt:true},
+   {f:"shareProtect",label:"and protect it by…",type:"text",max:200,opt:true}
   ],
   },
  {k:"forgery",n:6,title:"Spot the Forgery",req:"",reqLabel:"Class activity",optional:true,nosign:true,
@@ -516,7 +518,9 @@ function refresh(){
     chip.className="chip"+(st===2?" d":st===1?" p":"");
     if(st===2) done++;
     paintSign(sp,det.querySelector(".sign"));
-    var tb=document.getElementById("t-"+sp.k); if(tb) tb.className=st===2?"d":st===1?"p":"";
+    var tb=document.getElementById("t-"+sp.k);
+    if(tb){ var lb=lockedBy(sp.k); tb.className=(st===2?"d":st===1?"p":"")+(lb?" lk":""); tb.setAttribute("aria-disabled",lb?"true":"false");
+      tb.title=lb?"Locked until "+lb.n+". "+lb.title.split(":")[0].replace(/^My /,"")+" is done or waived":""; }
   });
   renderReqs();
   $("pt").textContent=done+" of "+SPEC.length+" sections done";
@@ -530,8 +534,16 @@ function startTab(){
   try{var v=localStorage.getItem("warden_tab"); if(v&&TABS.some(function(t){return t.k===v})) return v;}catch(e){}
   var f=SPEC.findIndex(function(sp){return secState(sp)<2}); return f<0?"req":SPEC[f].k;
 }
+// Worksheets open in order: a tab stays locked until every earlier worksheet is done or waived by the counselor.
+function lockedBy(k){
+  var i=SPEC.findIndex(function(sp){return sp.k===k}); if(i<0) return null;
+  for(var j=0;j<i;j++){ if(!SPEC[j].optional&&secState(SPEC[j])<2) return SPEC[j]; } return null;
+}
 function setTab(k,scroll){
-  if(!TABS.some(function(t){return t.k===k})) k="req"; curTab=k;
+  if(!TABS.some(function(t){return t.k===k})) k="req";
+  var lk=lockedBy(k);
+  if(lk){ setStatus("Locked: finish "+lk.n+". "+lk.title.split(":")[0].replace(/^My /,"")+" first, or ask your counselor to waive it."); k=lk.k; }
+  curTab=k;
   TABS.forEach(function(t){ var b=$("t-"+t.k); if(b){ b.setAttribute("aria-selected",t.k===k?"true":"false"); b.tabIndex=t.k===k?0:-1; } });
   $("reqPanel").hidden=k!=="req"; $("toolsPanel").hidden=k!=="tools"; document.querySelectorAll("#secs .sec").forEach(function(d){ d.hidden=d.dataset.sec!==k; });
   try{localStorage.setItem("warden_tab",k)}catch(e){}
@@ -596,7 +608,7 @@ function applyState(obj,keepId){
 function recover(){
   var raw=$("recIn").value.toLowerCase().replace(/[^a-f0-9]/g,""), m=$("recMsg");
   if(!ID_RE.test(raw)){m.textContent="Type the whole recovery code (letters a-f and numbers).";m.className="msg err";return}
-  var hasWork=SPEC.some(function(sp){return secState(sp)>0});
+  var hasWork=SPEC.some(function(sp){return sp.any(state.data[sp.k])});
   if(hasWork&&!confirm("This replaces what is on this device with the backup. Continue?")) return;
   m.textContent="Looking for your backup…";m.className="msg";
   fetch(API+"/restore?id="+raw,{cache:"no-store"}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(r.status===404?"No backup found for that code. Check it and try again, or ask your counselor.":(j.error||"Could not recover."));return j})})
