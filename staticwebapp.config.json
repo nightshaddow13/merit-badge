@@ -413,6 +413,16 @@
         "counselor",
         "scorekeeper"
       ]
+    },
+    {
+      "route": "/api/wardenlog/edit",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
     }
   ],
   "globalHeaders": {
