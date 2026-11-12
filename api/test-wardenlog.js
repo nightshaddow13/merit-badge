@@ -1,6 +1,7 @@
 "use strict";
 const assert = require("assert");
-const { createWardenLog } = require("./src/lib/wardenlog");
+const { createWardenLog, REQS, SECTION_REQ } = require("./src/lib/wardenlog");
+const shared = require("../assets/requirements.js");
 function mem() {
   const m = new Map();
   return {
@@ -14,6 +15,9 @@ function mem() {
 const hex = (n) => n.toString(16).padStart(16, "0");
 const body = (n, o) => Object.assign({ id: hex(n), name: "Sam K", lodge: "Owls", summary: { career: 2, surface: 1, seal: 2, bogus: 2 }, state: { career: { chosen: "Analyst" }, surface: { items: ["phone"] } } }, o);
 (async () => {
+  assert.deepStrictEqual(shared.cy.map((r) => r.code), REQS, "shared requirement list matches the API");
+  shared.cy.filter((r) => r.auto).forEach((r) => assert.strictEqual(SECTION_REQ[r.auto], r.code));
+  assert.strictEqual(Object.keys(SECTION_REQ).length, shared.cy.filter((r) => r.auto).length);
   const w = createWardenLog({ logs: mem(), ovr: mem() });
   assert.strictEqual((await w.save(body(1))).status, 200);
   for (const b of [null, [], { ...body(1), id: "zz" }, { ...body(1), state: null }, { ...body(1), state: [] }]) assert.ok((await w.save(b)).status >= 400);
@@ -27,20 +31,20 @@ const body = (n, o) => Object.assign({ id: hex(n), name: "Sam K", lodge: "Owls",
   assert.strictEqual((await w.restore(hex(1))).body.state.surface.items[0], "phone");
   assert.strictEqual((await w.restore(hex(9))).status, 404); assert.strictEqual((await w.restore("nope")).status, 400);
   // sign-offs are staff-written, survive a later autosave, and can be undone
-  assert.strictEqual((await w.signoff({ id: hex(1), req: "req9a", signed: true }, "Xavier")).body.signed.req9a.by, "Xavier");
+  assert.strictEqual((await w.signoff({ id: hex(1), req: "9", signed: true }, "Xavier")).body.signed["9"].by, "Xavier");
   assert.strictEqual((await w.signoff({ id: hex(1), req: "nope", signed: true }, "x")).status, 400);
-  assert.strictEqual((await w.signoff({ id: hex(9), req: "req9a", signed: true }, "x")).status, 404);
+  assert.strictEqual((await w.signoff({ id: hex(9), req: "9", signed: true }, "x")).status, 404);
   await w.save(body(1, { state: { career: { chosen: "Changed" } } }));
-  assert.ok((await w.status(hex(1))).body.signed.req9a.at, "autosave cannot erase a sign-off");
-  assert.ok((await w.list()).body.logs.find((l) => l.id === hex(1)).signed.req9a);
-  assert.strictEqual((await w.signoff({ id: hex(1), req: "req9a", signed: false }, "x")).body.signed.req9a, undefined);
+  assert.ok((await w.status(hex(1))).body.signed["9"].at, "autosave cannot erase a sign-off");
+  assert.ok((await w.list()).body.logs.find((l) => l.id === hex(1)).signed["9"]);
+  assert.strictEqual((await w.signoff({ id: hex(1), req: "9", signed: false }, "x")).body.signed["9"], undefined);
   // waivers: ask, pending, grant, revoke; a granted waiver is not reset to pending by another ask
-  assert.strictEqual((await w.requestWaive({ id: hex(1), req: "req6c", reason: "no device" })).body.waive.req6c, "pending");
-  assert.strictEqual((await w.requestWaive({ id: hex(9), req: "req6c" })).status, 409);
+  assert.strictEqual((await w.requestWaive({ id: hex(1), req: "6c", reason: "no device" })).body.waive["6c"], "pending");
+  assert.strictEqual((await w.requestWaive({ id: hex(9), req: "6c" })).status, 409);
   assert.strictEqual((await w.requestWaive({ id: hex(1), req: "x" })).status, 400);
-  assert.strictEqual((await w.grant({ id: hex(1), req: "req6c", granted: true })).body.waive.req6c.status, "granted");
-  assert.strictEqual((await w.requestWaive({ id: hex(1), req: "req6c" })).body.waive.req6c, "granted");
-  await w.grant({ id: hex(1), req: "req6c", granted: false }); assert.deepStrictEqual((await w.status(hex(1))).body.waive, {});
+  assert.strictEqual((await w.grant({ id: hex(1), req: "6c", granted: true })).body.waive["6c"].status, "granted");
+  assert.strictEqual((await w.requestWaive({ id: hex(1), req: "6c" })).body.waive["6c"], "granted");
+  await w.grant({ id: hex(1), req: "6c", granted: false }); assert.deepStrictEqual((await w.status(hex(1))).body.waive, {});
   // delete and reset
   assert.strictEqual((await w.remove({ id: hex(2) })).status, 200); assert.strictEqual((await w.get(hex(2))).status, 404);
   assert.strictEqual((await w.resetAll({})).status, 400);

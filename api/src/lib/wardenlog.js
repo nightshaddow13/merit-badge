@@ -12,9 +12,11 @@ const ID_RE = /^[a-f0-9]{16,32}$/;
 const MAX_STATE = 150000;
 const MAX_LOGS = 80;
 const MAX_TEXT = 1000;
-const REQS = ["req9a", "req4f", "req4e", "req6c", "req7"];
+// Every Cybersecurity requirement code (kept in step with assets/requirements.js; test-wardenlog.js checks).
+const REQS = ["1a", "1b", "1c", "2a", "2b", "3a", "3b", "4a", "4b", "4c", "4d", "4e", "4f", "5a", "5b", "5c1", "5c2", "5c3", "6a", "6b", "6c", "7", "8", "9"];
 const SECTIONS = ["career", "surface", "breach", "seal", "objects", "forgery", "reflect"];
-const SECTION_REQ = { career: "req9a", surface: "req4f", breach: "req4e", seal: "req6c", objects: "req7" };
+// Worksheet sections that check a requirement by themselves once the Warden finishes them.
+const SECTION_REQ = { career: "9", surface: "4f", breach: "4e", seal: "6c", objects: "7" };
 const txt = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max) : "");
 
 // Keep the shape a Warden sent but clamp it: strings to 1,000 characters (newlines allowed), small arrays, shallow depth.

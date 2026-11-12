@@ -34,7 +34,7 @@ function cleanSummary(s) {
 function createFieldLog(stores) {
   const logs = stores.logs, ovr = stores.ovr;
 
-  async function ovrRow(id) { return (await ovr.get("o-" + id)) || { levels: {} }; }
+  async function ovrRow(id) { const r = (await ovr.get("o-" + id)) || {}; r.levels = r.levels || {}; r.signed = r.signed || {}; return r; }
 
   // Public. body: { id, name, squad, squadSlot, summary, state }
   async function save(body) {
@@ -56,7 +56,7 @@ function createFieldLog(stores) {
     if (typeof id !== "string" || !ID_RE.test(id)) return { status: 400, body: { error: "Missing agent id." } };
     const row = await ovrRow(id), granted = [], pending = [];
     Object.keys(row.levels).forEach((n) => (row.levels[n].status === "granted" ? granted : pending).push(+n));
-    return { status: 200, body: { granted, pending } };
+    return { status: 200, body: { granted, pending, signed: row.signed } };
   }
 
   // Public. A Scout asks staff to waive the unfinished items on one level page.
@@ -86,7 +86,7 @@ function createFieldLog(stores) {
     const ovrs = new Map((await ovr.list()).map((r) => [r.rowKey.slice(2), r.data]));
     const out = (await logs.list()).map((r) => {
       const m = r.data.meta, o = (ovrs.get(m.id) || { levels: {} }).levels;
-      return Object.assign({}, m, { overrides: o });
+      return Object.assign({}, m, { overrides: o, signed: (ovrs.get(m.id) || {}).signed || {} });
     });
     out.sort((a, b) => (a.updated < b.updated ? 1 : -1));
     return { status: 200, body: { logs: out } };
@@ -95,7 +95,8 @@ function createFieldLog(stores) {
     if (typeof id !== "string" || !ID_RE.test(id)) return { status: 400, body: { error: "Missing agent id." } };
     const rec = await logs.get("log-" + id);
     if (!rec) return { status: 404, body: { error: "No such field log." } };
-    return { status: 200, body: { meta: rec.meta, state: rec.state, overrides: (await ovrRow(id)).levels } };
+    const row = await ovrRow(id);
+    return { status: 200, body: { meta: rec.meta, state: rec.state, overrides: row.levels, signed: row.signed } };
   }
   async function grant(body) {
     if (!body || typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };
@@ -107,13 +108,24 @@ function createFieldLog(stores) {
     await ovr.put("o-" + body.id, row);
     return { status: 200, body: { overrides: row.levels } };
   }
+  // Staff: sign off (or undo) one A.I.R.A. requirement, 1 to 8. `by` is the staff member's sign-in name.
+  async function signoff(body, by) {
+    if (!body || typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };
+    if (!isInt(body.req, 1, 8) || typeof body.signed !== "boolean") return { status: 400, body: { error: "req (1-8) and signed (true/false) are required." } };
+    if (!(await logs.get("log-" + body.id))) return { status: 404, body: { error: "No such field log." } };
+    const row = await ovrRow(body.id);
+    if (body.signed) row.signed[body.req] = { by: txt(by, 60) || "counselor", at: new Date().toISOString() };
+    else delete row.signed[body.req];
+    await ovr.put("o-" + body.id, row);
+    return { status: 200, body: { signed: row.signed } };
+  }
   async function remove(body) {
     if (!body || typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };
     await logs.remove("log-" + body.id); await ovr.remove("o-" + body.id);
     return { status: 200, body: { removed: true } };
   }
 
-  return { save, restore, overrideStatus, requestOverride, list, get, grant, remove };
+  return { save, restore, overrideStatus, requestOverride, list, get, grant, signoff, remove };
 }
 
 module.exports = { createFieldLog, MAX_STATE, MAX_LOGS };

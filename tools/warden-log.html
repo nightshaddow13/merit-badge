@@ -57,6 +57,12 @@ details.sec>summary::-webkit-details-marker{display:none}
 .chips button{min-height:44px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:10px;padding:6px 12px;font:inherit;font-size:14px;text-align:left;cursor:pointer}
 .chips button small{display:block;color:var(--mut);font-size:12px}
 .warnmsg{color:var(--red);font-size:13px;margin:4px 0 0}
+.rq{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.rq:first-child{border-top:0}.rq .c{flex:none;min-width:38px;font-weight:800;color:var(--gold)}
+.rq .s{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--line);color:var(--mut);text-align:center;flex:none;max-width:48%}
+.rq .s.ok{border-color:var(--ok);color:var(--ok)}.rq .s.rdy{border-color:var(--gold);color:var(--gold)}
+.rq small{display:block;color:var(--mut)}
+.rgrp{margin:12px 0 2px;font-size:13px;font-weight:800;color:var(--gold);letter-spacing:.03em}
 .sign{margin-top:14px;padding:10px 12px;border-radius:8px;font-size:14px;border:1px solid var(--line);background:var(--panel2)}
 .sign.ok{border-color:var(--ok);color:var(--ok)}
 .sign.wait{color:var(--mut)}
@@ -116,12 +122,15 @@ code.rc{font:16px Consolas,monospace;letter-spacing:.05em;word-break:break-all}
   <nav class="jumps" id="jumps" aria-label="Sections"></nav>
 </div>
 
+<section class="card" id="reqCard"><h2>My requirements</h2><p class="hint" id="reqSum"></p><div id="reqList"></div><p class="hint" style="margin-top:10px">A requirement turns green when your counselor signs it off. Worksheets here check themselves as &ldquo;Ready for counselor&rdquo; when you finish them; the rest happen in class. Wording is paraphrased: your counselor has the official text.</p></section>
+
 <div id="secs"></div>
 
 <section class="card"><h2>All done?</h2><p class="hint">When a section says <b>Done</b>, find your counselor. He signs it off here on his own screen. A paper backup of every page is also available.</p><div class="row"><button class="btn" id="prn2" type="button">Print my log</button></div></section>
 <div id="printView" aria-hidden="true"></div>
 </div>
 
+<script src="/assets/requirements.js"></script>
 <script>
 (function(){
 "use strict";
@@ -129,7 +138,7 @@ var KEY="warden_log_v1", API="/api/wardenlog";
 var $=function(i){return document.getElementById(i)};
 var ID_RE=/^[a-f0-9]{16,32}$/;
 var SPEC=[
- {k:"career",n:1,title:"Paths of the Order: career worksheet",req:"req9a",reqLabel:"Req 9a",home:true,
+ {k:"career",n:1,title:"Paths of the Order: career worksheet",req:"9",reqLabel:"Req 9",home:true,
   inst:"About 30 minutes, best done at home with a parent. Find three cybersecurity careers and research one in depth. Use real, current sources and write where each fact came from. In class, tell the group one specific thing you learned.",
   blocks:[
    {t:"label",text:"Part 1: three careers"},
@@ -153,7 +162,7 @@ var SPEC=[
   ],
   need:function(d){return d.careers.every(has)&&["chosen","daily","why","education","certs","experience","expenses","prospects","salary","advancement","sources","learned"].every(function(k){return has(d[k])})},
   any:function(d){return d.careers.some(has)||["chosen","daily","why","education","certs","experience","expenses","prospects","salary","advancement","sources","learned"].some(function(k){return has(d[k])})}},
- {k:"surface",n:2,title:"My Attack Surface",req:"req4f",reqLabel:"Req 4f",
+ {k:"surface",n:2,title:"My Attack Surface",req:"4f",reqLabel:"Req 4f",
   inst:"List the devices and accounts you use. Write types only, such as “phone”, “game console” or “email”. Never write passwords or private details.",
   blocks:[
    {t:"rows",k:"items",n:5,grow:12,label:"Device or account type",max:60,add:"Add another"},
@@ -162,7 +171,7 @@ var SPEC=[
   ],
   need:function(d){return d.items.some(has)&&has(d.risk)&&has(d.protect)},
   any:function(d){return d.items.some(has)||has(d.risk)||has(d.riskText)||has(d.protect)}},
- {k:"breach",n:3,title:"My Breach News Report",req:"req4e",reqLabel:"Req 4e",
+ {k:"breach",n:3,title:"My Breach News Report",req:"4e",reqLabel:"Req 4e",
   inst:"Find a news article about a real data breach or cyber attack and report on it.",
   blocks:[
    {f:"headline",label:"Headline of my article",type:"text",max:200},
@@ -175,7 +184,7 @@ var SPEC=[
   ],
   need:function(d){return ["headline","what","how","cost","stop","oneline"].every(function(k){return has(d[k])})},
   any:function(d){return ["headline","url","what","how","cost","stop","oneline"].some(function(k){return has(d[k])})}},
- {k:"seal",n:4,title:"Press the Seal",req:"req6c",reqLabel:"Req 6c",
+ {k:"seal",n:4,title:"Press the Seal",req:"6c",reqLabel:"Req 6c",
   inst:"Hashing: seal a message, change one character, and watch the seal change.",
   blocks:[
    {f:"tool",label:"Which tool did you use?",type:"radio",opts:["Wax Seal Lab","PowerShell","Terminal","Other"]},
@@ -198,7 +207,7 @@ var SPEC=[
   ],
   need:function(d){return has(d.tool)&&["msgA","hashA","msgB","hashB","match","changed","whichChar","told","hashVsEnc"].every(function(k){return has(d[k])})},
   any:function(d){return ["tool","msgA","hashA","msgB","hashB","match","changed","whichChar","told","hashVsEnc"].some(function(k){return has(d[k])})}},
- {k:"objects",n:5,title:"Enchanted Objects: connected device draft",req:"req7",reqLabel:"Req 7",
+ {k:"objects",n:5,title:"Enchanted Objects: connected device draft",req:"7",reqLabel:"Req 7",
   inst:"Connected devices are handy and risky. Work as a lodge in three rounds.",
   blocks:[
    {t:"label",text:"Round 1: list connected devices (60 seconds)"},
@@ -211,7 +220,7 @@ var SPEC=[
   ],
   need:function(d){return d.rows.filter(function(r){return has(r.device)&&has(r.why)&&has(r.risk)&&has(r.protect)}).length>=2&&has(d.list)&&has(d.share)&&has(d.shareProtect)},
   any:function(d){return has(d.list)||has(d.share)||has(d.shareProtect)||d.rows.some(function(r){return has(r.device)||has(r.why)||has(r.risk)||has(r.protect)})}},
- {k:"forgery",n:6,title:"Spot the Forgery",req:"req6c",reqLabel:"Class activity",optional:true,nosign:true,
+ {k:"forgery",n:6,title:"Spot the Forgery",req:"",reqLabel:"Class activity",optional:true,nosign:true,
   inst:"Optional. In class, four documents are checked by comparing hashes, and one is a forgery.",
   blocks:[
    {f:"fake",label:"Which document was forged?",type:"select",opts:["Document 1","Document 2","Document 3","Document 4"]},
@@ -439,6 +448,23 @@ function paintSign(sp,box){
   };
   row.appendChild(bt);box.appendChild(row);
 }
+function renderReqs(){
+  var host=$("reqList"); if(!host||!window.MB_REQS) return; host.textContent="";
+  var secByKey={}; SPEC.forEach(function(sp){secByKey[sp.k]=sp});
+  var signedN=0, ready=0, last="";
+  window.MB_REQS.cy.forEach(function(r){
+    if(r.group!==last){ last=r.group; host.appendChild(el("div",{"class":"rgrp"},r.group.toUpperCase())); }
+    var sg=signed[r.code], row=el("div",{"class":"rq"}), txt=el("div"), chip=el("span",{"class":"s"});
+    txt.appendChild(document.createTextNode(r.text)); txt.appendChild(el("small",null,r.auto?"Worksheet: "+secByKey[r.auto].title:r.when));
+    if(sg){ chip.className="s ok"; chip.textContent="Signed off by "+sg.by; signedN++; }
+    else if(r.auto&&secState(secByKey[r.auto])===2){ chip.className="s rdy"; chip.textContent="Ready for counselor"; ready++; }
+    else if(r.auto&&secState(secByKey[r.auto])===1) chip.textContent="In progress";
+    else chip.textContent=r.auto?"Open the worksheet":(r.when==="Before class"?"Before class":"Do in class");
+    row.appendChild(el("span",{"class":"c"},r.code)); row.appendChild(txt); row.appendChild(chip);
+    host.appendChild(row);
+  });
+  $("reqSum").textContent=signedN+" of "+window.MB_REQS.cy.length+" signed off"+(ready?", "+ready+" ready for your counselor":"")+".";
+}
 function build(){
   var host=$("secs");host.textContent="";uid=0;
   SPEC.forEach(function(sp,idx){
@@ -475,6 +501,7 @@ function refresh(){
     paintSign(sp,det.querySelector(".sign"));
     var j=document.querySelector('#jumps a[data-k="'+sp.k+'"]'); if(j) j.className=st===2?"d":"";
   });
+  renderReqs();
   $("pt").textContent=done+" of "+SPEC.length+" sections done";
   $("pb").style.width=Math.round(done/SPEC.length*100)+"%";
 }

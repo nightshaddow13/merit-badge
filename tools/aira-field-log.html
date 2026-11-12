@@ -94,6 +94,11 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 .mterm{font-weight:700}.mterm.sel{border-color:var(--accent,#2f7d5b);background:rgba(47,125,91,.22)}.mdef{font-size:14px}.mdef.bad{border-color:#e5484d;background:rgba(229,72,77,.2)}
 .mrow{margin:6px 0;font-size:14px}.mdone{margin-top:12px}.mdone summary{cursor:pointer;color:var(--ok);font-weight:700}
 @media(max-width:560px){.mgame{grid-template-columns:1fr}}
+.rq{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.rq:first-child{border-top:0}.rq .c{flex:none;min-width:48px;font-weight:800;color:var(--gold)}
+.rq .s{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--line);color:var(--mut);text-align:center;flex:none;max-width:48%}
+.rq .s.ok{border-color:var(--ok);color:var(--ok)}.rq .s.rdy{border-color:var(--gold);color:var(--gold)}
+.rq small{display:block;color:var(--mut)}
 .rec{margin:10px 0;padding:8px 12px;border:1px dashed var(--line);border-radius:8px}.rec summary{cursor:pointer;font-weight:700}
 .hvrule{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel2)}.hvrule b{display:block;color:var(--gold)}.hvrule span{font-size:14px}
 .hvtile{height:150px;border-radius:14px;display:grid;place-items:center;font:900 38px/1 Consolas,monospace;letter-spacing:.1em;margin:10px 0;border:3px solid rgba(255,255,255,.5)}
@@ -194,6 +199,12 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
     <div class="msg" id="certMsg"></div>
   </section>
 
+  <section class="card" id="reqCard">
+    <h2>My requirements</h2>
+    <p class="hint" id="reqSum"></p>
+    <div id="reqList"></div>
+    <p class="hint" style="margin-top:10px">A level turns <b>Ready</b> when you finish all its required items. It turns green when your counselor signs it off. Short names only: your counselor has the official wording.</p>
+  </section>
   <section class="card" id="finish">
     <h2>Send your log to the counselor</h2>
     <ol class="how">
@@ -219,6 +230,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
   <footer>A.I.R.A. Field Log &middot; Scouting America Artificial Intelligence merit badge class</footer>
 </div>
 
+<script src="/assets/requirements.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function(){
@@ -358,6 +370,31 @@ function summary(){
   var lv={}; lv[1]=[pointsNow().terms,LEVELS[0].items.length]; lv[2]=l2Count(); Object.keys(LV).forEach(function(k){ if(+k!==2) lv[k]=lvCount(+k); });
   return {unlocked:state.unlocked,won:state.won,vault:state.vault&&Number.isInteger(state.vault.best)?state.vault.best:null,aiOrNot:state.games&&state.games.ai&&Number.isInteger(state.games.ai.best)?state.games.ai.best:null,levels:lv};
 }
+// ---- Requirement checklist: a level is Ready when every required item on it is done (or it was unlocked past), Signed once staff sign it off ----
+var reqSigned={};
+function reqReady(n){
+  if(state.unlocked>n||(n===8&&state.won)) return true;
+  var c=n===1?[pointsNow().terms,LEVELS[0].items.length]:n===2?l2Count():lvCount(n);
+  return c[1]>0&&c[0]>=c[1]&&(n!==1||(state.vault&&state.vault.best!=null));
+}
+function reqStarted(n){ if(n===1) return pointsNow().terms>0||(state.vault&&state.vault.best!=null); var c=n===2?l2Count():lvCount(n); return c[0]>0; }
+function renderReqs(){
+  var host=$("reqList"); if(!host||!window.MB_REQS) return; host.textContent=""; var signedN=0, ready=0;
+  window.MB_REQS.ai.forEach(function(r){
+    var sg=reqSigned[r.code], row=el("div","rq"), box=el("div"), chip=el("span","s");
+    box.appendChild(document.createTextNode(r.title+": "+r.text)); box.appendChild(el("small",null,"Level "+r.code+" · "+r.when));
+    if(sg){ chip.className="s ok"; chip.textContent="Signed off by "+sg.by; signedN++; }
+    else if(reqReady(+r.code)){ chip.className="s rdy"; chip.textContent="Ready for counselor"; ready++; }
+    else chip.textContent=reqStarted(+r.code)?"In progress":"Not started";
+    row.appendChild(el("span","c","Req "+r.code)); row.appendChild(box); row.appendChild(chip); host.appendChild(row);
+  });
+  $("reqSum").textContent=signedN+" of 8 signed off"+(ready?", "+ready+" ready for your counselor":"")+".";
+}
+function pullSigned(){
+  if(!state.scoutId||!navigator.onLine) return;
+  ovrStatus().then(function(j){ var a=JSON.stringify(reqSigned); reqSigned=(j&&j.signed)||{}; if(JSON.stringify(reqSigned)!==a||!$("reqList").firstChild) renderReqs(); });
+}
+setInterval(function(){ if(!document.hidden) pullSigned(); },30000);
 function scheduleLog(){ clearTimeout(logTimer); logTimer=setTimeout(function(){ logTimer=0; backupLog(); },5000); }
 function backupLog(){
   if(logBusy){ scheduleLog(); return Promise.resolve(false); }
@@ -511,7 +548,7 @@ function show(p,keepScroll){
   if(state.page==="L1"&&p!=="L1") topHide=true; // tuck the agent info away once page 1 is done
   state.page=p; save();
   ids.forEach(function(id){ var el=$("p-"+id); if(el){ el.hidden=(id!==p); if(id===p){ el.style.animation="none"; void el.offsetWidth; el.style.animation=""; } } });
-  renderNav(); if(!keepScroll) window.scrollTo({top:0,behavior:"smooth"});
+  renderNav(); if(p==="send"){ renderReqs(); pullSigned(); } if(!keepScroll) window.scrollTo({top:0,behavior:"smooth"});
 }
 function renderSub(){
   var sn=$("subnav"), par=parentLevel(curPage()); sn.innerHTML=""; var items=null;

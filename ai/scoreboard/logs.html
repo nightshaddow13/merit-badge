@@ -43,6 +43,9 @@
 .tl{margin:6px 0 0 20px}.tl .yes{color:#1B6B3A;font-weight:700}.lvbox .btn.sel{outline:3px solid var(--ink)}
 .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:13px;font-weight:700;background:#E2EAE5;color:#14201B}
 .pill.warn{background:#FFE08A;color:#4a3300}.pill.ok{background:#BFEBD0;color:#0b3a1f}
+.cell{min-width:44px;min-height:44px;border:2px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink);font:700 18px/1 inherit;font-family:inherit;cursor:pointer;padding:0 4px}
+.cell.s{background:#BFEBD0;border-color:#1B6B3A;color:#0b3a1f}.cell.d{border-color:#B77900;color:#B77900}.cell.n{color:var(--mut);border-style:dashed}
+.cell:focus-visible{outline:3px solid var(--ink);outline-offset:2px}.rqrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0}.rqrow .btn{min-height:44px}
 .lrow{cursor:pointer}.lrow:hover{background:rgba(47,125,91,.10)}
 .lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin:12px 0}
 .lvbox{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--white)}
@@ -60,19 +63,28 @@
  function api(path,body){return fetch(path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(r.status===401||r.status===403?"Sign in as a counselor or scorekeeper to see this page.":(j.error||"Request failed ("+r.status+")"));return j})})}
  function E(tag,cls,t){var e=document.createElement(tag);if(cls)e.className=cls;if(t!=null)e.textContent=t;return e}
  function when(iso){try{return new Date(iso).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}catch(e){return ""}}
+ function reqDone(l,n){var s=l.summary||{},lv=(s.levels||{})[n];if((s.unlocked||1)>n||(n===8&&s.won))return true;return !!(lv&&lv[1]>0&&lv[0]>=lv[1]&&(n!==1||s.vault!=null))}
+ function reqSigned(l,n){return !!(l.signed&&l.signed[n])}
+ function signReq(l,n,on){return api("/api/fieldlog/signoff",{id:l.id,req:n,signed:on}).then(function(j){l.signed=j.signed;return j})}
  function pending(l){return Object.keys(l.overrides||{}).filter(function(n){return l.overrides[n].status==="pending"})}
  function paintList(logs){
   list.textContent="";
   if(!logs.length){list.textContent="No Field Logs backed up yet. They appear a few seconds after a Scout enters a name and starts working.";return}
-  var t=E("table","grid"),h=E("thead"),hr=E("tr");["Scout","Squad","Level","Vault","Updated","Needs you"].forEach(function(x){var th=E("th",null,x);th.scope="col";hr.appendChild(th)});h.appendChild(hr);t.appendChild(h);
+  var t=E("table","grid"),h=E("thead"),hr=E("tr");["Scout","Squad","Level","Vault","Updated","Needs you","1","2","3","4","5","6","7","8"].forEach(function(x,i){var th=E("th",null,x);th.scope="col";if(i>5)th.title="Requirement "+x+": "+NAMES[i-6];hr.appendChild(th)});h.appendChild(hr);t.appendChild(h);
   var b=E("tbody");
   logs.forEach(function(l){var tr=E("tr","lrow");tr.tabIndex=0;var s=l.summary||{};
    var lvl=s.won?"MIRAGE shut down":"Level "+(s.unlocked||1);
    [l.name||"(no name)",l.squad||"-",lvl,s.vault==null?"-":s.vault+" / 10",when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
    var td=E("td");var p=pending(l);if(p.length)td.appendChild(E("span","pill warn","Override: level "+p.join(", ")));tr.appendChild(td);
+   for(var q=1;q<=8;q++)(function(q){var c=E("td"),b=E("button","cell"),sg=reqSigned(l,q),dn=reqDone(l,q);b.type="button";
+    if(sg){b.className="cell s";b.textContent="\u2713";b.title="Signed by "+l.signed[q].by+". Click to undo."}else if(dn){b.className="cell d";b.textContent="\u25CF";b.title="Finished. Click to sign off."}else{b.className="cell n";b.textContent="\u2013";b.title="Not finished. Click to sign off anyway."}
+    b.setAttribute("aria-label",(l.name||"Scout")+" requirement "+q+(sg?" signed, undo":dn?" finished, sign off":" not finished, sign off"));
+    b.addEventListener("click",function(e){e.stopPropagation();b.disabled=true;signReq(l,q,!sg).then(function(){say((sg?"Undid":"Signed")+" requirement "+q+" for "+(l.name||"Scout")+".");paintList(logsCache)}).catch(function(er){say(er.message);b.disabled=false})});
+    b.addEventListener("keydown",function(e){e.stopPropagation()});c.appendChild(b);tr.appendChild(c)})(q);
    function open(){openLog(l.id)}tr.addEventListener("click",open);tr.addEventListener("keydown",function(e){if(e.key==="Enter")open()});b.appendChild(tr)});
   t.appendChild(b);var w=E("div","tablewrap");w.appendChild(t);list.appendChild(w)}
- function load(){return api("/api/fieldlog/logs").then(function(j){paintList(j.logs)}).catch(function(e){say(e.message)})}
+ var logsCache=[];
+ function load(){return api("/api/fieldlog/logs").then(function(j){logsCache=j.logs;paintList(j.logs)}).catch(function(e){say(e.message)})}
  function dump(parent,v,depth){
   if(v===null||v===undefined||v==="")return;
   if(Array.isArray(v)){v.forEach(function(x,i){if(x&&typeof x==="object"){var d=E("div");d.appendChild(E("b",null,"#"+(i+1)));parent.appendChild(d);dump(d,x,depth+1)}else if(x!==""&&x!==null){var d2=E("div",null,(i+1)+". "+x);parent.appendChild(d2)}});return}
@@ -146,6 +158,10 @@ function ok(v){return String(v||"").trim().length>=3}
   var mid=((j.state||{}).memberId||"").replace(/\D/g,"");if(mid)detail.appendChild(E("p","small","Scouting America member ID: "+mid));
   detail.appendChild(E("p","small","Recovery code (give it to the Scout if they lost it): "+m.id.replace(/(.{4})/g,"$1-").replace(/-$/,"")));
   detail.appendChild(E("p",null,"Last saved "+when(m.updated)+". "+(s.won?"MIRAGE shut down.":"Unlocked up to level "+(s.unlocked||1)+" of 8.")+" Vocab Vault best: "+(s.vault==null?"not taken":s.vault+" / 10")+". AI or Not best: "+(s.aiOrNot==null?"not played":s.aiOrNot+" / 10")+"."));
+  var rqh=E("h3",null,"Requirement sign-off");detail.appendChild(rqh);
+  for(var rn=1;rn<=8;rn++)(function(rn){var row=E("div","rqrow"),sg=(j.signed||{})[rn],dn=reqDone(m,rn);
+   row.appendChild(E("strong",null,"Req "+rn+" · "+NAMES[rn-1]+" "));row.appendChild(E("span","pill"+(sg?" ok":dn?" warn":""),sg?"Signed by "+sg.by+" "+when(sg.at):dn?"Finished, not signed":"Not finished"));
+   var b=E("button","btn"+(sg?" ghost":""),sg?"Undo sign-off":"Sign off");b.type="button";b.onclick=function(){b.disabled=true;api("/api/fieldlog/signoff",{id:m.id,req:rn,signed:!sg}).then(function(x){j.signed=x.signed;m.signed=x.signed;renderDetail(j);load()}).catch(function(e){say(e.message);b.disabled=false})};row.appendChild(b);detail.appendChild(row)})(rn);
   var g=E("div","lvgrid");
   for(var n=1;n<=8;n++)(function(n){
    var box=E("div","lvbox"),lv=(s.levels||{})[n],o=ov[n];

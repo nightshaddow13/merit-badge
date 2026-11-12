@@ -40,21 +40,23 @@
 .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:13px;font-weight:700;background:#E2EAE5;color:#14201B;margin:2px 4px 2px 0}
 .pill.warn{background:#FFE08A;color:#4a3300}.pill.ok{background:#BFEBD0;color:#0b3a1f}
 .lrow{cursor:pointer}.lrow:hover{background:rgba(122,30,58,.08)}
-.cell{min-width:44px;min-height:44px;border:2px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink);font:700 20px/1 inherit;font-family:inherit;cursor:pointer}
-.cell.s{background:#BFEBD0;border-color:#1B6B3A;color:#0b3a1f}.cell.d{border-color:#B77900;color:#B77900}.cell.n{color:var(--mut);cursor:default;border-style:dashed}.cell.w{border-color:#B77900;background:#FFE08A;color:#4a3300;font-size:14px}
+.cell{min-width:44px;padding:0 4px;min-height:44px;border:2px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink);font:700 20px/1 inherit;font-family:inherit;cursor:pointer}
+.cell.s{background:#BFEBD0;border-color:#1B6B3A;color:#0b3a1f}.cell.d{border-color:#B77900;color:#B77900}.cell.o{border-style:dashed;color:var(--mut)}.cell.n{color:var(--mut);cursor:default;border-style:dashed}.cell.w{border-color:#B77900;background:#FFE08A;color:#4a3300;font-size:14px}
 .cell:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .legend{font-size:14px;color:var(--mut);margin:8px 0}
 .ans{margin:4px 0;padding:6px 10px;border-left:3px solid var(--line);font-size:15px;white-space:pre-wrap}.ans b{display:block;font-size:13px;color:var(--mut)}
 .secbox{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0;background:var(--white)}.secbox h4{margin:0 0 6px;font-size:17px}
-.rq{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0}
+.rq h4,#reqs h4{margin:12px 0 2px}.rq{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0}
 .rq .btn{min-height:44px}
 #pv{display:none}
 @media print{body>*:not(#pv){display:none!important}#pv{display:block;color:#000;font:12pt/1.4 Georgia,serif}#pv h1{font-size:20pt}#pv h2{font-size:13pt;border-bottom:1px solid #000;margin:12pt 0 4pt}#pv dt{font-weight:700;margin-top:5pt}#pv dd{margin:0 0 0 12pt;white-space:pre-wrap}#pv section{break-inside:avoid}}
 </style>
+<script src="/assets/requirements.js"></script>
 <script>
 (function(){
- var REQS=[["req9a","9a","Career"],["req4f","4f","Attack surface"],["req4e","4e","Breach report"],["req6c","6c","Seal"],["req7","7","Objects"]];
- var SEC=[["career","Paths of the Order","req9a"],["surface","My Attack Surface","req4f"],["breach","My Breach News Report","req4e"],["seal","Press the Seal","req6c"],["objects","Enchanted Objects","req7"],["forgery","Spot the Forgery",""],["reflect","Class reflection",""]];
+ // Requirement columns come from the shared list. A requirement with an `auto` worksheet counts as done when the Warden finishes it.
+ var REQS=window.MB_REQS.cy.map(function(r){return [r.code,r.code,r.text,r.auto,r.group,r.when]});
+ var SEC=[["career","Paths of the Order","9"],["surface","My Attack Surface","4f"],["breach","My Breach News Report","4e"],["seal","Press the Seal","6c"],["objects","Enchanted Objects","7"],["forgery","Spot the Forgery",""],["reflect","Class reflection",""]];
  var LBL={career:{careers:"Three careers",chosen:"Researching",daily:"All day",why:"Why it interests me",education:"Education",certs:"Certifications",experience:"Experience",expenses:"Expenses",prospects:"Prospects (source)",salary:"Salary (source)",advancement:"Advancement",sources:"Sources",learned:"Fact to share in class"},
   surface:{items:"Devices and accounts",risk:"Item picked",riskText:"Risk",protect:"How I will protect it"},
   breach:{headline:"Headline",url:"Link",what:"What happened",how:"How",cost:"Cost to the victim",stop:"What could have stopped it",oneline:"One sentence"},
@@ -68,8 +70,9 @@
  function E(tag,cls,t){var e=document.createElement(tag);if(cls)e.className=cls;if(t!=null)e.textContent=t;return e}
  function when(iso){try{return new Date(iso).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}catch(e){return ""}}
  function secOf(r){return SEC.filter(function(s){return s[2]===r})[0]}
- function st(l,r){var s=secOf(r)[0];return (l.summary||{})[s]||0}
- function isDone(l,r){return st(l,r)===2||(l.waive&&l.waive[r]&&l.waive[r].status==="granted")}
+ function auto(r){return REQS.filter(function(q){return q[0]===r})[0][3]}
+ function st(l,r){var s=secOf(r);return s?((l.summary||{})[s[0]]||0):0}
+ function isDone(l,r){if(!secOf(r))return false;return st(l,r)===2||!!(l.waive&&l.waive[r]&&l.waive[r].status==="granted")}
  function shown(){return logs.filter(function(l){return !flt||l.lodge===flt})}
  function counts(l){var s=0,d=0;REQS.forEach(function(q){if(l.signed&&l.signed[q[0]])s++;});SEC.forEach(function(x){if(((l.summary||{})[x[0]]||0)===2)d++});return{signed:s,done:d}}
  function needs(l){return REQS.some(function(q){return isDone(l,q[0])&&!(l.signed&&l.signed[q[0]])})}
@@ -80,7 +83,7 @@
   if(!logs.length){list.textContent="No Warden Logs backed up yet. They appear a few seconds after a Warden enters a name and starts working.";return}
   if(!rows.length){list.textContent="No Wardens in that lodge.";return}
   var t=E("table","grid"),h=E("thead"),hr=E("tr");
-  (view==="grid"?["Warden","Lodge"].concat(REQS.map(function(q){return "Req "+q[1]})).concat(["Sign row"]):["Warden","Lodge","Sections done","Signed off","Updated","Needs you"]).forEach(function(x){var th=E("th",null,x);th.scope="col";hr.appendChild(th)});h.appendChild(hr);t.appendChild(h);
+  (view==="grid"?["Warden","Lodge"].concat(REQS.map(function(q){return q[1]})).concat(["Sign row"]):["Warden","Lodge","Sections done","Signed off","Updated","Needs you"]).forEach(function(x){var th=E("th",null,x);th.scope="col";var rq=REQS.filter(function(q){return q[1]===x})[0];if(rq&&view==="grid"){th.title=rq[4]+": "+rq[2]}hr.appendChild(th)});h.appendChild(hr);t.appendChild(h);
   var b=E("tbody");
   rows.forEach(function(l){
    var tr=E("tr");
@@ -91,6 +94,7 @@
      if(sg){c.className="cell s";c.textContent="✓";c.title="Signed by "+sg.by+" "+when(sg.at)+". Click to undo.";c.setAttribute("aria-label",l.name+" req "+q[1]+" signed. Undo")}
      else if(isDone(l,r)){c.className="cell d";c.textContent="●";c.title="Done. Click to sign off.";c.setAttribute("aria-label",l.name+" req "+q[1]+" done. Sign off")}
      else if(wv&&wv.status==="pending"){c.className="cell w";c.textContent="Waive?";c.title="Wants this waived. Open the Warden to decide.";c.onclick=function(){openLog(l.id)};td.appendChild(c);tr.appendChild(td);return}
+     else if(!auto(r)){c.className="cell o";c.textContent="○";c.title="Class activity: "+q[5]+". Click to sign off.";c.setAttribute("aria-label",l.name+" req "+q[1]+" class activity. Sign off")}
      else {c.className="cell n";c.textContent=st(l,r)===1?"○":"–";c.title=st(l,r)===1?"In progress":"Not started";c.disabled=false;c.setAttribute("aria-label",l.name+" req "+q[1]+(st(l,r)===1?" in progress":" not started"));c.onclick=function(){openLog(l.id)};td.appendChild(c);tr.appendChild(td);return}
      c.onclick=function(){c.disabled=true;sign(l,r,!sg).then(function(){say(sg?"Undid req "+q[1]+" for "+l.name+".":"Signed req "+q[1]+" for "+l.name+".");paint()}).catch(function(e){say(e.message);c.disabled=false})};
      td.appendChild(c);tr.appendChild(td);
@@ -98,7 +102,7 @@
     var tdr=E("td"),sr=E("button","btn ghost","Sign done");sr.type="button";sr.disabled=!needs(l);sr.onclick=function(){sr.disabled=true;var p=REQS.filter(function(q){return isDone(l,q[0])&&!(l.signed&&l.signed[q[0]])}).reduce(function(pr,q){return pr.then(function(){return sign(l,q[0],true)})},Promise.resolve());p.then(function(){say("Signed everything finished for "+l.name+".");paint()}).catch(function(e){say(e.message);paint()})};tdr.appendChild(sr);tr.appendChild(tdr);
    } else {
     tr.className="lrow";tr.tabIndex=0;var c=counts(l);
-    [l.name||"(no name)",l.lodge||"-",c.done+" / 7",c.signed+" / 5",when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
+    [l.name||"(no name)",l.lodge||"-",c.done+" / 7",c.signed+" / "+REQS.length,when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
     var td=E("td");if(needs(l))td.appendChild(E("span","pill warn","Needs sign-off"));Object.keys(l.waive||{}).forEach(function(k){if(l.waive[k].status==="pending")td.appendChild(E("span","pill warn","Waive: "+k))});tr.appendChild(td);
     tr.addEventListener("click",function(){openLog(l.id)});tr.addEventListener("keydown",function(e){if(e.key==="Enter")openLog(l.id)});
    }
@@ -119,9 +123,11 @@
  }
  function updateSign(l){if(!detailLog||detailLog.meta.id!==l.id)return;detailLog.signed=l.signed||{};detailLog.waive=l.waive||{};detailLog.meta=Object.assign(detailLog.meta,{summary:l.summary});paintReqs()}
  function paintReqs(){var box=$("reqs");if(!box)return;box.textContent="";var j=detailLog;
+  var lastG="";
   REQS.forEach(function(q){var r=q[0],sg=(j.signed||{})[r],wv=(j.waive||{})[r],row=E("div","rq");
-   row.appendChild(E("strong",null,"Req "+q[1]+" "+q[2]+": "));
-   var stt=((j.meta.summary||{})[secOf(r)[0]])||0;row.appendChild(E("span","pill"+(sg?" ok":stt===2?" warn":""),sg?"Signed by "+sg.by+" "+when(sg.at):stt===2?"Done, not signed":stt===1?"In progress":"Not started"));
+   if(q[4]!==lastG){lastG=q[4];box.appendChild(E("h4",null,q[4]))}
+   row.appendChild(E("strong",null,q[1]+" "+q[2]+" "));
+   var stt=secOf(r)?(((j.meta.summary||{})[secOf(r)[0]])||0):-1;row.appendChild(E("span","pill"+(sg?" ok":stt===2?" warn":""),sg?"Signed by "+sg.by+" "+when(sg.at):stt===2?"Done, not signed":stt===1?"In progress":stt===0?"Not started":"Class activity"));
    var b=E("button","btn"+(sg?" ghost":""),sg?"Undo sign-off":"Sign off");b.type="button";b.onclick=function(){b.disabled=true;sign(j.meta,r,!sg).then(function(x){j.signed=x.signed;paintReqs();load()}).catch(function(e){say(e.message);b.disabled=false})};row.appendChild(b);
    if(wv){row.appendChild(E("span","pill "+(wv.status==="granted"?"ok":"warn"),wv.status==="granted"?"Waived":"Waive requested"+(wv.reason?" ("+wv.reason+")":"")));var g=E("button","btn ghost",wv.status==="granted"?"Revoke waiver":"Approve waiver");g.type="button";g.onclick=function(){g.disabled=true;api("/api/wardenlog/grant",{id:j.meta.id,req:r,granted:wv.status!=="granted"}).then(function(x){j.waive=x.waive;paintReqs();load()}).catch(function(e){say(e.message);g.disabled=false})};row.appendChild(g)}
    box.appendChild(row)});
@@ -140,15 +146,15 @@
  }
  function printOne(j){
   var pv=$("pv");pv.textContent="";pv.appendChild(E("h1",null,"Warden Log: "+(j.meta.name||"")));pv.appendChild(E("p",null,"Lodge: "+(j.meta.lodge||"-")));
-  SEC.forEach(function(s){var sec=E("section");sec.appendChild(E("h2",null,s[1]+(s[2]?" (req "+s[2].replace("req","")+")":"")));var dl=E("dl"),d=(j.state||{})[s[0]]||{},lb=LBL[s[0]];
+  SEC.forEach(function(s){var sec=E("section");sec.appendChild(E("h2",null,s[1]+(s[2]?" (req "+s[2]+")":"")));var dl=E("dl"),d=(j.state||{})[s[0]]||{},lb=LBL[s[0]];
    Object.keys(lb).forEach(function(k){var v=d[k];if(k==="rows")v=(v||[]).filter(function(r){return r.device});var t=fmt(v);dl.appendChild(E("dt",null,lb[k]));dl.appendChild(E("dd",null,t.trim()?t:"—"))});sec.appendChild(dl);
    if(s[2]){var sg=(j.signed||{})[s[2]];sec.appendChild(E("p",null,sg?"Signed off by "+sg.by+" on "+new Date(sg.at).toLocaleDateString():"Counselor sign-off: ____________________"))}pv.appendChild(sec)});
   window.print();
  }
  function csv(){
   var q=function(v){v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-  var head=["Warden","Lodge","Sections done (of 7)"].concat(REQS.map(function(r){return "Req "+r[1]+" signed"})).concat(REQS.map(function(r){return "Req "+r[1]+" signed by"})).concat(REQS.map(function(r){return "Req "+r[1]+" signed on"})).concat(["Last updated"]);
-  var rows=[head].concat(shown().map(function(l){var s=l.signed||{};return [l.name,l.lodge,counts(l).done].concat(REQS.map(function(r){return s[r[0]]?"Yes":"No"})).concat(REQS.map(function(r){return s[r[0]]?s[r[0]].by:""})).concat(REQS.map(function(r){return s[r[0]]?s[r[0]].at.slice(0,10):""})).concat([l.updated])}));
+  var head=["Warden","Lodge","Sections done (of 7)"].concat(REQS.map(function(r){return "Req "+r[1]+" signed"})).concat(["Signed by (most recent)","Last updated"]);
+  var rows=[head].concat(shown().map(function(l){var s=l.signed||{},ks=Object.keys(s).sort(function(a,b){return s[a].at<s[b].at?1:-1});return [l.name,l.lodge,counts(l).done].concat(REQS.map(function(r){return s[r[0]]?"Yes":"No"})).concat([ks.length?s[ks[0]].by:"",l.updated])}));
   var bl=new Blob([rows.map(function(r){return r.map(q).join(",")}).join("\r\n")+"\r\n"],{type:"text/csv"});var a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download="Warden-Log-signoffs.csv";document.body.appendChild(a);a.click();a.remove();say("CSV downloaded"+(flt?" for "+flt:"")+".");
  }
  $("flt").onchange=function(){flt=this.value;paint()};
