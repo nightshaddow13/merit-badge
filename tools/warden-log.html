@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warden Log</title>
+<meta name="description" content="The online worksheets for the Cybersecurity merit badge: the Warden Log.">
+<style>
+:root{--bg:#17112B;--panel:#241a42;--panel2:#150f27;--gold:#F4B63F;--ink:#f4f1e8;--mut:#b4aacd;--line:#3f3266;--ok:#6fd39a;--red:#ff8a9a;--wine:#7A1E3A}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:16px}
+header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 0 4px}
+.badge{background:var(--gold);color:var(--bg);font-weight:800;letter-spacing:.06em;border-radius:8px;padding:6px 10px;font-size:18px}
+h1{margin:0;font-size:25px;line-height:1.1}
+.sub{color:var(--mut);font-size:14px;margin:2px 0 0}
+a{color:var(--gold)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.25),0 6px 16px rgba(0,0,0,.28)}
+.card h2{margin:0 0 4px;font-size:18px;color:var(--gold)}
+.hint{color:var(--mut);font-size:14px;margin:0 0 10px}
+label,.lbl{display:block;font-size:14px;color:var(--mut);margin:12px 0 4px;font-weight:600}
+input[type=text],input[type=number],select,textarea{width:100%;min-height:44px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit}
+textarea{min-height:84px;resize:vertical}
+input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+.opt{font-weight:400;color:var(--mut);font-size:12px;margin-left:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+.safe{background:var(--panel2);border-left:4px solid var(--gold);padding:10px 12px;border-radius:6px;font-size:14px;margin-top:12px}
+.btn,button.b{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:8px;border:2px solid var(--gold);background:var(--gold);color:#17112B;font-weight:700;font-size:15px;line-height:1.2;font-family:inherit;cursor:pointer;text-decoration:none}
+.btn.ghost,button.ghost{background:transparent;color:var(--gold)}
+.btn:disabled,button:disabled{opacity:.5;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px}
+.row>input{flex:1 1 200px}
+.progress{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 8px;border-bottom:1px solid var(--line)}
+.bar{height:10px;border-radius:6px;background:var(--panel2);overflow:hidden;border:1px solid var(--line)}
+.bar>i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
+.pl{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin-bottom:6px}
+.jumps{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.jumps a{display:inline-flex;align-items:center;min-height:36px;padding:0 10px;border:1px solid var(--line);border-radius:999px;text-decoration:none;font-size:13px;color:var(--ink)}
+.jumps a.d{border-color:var(--ok);color:var(--ok)}
+details.sec{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.25),0 6px 16px rgba(0,0,0,.28)}
+details.sec[data-st="2"]{border-color:var(--ok)}
+details.sec>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;min-height:56px}
+details.sec>summary::-webkit-details-marker{display:none}
+.n{background:var(--gold);color:var(--bg);width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-size:14px;font-weight:800;flex:none}
+.st{font-size:18px;font-weight:700}
+.req{font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+.chip{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--line);color:var(--mut);white-space:nowrap}
+.chip.p{border-color:var(--gold);color:var(--gold)}
+.chip.d{border-color:var(--ok);color:var(--ok)}
+.body{padding:0 16px 16px}
+.inst{color:var(--mut);font-size:14px;margin:0 0 8px}
+.help{background:var(--panel2);border:1px dashed var(--line);border-radius:8px;padding:10px 12px;font-size:14px;margin:10px 0}
+.help ul{margin:6px 0 0;padding-left:20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.chips button{min-height:44px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:10px;padding:6px 12px;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.chips button small{display:block;color:var(--mut);font-size:12px}
+.warnmsg{color:var(--red);font-size:13px;margin:4px 0 0}
+.sign{margin-top:14px;padding:10px 12px;border-radius:8px;font-size:14px;border:1px solid var(--line);background:var(--panel2)}
+.sign.ok{border-color:var(--ok);color:var(--ok)}
+.sign.wait{color:var(--mut)}
+.sign .row{margin-top:6px}
+.radio{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0}
+.radio label{display:inline-flex;align-items:center;gap:8px;min-height:44px;margin:0;padding:0 12px;border:1px solid var(--line);border-radius:10px;color:var(--ink);font-weight:500;cursor:pointer;background:var(--panel2)}
+.radio input{width:20px;height:20px;margin:0}
+.tablewrap{overflow-x:auto}
+table.t{border-collapse:collapse;width:100%;min-width:620px}
+table.t th{font-size:12px;color:var(--mut);text-align:left;padding:4px 6px}
+table.t td{padding:4px;vertical-align:top}
+table.t input{min-height:44px}
+table.t tr.ex td{opacity:.75}
+table.t tr.ex input{background:transparent;border-style:dashed}
+.check{font-size:13px;margin:6px 0 0;color:var(--mut)}
+.check.ok{color:var(--ok)}
+.check.no{color:var(--gold)}
+.msg{font-size:14px;min-height:20px;margin-top:8px}
+.msg.ok{color:var(--ok)}.msg.err{color:var(--red)}
+#status{font-size:12px;color:var(--mut)}
+code.rc{font:16px Consolas,monospace;letter-spacing:.05em;word-break:break-all}
+#printView{display:none}
+@media print{
+  body{background:#fff;color:#000}
+  .wrap>*:not(#printView){display:none!important}
+  #printView{display:block;color:#000;font:12pt/1.4 Georgia,serif}
+  #printView h1{font-size:20pt;margin:0 0 4pt}
+  #printView h2{font-size:13pt;margin:14pt 0 4pt;border-bottom:1px solid #000}
+  #printView dt{font-weight:700;margin-top:6pt}
+  #printView dd{margin:0 0 0 12pt;white-space:pre-wrap}
+  #printView section{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><span class="badge">WARDEN LOG</span><div><h1>Warden Log</h1><p class="sub">Order of the Silver Padlock &middot; <a href="/cybersecurity/">Cybersecurity</a> &middot; <a href="/">Home</a></p></div></header>
+
+<section class="card" id="who">
+  <h2>Who is sealing this log?</h2>
+  <div class="grid2">
+    <div><label for="nm">Warden name <span class="opt">(first name and last initial)</span></label><input type="text" id="nm" maxlength="40" autocomplete="off" placeholder="Sam K"></div>
+    <div><label for="lg">Lodge</label><select id="lg"><option value="">Not sure yet</option></select></div>
+  </div>
+  <div class="safe"><b>Seal your findings, keep your secrets.</b> Never write a password, a private detail, an email address or a phone number here. Types only: write &ldquo;phone&rdquo;, not your PIN. Your counselor signs off each requirement once you are done. You do not sign it yourself.</div>
+  <details style="margin-top:10px"><summary style="cursor:pointer;min-height:44px;display:flex;align-items:center">Your recovery code, other devices, and save/print</summary>
+    <p class="hint" style="margin-top:8px">Your recovery code: <code class="rc" id="rc"></code>. Write it down or take a screenshot. Type it on another device (or after clearing this browser) to get your log back. Keep it private: it is the only key to your backup.</p>
+    <div class="row"><input type="text" id="recIn" autocomplete="off" spellcheck="false" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx-xxxx" aria-label="Recovery code"><button class="btn ghost" id="recGo" type="button">Recover my log</button></div>
+    <div class="row"><button class="btn ghost" id="exp" type="button">Save to a file</button><label class="btn ghost" style="margin:0;cursor:pointer" for="imp">Load a file</label><input type="file" id="imp" accept=".json,application/json" hidden><button class="btn ghost" id="prn" type="button">Print my log</button></div>
+    <div class="msg" id="recMsg" role="status"></div>
+  </details>
+</section>
+
+<div class="progress" aria-live="polite">
+  <div class="pl"><span id="pt">0 of 7 sections done</span><span id="status">Saved on this device</span></div>
+  <div class="bar"><i id="pb"></i></div>
+  <nav class="jumps" id="jumps" aria-label="Sections"></nav>
+</div>
+
+<div id="secs"></div>
+
+<section class="card"><h2>All done?</h2><p class="hint">When a section says <b>Done</b>, find your counselor. He signs it off here on his own screen. A paper backup of every page is also available.</p><div class="row"><button class="btn" id="prn2" type="button">Print my log</button></div></section>
+<div id="printView" aria-hidden="true"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var KEY="warden_log_v1", API="/api/wardenlog";
+var $=function(i){return document.getElementById(i)};
+var ID_RE=/^[a-f0-9]{16,32}$/;
+var SPEC=[
+ {k:"career",n:1,title:"Paths of the Order: career worksheet",req:"req9a",reqLabel:"Req 9a",home:true,
+  inst:"About 30 minutes, best done at home with a parent. Find three cybersecurity careers and research one in depth. Use real, current sources and write where each fact came from. In class, tell the group one specific thing you learned.",
+  blocks:[
+   {t:"label",text:"Part 1: three careers"},
+   {t:"chips",k:"careers",chips:[["Security analyst","watches systems and networks for attacks"],["Penetration tester","hired to hack safely to find weaknesses first"],["Incident responder","handles a breach and gets the organization back to normal"],["Cryptographer","designs and tests encryption"]]},
+   {t:"rows",k:"careers",n:3,label:"Career",max:80},
+   {f:"chosen",label:"The one I will research",type:"text",max:80},
+   {f:"daily",label:"What does this person do all day?",type:"area"},
+   {t:"label",text:"Part 2: why"},
+   {f:"why",label:"Why this career might interest me",type:"area"},
+   {t:"label",text:"Part 3: dig in (cite a source for salary and prospects)"},
+   {t:"help",html:"<b>Where to look:</b><ul><li>bls.gov/ooh (U.S. Bureau of Labor Statistics Occupational Outlook Handbook)</li><li>CISA and NICE cybersecurity workforce pages</li><li>Certification organization websites</li><li>A parent, relative or counselor who works in technology</li></ul><b>Do not guess at salaries or costs.</b>"},
+   {f:"education",label:"Education needed",type:"area"},
+   {f:"certs",label:"Certifications (name at least one, for example Security+, and what it proves)",type:"area"},
+   {f:"experience",label:"Experience needed",type:"area"},
+   {f:"expenses",label:"Expenses (training, exams, equipment)",type:"area"},
+   {f:"prospects",label:"Is the field growing? (cite your source)",type:"area"},
+   {f:"salary",label:"Salary (the number and where you found it)",type:"text",max:200},
+   {f:"advancement",label:"How could this person advance?",type:"area"},
+   {f:"sources",label:"Sources (website names or addresses, or the person you interviewed)",type:"area"},
+   {f:"learned",label:"One specific fact I will share in class",type:"text",max:200}
+  ],
+  need:function(d){return d.careers.every(has)&&["chosen","daily","why","education","certs","experience","expenses","prospects","salary","advancement","sources","learned"].every(function(k){return has(d[k])})},
+  any:function(d){return d.careers.some(has)||["chosen","daily","why","education","certs","experience","expenses","prospects","salary","advancement","sources","learned"].some(function(k){return has(d[k])})}},
+ {k:"surface",n:2,title:"My Attack Surface",req:"req4f",reqLabel:"Req 4f",
+  inst:"List the devices and accounts you use. Write types only, such as “phone”, “game console” or “email”. Never write passwords or private details.",
+  blocks:[
+   {t:"rows",k:"items",n:5,grow:12,label:"Device or account type",max:60,add:"Add another"},
+   {t:"risk"},
+   {f:"protect",label:"One way I will protect it",type:"area"}
+  ],
+  need:function(d){return d.items.some(has)&&has(d.risk)&&has(d.protect)},
+  any:function(d){return d.items.some(has)||has(d.risk)||has(d.riskText)||has(d.protect)}},
+ {k:"breach",n:3,title:"My Breach News Report",req:"req4e",reqLabel:"Req 4e",
+  inst:"Find a news article about a real data breach or cyber attack and report on it.",
+  blocks:[
+   {f:"headline",label:"Headline of my article",type:"text",max:200},
+   {f:"url",label:"Link to the article",type:"text",max:300,opt:true},
+   {f:"what",label:"What happened?",type:"area"},
+   {f:"how",label:"How did it happen?",type:"area"},
+   {f:"cost",label:"What did it cost the victim?",type:"area"},
+   {f:"stop",label:"One thing that could have stopped it",type:"area"},
+   {f:"oneline",label:"My report in one sentence",type:"text",max:200}
+  ],
+  need:function(d){return ["headline","what","how","cost","stop","oneline"].every(function(k){return has(d[k])})},
+  any:function(d){return ["headline","url","what","how","cost","stop","oneline"].some(function(k){return has(d[k])})}},
+ {k:"seal",n:4,title:"Press the Seal",req:"req6c",reqLabel:"Req 6c",
+  inst:"Hashing: seal a message, change one character, and watch the seal change.",
+  blocks:[
+   {f:"tool",label:"Which tool did you use?",type:"radio",opts:["Wax Seal Lab","PowerShell","Terminal","Other"]},
+   {f:"toolOther",label:"Other tool (name it)",type:"text",max:60,opt:true,showIf:function(d){return d.tool==="Other"}},
+   {t:"help",html:"Open the <a href=\"/cybersecurity/hash-lab/\" target=\"_blank\" rel=\"noopener\">Hash Lab</a> in a new tab to make a hash, or use the <b>Check my hash</b> buttons below."},
+   {t:"label",text:"Step 1: seal a message"},
+   {f:"msgA",label:"A short, kind message (one sentence, no personal details)",type:"text",max:200},
+   {f:"hashA",label:"First 8 characters of its SHA-256 hash",type:"text",max:8,mono:true},
+   {t:"hashcheck",m:"msgA",h:"hashA"},
+   {t:"label",text:"Step 2: a lodge mate changes one character"},
+   {f:"msgB",label:"The changed message",type:"text",max:200},
+   {f:"hashB",label:"First 8 characters of the new hash",type:"text",max:8,mono:true},
+   {t:"hashcheck",m:"msgB",h:"hashB"},
+   {t:"label",text:"Step 3: compare"},
+   {f:"match",label:"Do the two hashes match?",type:"radio",opts:["Yes","No"]},
+   {f:"changed",label:"How many of the 8 characters changed? (0 to 8)",type:"num"},
+   {f:"whichChar",label:"Which character did your lodge mate change?",type:"text",max:20},
+   {f:"told",label:"What did the checksum tell you?",type:"area"},
+   {f:"hashVsEnc",label:"One difference between hashing and encryption",type:"area"}
+  ],
+  need:function(d){return has(d.tool)&&["msgA","hashA","msgB","hashB","match","changed","whichChar","told","hashVsEnc"].every(function(k){return has(d[k])})},
+  any:function(d){return ["tool","msgA","hashA","msgB","hashB","match","changed","whichChar","told","hashVsEnc"].some(function(k){return has(d[k])})}},
+ {k:"objects",n:5,title:"Enchanted Objects: connected device draft",req:"req7",reqLabel:"Req 7",
+  inst:"Connected devices are handy and risky. Work as a lodge in three rounds.",
+  blocks:[
+   {t:"label",text:"Round 1: list connected devices (60 seconds)"},
+   {f:"list",label:"Our lodge's list of connected devices",type:"area"},
+   {t:"label",text:"Round 2: pick four and think it through"},
+   {t:"table"},
+   {t:"label",text:"Round 3: share"},
+   {f:"share",label:"Our lodge will share…",type:"text",max:200},
+   {f:"shareProtect",label:"and protect it by…",type:"text",max:200}
+  ],
+  need:function(d){return d.rows.filter(function(r){return has(r.device)&&has(r.why)&&has(r.risk)&&has(r.protect)}).length>=2&&has(d.list)&&has(d.share)&&has(d.shareProtect)},
+  any:function(d){return has(d.list)||has(d.share)||has(d.shareProtect)||d.rows.some(function(r){return has(r.device)||has(r.why)||has(r.risk)||has(r.protect)})}},
+ {k:"forgery",n:6,title:"Spot the Forgery",req:"req6c",reqLabel:"Class activity",optional:true,nosign:true,
+  inst:"Optional. In class, four documents are checked by comparing hashes, and one is a forgery.",
+  blocks:[
+   {f:"fake",label:"Which document was forged?",type:"select",opts:["Document 1","Document 2","Document 3","Document 4"]},
+   {f:"how",label:"How I know",type:"area"}
+  ],
+  need:function(d){return has(d.fake)&&has(d.how)},
+  any:function(d){return has(d.fake)||has(d.how)}},
+ {k:"reflect",n:7,title:"Class reflection",req:"",reqLabel:"Optional",optional:true,nosign:true,
+  inst:"Three quick prompts at the end of class. Not signed by the counselor.",
+  blocks:[
+   {f:"learned",label:"The best thing I learned",type:"area"},
+   {f:"lodge",label:"How my lodge worked together",type:"area"},
+   {f:"next",label:"One habit I will change tonight",type:"area"}
+  ],
+  need:function(d){return has(d.learned)&&has(d.lodge)&&has(d.next)},
+  any:function(d){return has(d.learned)||has(d.lodge)||has(d.next)}}
+];
+function has(v){return typeof v==="string"&&v.trim().length>0}
+function blank(){
+  return {v:1,id:"",rev:0,name:"",lodge:"",data:{
+   career:{careers:["","",""],chosen:"",daily:"",why:"",education:"",certs:"",experience:"",expenses:"",prospects:"",salary:"",advancement:"",sources:"",learned:""},
+   surface:{items:["","","","",""],risk:"",riskText:"",protect:""},
+   breach:{headline:"",url:"",what:"",how:"",cost:"",stop:"",oneline:""},
+   seal:{tool:"",toolOther:"",msgA:"",hashA:"",msgB:"",hashB:"",match:"",changed:"",whichChar:"",told:"",hashVsEnc:""},
+   objects:{list:"",rows:[{device:"",why:"",risk:"",protect:""},{device:"",why:"",risk:"",protect:""},{device:"",why:"",risk:"",protect:""},{device:"",why:"",risk:"",protect:""}],share:"",shareProtect:""},
+   forgery:{fake:"",how:""},
+   reflect:{learned:"",lodge:"",next:""}}};
+}
+var state=blank(), signed={}, waive={};
+// merge any saved/imported object onto the blank shape so missing or odd values can never break a render
+function merge(dst,src){
+  if(typeof dst==="string") return typeof src==="string"?src.slice(0,1000):dst;
+  if(Array.isArray(dst)){
+    if(!Array.isArray(src)) return dst;
+    var n=Math.min(src.length,Math.max(dst.length,12)), out=[], i;
+    for(i=0;i<n;i++){ var t=i<dst.length?dst[i]:""; out.push(typeof t==="object"&&t!==null?merge(t,src[i]):(typeof src[i]==="string"?src[i].slice(0,1000):"")); }
+    return out;
+  }
+  if(dst&&typeof dst==="object"){ if(!src||typeof src!=="object") return dst; Object.keys(dst).forEach(function(k){ if(Object.prototype.hasOwnProperty.call(src,k)) dst[k]=merge(dst[k],src[k]); }); return dst; }
+  return dst;
+}
+function newId(){var a=new Uint8Array(12);(window.crypto||{getRandomValues:function(x){for(var i=0;i<x.length;i++)x[i]=Math.floor(Math.random()*256)}}).getRandomValues(a);return Array.prototype.map.call(a,function(b){return("0"+b.toString(16)).slice(-2)}).join("")}
+function load(){
+  try{var s=JSON.parse(localStorage.getItem(KEY)||"null"); if(s&&typeof s==="object"){ var b=blank(); b.id=ID_RE.test(String(s.id))?s.id:""; b.rev=+s.rev||0; b.name=String(s.name||"").slice(0,40); b.lodge=String(s.lodge||"").slice(0,40); b.data=merge(b.data,s.data); state=b; }}catch(e){}
+  if(!state.id){ state.id=newId(); persist(); }
+}
+var dirty=false;
+function persist(){ try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
+
+// ---- status ----
+function secState(sp){
+  if(waive[sp.req]==="granted"&&!sp.nosign) return 2;
+  var d=state.data[sp.k]; return sp.need(d)?2:(sp.any(d)?1:0);
+}
+function summary(){var o={};SPEC.forEach(function(sp){o[sp.k]=secState(sp)});return o}
+
+// ---- save + backup ----
+var saveT=0, bkT=0, sending=false;
+function setStatus(t){$("status").textContent=t}
+function changed(){
+  state.rev++; dirty=true; clearTimeout(saveT); setStatus("Saving…");
+  saveT=setTimeout(function(){persist();setStatus("Saved on this device");refresh();scheduleBackup()},300);
+}
+function scheduleBackup(){clearTimeout(bkT);bkT=setTimeout(backup,2500)}
+function backup(){
+  if(sending) return scheduleBackup();
+  if(!dirty) return Promise.resolve();
+  if(!navigator.onLine){setStatus("Saved on this device. Backup waits for Wi-Fi.");return Promise.resolve()}
+  sending=true; var rev=state.rev;
+  return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.id,name:state.name,lodge:state.lodge,summary:summary(),state:state.data})})
+   .then(function(r){ if(!r.ok) throw new Error(String(r.status)); if(rev===state.rev) dirty=false; setStatus("Saved and backed up"); })
+   .catch(function(){setStatus("Saved on this device. Backup will retry.");setTimeout(scheduleBackup,15000)})
+   .then(function(){sending=false});
+}
+window.addEventListener("online",function(){if(dirty)backup();pollStatus()});
+function pollStatus(){
+  if(!navigator.onLine) return;
+  fetch(API+"/status?id="+state.id,{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
+    if(!j) return; var a=JSON.stringify([signed,waive]); signed=j.signed||{}; waive=j.waive||{};
+    if(JSON.stringify([signed,waive])!==a) refresh();
+  }).catch(function(){});
+}
+setInterval(pollStatus,20000);
+
+// ---- privacy check (warns, never blocks) ----
+function sensitive(v){
+  if(!v) return "";
+  if(/[^\s@]+@[^\s@]+\.[a-z]{2,}/i.test(v)) return "That looks like an email address. Please take it out.";
+  if(/(\+?\d[\d\s().-]{8,}\d)/.test(v)) return "That looks like a phone number. Please take it out.";
+  if(/\b(password|passcode|my pin|passphrase)\s*(is|was|=|:)\s*\S+/i.test(v)) return "That looks like a password. Never write one here. Please take it out.";
+  return "";
+}
+
+// ---- render ----
+function el(tag,attrs,text){var e=document.createElement(tag);if(attrs)Object.keys(attrs).forEach(function(k){if(k==="class")e.className=attrs[k];else e.setAttribute(k,attrs[k])});if(text!==undefined)e.textContent=text;return e}
+var uid=0;
+function field(sp,b){
+  var d=state.data[sp.k], wrap=el("div"), id="f"+(++uid);
+  if(b.showIf){wrap.hidden=!b.showIf(d);wrap.dataset.showif="1";wrap._f=b;wrap._sp=sp}
+  var lab=el("label",{"for":id},b.label); if(b.opt){lab.appendChild(el("span",{"class":"opt"},"(optional)"))}
+  if(b.type==="radio"){
+    var l2=el("div",{"class":"lbl",id:id+"l"},b.label); if(b.opt) l2.appendChild(el("span",{"class":"opt"},"(optional)")); wrap.appendChild(l2);
+    var g=el("div",{"class":"radio",role:"radiogroup","aria-labelledby":id+"l"});
+    b.opts.forEach(function(o,i){var lb=el("label"),r=el("input",{type:"radio",name:id,value:o});r.checked=d[b.f]===o;r.onchange=function(){d[b.f]=o;changed();syncShow(sp)};lb.appendChild(r);lb.appendChild(document.createTextNode(o));g.appendChild(lb)});
+    wrap.appendChild(g); return wrap;
+  }
+  wrap.appendChild(lab);
+  var inp;
+  if(b.type==="area"){inp=el("textarea",{id:id,maxlength:"1000"})}
+  else if(b.type==="select"){inp=el("select",{id:id});inp.appendChild(el("option",{value:""},"Choose…"));b.opts.forEach(function(o){inp.appendChild(el("option",{value:o},o))})}
+  else if(b.type==="num"){inp=el("input",{id:id,type:"number",min:"0",max:"8",inputmode:"numeric"})}
+  else {inp=el("input",{id:id,type:"text",maxlength:String(b.max||200),autocomplete:"off"}); if(b.mono){inp.style.fontFamily="Consolas,monospace";inp.setAttribute("spellcheck","false");inp.setAttribute("autocapitalize","none")}}
+  inp.value=d[b.f]||"";
+  var warn=el("div",{"class":"warnmsg",role:"status"});
+  var ev=inp.tagName==="SELECT"?"change":"input";
+  inp.addEventListener(ev,function(){
+    var v=inp.value; if(b.type==="num"){v=v.replace(/\D/g,"").slice(0,1); if(+v>8)v="8"; inp.value=v}
+    d[b.f]=v; if(b.type!=="select"&&b.f!=="url"&&b.f!=="hashA"&&b.f!=="hashB") warn.textContent=sensitive(v);
+    changed(); syncShow(sp);
+  });
+  wrap.appendChild(inp); wrap.appendChild(warn);
+  if(b.type!=="select"&&b.f!=="url") warn.textContent=sensitive(inp.value);
+  return wrap;
+}
+function syncShow(sp){var box=document.querySelector('[data-sec="'+sp.k+'"]');if(!box)return;box.querySelectorAll("[data-showif]").forEach(function(w){w.hidden=!w._f.showIf(state.data[w._sp.k])})}
+function rowsBlock(sp,b){
+  var d=state.data[sp.k], arr=d[b.k], box=el("div"), list=el("div");
+  function draw(){
+    list.textContent="";
+    arr.forEach(function(v,i){
+      var id="f"+(++uid), w=el("div"); w.appendChild(el("label",{"for":id},b.label+" "+(i+1)));
+      var inp=el("input",{id:id,type:"text",maxlength:String(b.max||80),autocomplete:"off"}); inp.value=v;
+      var warn=el("div",{"class":"warnmsg",role:"status"}); warn.textContent=sensitive(v);
+      inp.addEventListener("input",function(){arr[i]=inp.value;warn.textContent=sensitive(inp.value);changed();if(b.k==="items")fillRisk(sp)});
+      w.appendChild(inp);w.appendChild(warn);list.appendChild(w);
+    });
+  }
+  draw(); box.appendChild(list);
+  if(b.add){var ab=el("button",{type:"button","class":"btn ghost"},b.add);ab.style.marginTop="8px";ab.onclick=function(){if(arr.length<b.grow){arr.push("");draw();changed();var ins=list.querySelectorAll("input");ins[ins.length-1].focus()}};box.appendChild(ab)}
+  box._draw=draw;
+  return box;
+}
+function fillRisk(sp){
+  var sel=document.getElementById("riskSel"); if(!sel) return; var d=state.data.surface, cur=d.risk; sel.textContent="";
+  sel.appendChild(el("option",{value:""},"Choose one you listed…"));
+  d.items.filter(has).forEach(function(v){sel.appendChild(el("option",{value:v},v))});
+  if(cur&&d.items.filter(has).indexOf(cur)<0){ d.risk=""; } sel.value=d.risk;
+}
+function riskBlock(sp){
+  var d=state.data.surface, w=el("div");
+  w.appendChild(el("label",{"for":"riskSel"},"Pick one item from your list"));
+  var sel=el("select",{id:"riskSel"}); w.appendChild(sel); sel.onchange=function(){d.risk=sel.value;changed()};
+  w.appendChild(el("label",{"for":"riskTxt"},"A risk it faces (for example: someone guesses the login, or it is lost)"));
+  var t=el("textarea",{id:"riskTxt",maxlength:"1000"}); t.value=d.riskText||"";
+  var warn=el("div",{"class":"warnmsg",role:"status"}); warn.textContent=sensitive(t.value);
+  t.oninput=function(){d.riskText=t.value;warn.textContent=sensitive(t.value);changed()};
+  w.appendChild(t); w.appendChild(warn); setTimeout(function(){fillRisk(sp)},0); return w;
+}
+function tableBlock(sp){
+  var d=state.data.objects, wrap=el("div",{"class":"tablewrap"}), t=el("table",{"class":"t"});
+  t.innerHTML="<thead><tr><th scope=col>Device</th><th scope=col>Why it is useful</th><th scope=col>Risk</th><th scope=col>How I protect it</th></tr></thead>";
+  var tb=el("tbody"), ex=el("tr",{"class":"ex"});
+  ["Smart doorbell","See visitors from anywhere","Hacked camera, shared video","Strong password, MFA, updates"].forEach(function(v){var td=el("td"),i=el("input",{type:"text",value:v,readonly:"","aria-label":"Example: "+v});td.appendChild(i);ex.appendChild(td)});
+  tb.appendChild(ex);
+  d.rows.forEach(function(r,ri){
+    var tr=el("tr");
+    [["device","Device"],["why","Why it is useful"],["risk","Risk"],["protect","How I protect it"]].forEach(function(c){
+      var td=el("td"),i=el("input",{type:"text",maxlength:"120","aria-label":c[1]+", row "+(ri+1),autocomplete:"off"}); i.value=r[c[0]]||"";
+      i.oninput=function(){r[c[0]]=i.value;changed()}; td.appendChild(i);tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);wrap.appendChild(t);
+  var h=el("p",{"class":"hint"},"The first row is an example. Fill in your own rows below it (two complete rows are needed).");h.style.marginTop="6px";
+  var o=el("div");o.appendChild(h);o.appendChild(wrap);return o;
+}
+function chipsBlock(sp,b){
+  var d=state.data[sp.k], box=el("div",{"class":"chips"});
+  b.chips.forEach(function(c){
+    var bt=el("button",{type:"button"},c[0]);bt.appendChild(el("small",null,c[1]));
+    bt.onclick=function(){
+      var arr=d[b.k],i=arr.findIndex(function(v){return !has(v)}); if(i<0) i=arr.length-1; arr[i]=c[0]; changed();
+      var sec=document.querySelector('[data-sec="'+sp.k+'"]'); var ins=sec.querySelectorAll("[data-rows='"+b.k+"'] input"); if(ins[i]){ins[i].value=c[0];ins[i].focus()}
+    };
+    box.appendChild(bt);
+  });
+  return box;
+}
+function hashBlock(sp,b){
+  var w=el("div"),out=el("div",{"class":"check",role:"status"}), bt=el("button",{type:"button","class":"btn ghost"},"Check my hash");
+  bt.style.marginTop="6px";
+  bt.onclick=function(){
+    var d=state.data.seal, msg=d[b.m];
+    if(!has(msg)){out.className="check no";out.textContent="Type the message first.";return}
+    if(!(window.crypto&&crypto.subtle)){out.className="check no";out.textContent="This browser cannot check hashes. Use the Hash Lab.";return}
+    crypto.subtle.digest("SHA-256",new TextEncoder().encode(msg)).then(function(buf){
+      var hex=Array.prototype.map.call(new Uint8Array(buf),function(x){return("0"+x.toString(16)).slice(-2)}).join(""), first=hex.slice(0,8), typed=(d[b.h]||"").trim().toLowerCase();
+      if(!typed){out.className="check";out.textContent="The first 8 characters of the SHA-256 of that exact message are "+first+". Type them in the box above, then check again."}
+      else if(typed===first){out.className="check ok";out.textContent="Match. "+first+" is right for that exact message."}
+      else{out.className="check no";out.textContent="Not quite. For that exact message (spaces and capitals count) the first 8 characters are "+first+". Check for a typo in the message or the hash."}
+    });
+  };
+  w.appendChild(bt);w.appendChild(out);return w;
+}
+function signBox(sp){
+  var box=el("div",{"class":"sign"}); box.dataset.sign=sp.k;
+  paintSign(sp,box); return box;
+}
+function paintSign(sp,box){
+  box.textContent=""; box.className="sign";
+  var r=sp.req, s=signed[r], w=waive[r], st=secState(sp);
+  if(sp.nosign){box.hidden=true;return}
+  box.hidden=false;
+  if(s){box.className="sign ok";box.appendChild(el("div",null,"✓ Signed off by "+s.by+" ("+new Date(s.at).toLocaleString()+")"));return}
+  if(w==="granted"){box.className="sign ok";box.appendChild(el("div",null,"Your counselor waived this requirement. He will sign it off."));return}
+  box.className="sign wait";
+  box.appendChild(el("div",null,st===2?"Waiting for counselor. Show him this screen to get it signed off.":"Finish this section, then show your counselor."));
+  if(w==="pending"){box.appendChild(el("div",{"class":"hint"},"Waive request sent. Your counselor will see it."));return}
+  var row=el("div",{"class":"row"}),bt=el("button",{type:"button","class":"btn ghost"},"Ask counselor to waive");
+  bt.onclick=function(){
+    bt.disabled=true; var why=sp.k==="seal"&&state.data.seal.tool===""?"no device":"blocked";
+    backup().then(function(){return fetch(API+"/waive",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.id,req:sp.req,reason:why})})})
+     .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||"Could not send");return j})})
+     .then(function(j){waive=j.waive||waive;refresh()}).catch(function(e){bt.disabled=false;alert(e.message||"Could not send. Try again when you have Wi-Fi.")});
+  };
+  row.appendChild(bt);box.appendChild(row);
+}
+function build(){
+  var host=$("secs");host.textContent="";uid=0;
+  SPEC.forEach(function(sp,idx){
+    var det=el("details",{"class":"sec",id:"s-"+sp.k}); det.dataset.sec=sp.k;
+    var sm=el("summary");sm.appendChild(el("span",{"class":"n"},String(sp.n)));sm.appendChild(el("span",{"class":"st"},sp.title));
+    sm.appendChild(el("span",{"class":"req"},sp.reqLabel+(sp.home?" · can start at home":"")));sm.appendChild(el("span",{"class":"chip"}));
+    det.appendChild(sm);
+    var body=el("div",{"class":"body"});body.appendChild(el("p",{"class":"inst"},sp.inst));
+    sp.blocks.forEach(function(b){
+      if(b.t==="label") body.appendChild(el("div",{"class":"lbl",style:"color:var(--gold);margin-top:16px"},b.text));
+      else if(b.t==="help"){var h=el("div",{"class":"help"});h.innerHTML=b.html;body.appendChild(h)}
+      else if(b.t==="chips") body.appendChild(chipsBlock(sp,b));
+      else if(b.t==="rows"){var rb=rowsBlock(sp,b);rb.dataset.rows=b.k;body.appendChild(rb)}
+      else if(b.t==="risk") body.appendChild(riskBlock(sp));
+      else if(b.t==="table") body.appendChild(tableBlock(sp));
+      else if(b.t==="hashcheck") body.appendChild(hashBlock(sp,b));
+      else body.appendChild(field(sp,b));
+    });
+    body.appendChild(signBox(sp));
+    det.appendChild(body);host.appendChild(det);
+  });
+  var first=SPEC.findIndex(function(sp){return secState(sp)<2});
+  var d0=$("secs").children[first<0?0:first]; if(d0) d0.open=true;
+  refresh();
+}
+function refresh(){
+  var done=0;
+  SPEC.forEach(function(sp){
+    var st=secState(sp), det=document.querySelector('[data-sec="'+sp.k+'"]'); if(!det) return;
+    det.dataset.st=st; var chip=det.querySelector(".chip");
+    chip.textContent=st===2?(waive[sp.req]==="granted"&&!sp.nosign?"Waived":"Done"):st===1?"In progress":"Not started";
+    chip.className="chip"+(st===2?" d":st===1?" p":"");
+    if(st===2) done++;
+    paintSign(sp,det.querySelector(".sign"));
+    var j=document.querySelector('#jumps a[data-k="'+sp.k+'"]'); if(j) j.className=st===2?"d":"";
+  });
+  $("pt").textContent=done+" of "+SPEC.length+" sections done";
+  $("pb").style.width=Math.round(done/SPEC.length*100)+"%";
+}
+function jumps(){
+  var n=$("jumps");SPEC.forEach(function(sp){var a=el("a",{href:"#s-"+sp.k,"data-k":sp.k},sp.n+". "+sp.title.split(":")[0]);a.onclick=function(e){e.preventDefault();var d=$("s-"+sp.k);d.open=true;d.scrollIntoView({behavior:"smooth",block:"start"})};n.appendChild(a)});
+}
+
+// ---- header fields, lodges ----
+function setupHeader(){
+  $("nm").value=state.name;
+  $("nm").addEventListener("input",function(){state.name=$("nm").value;changed()});
+  $("lg").addEventListener("change",function(){state.lodge=$("lg").value;changed()});
+  $("rc").textContent=state.id.replace(/(.{4})/g,"$1-").replace(/-$/,"");
+  fetch("/api/scores/cybersecurity",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
+    var names=((j&&j.lodges)||[]).map(function(x){return String(x||"").trim()}).filter(Boolean), sel=$("lg");
+    names.forEach(function(nm){sel.appendChild(el("option",{value:nm},nm))});
+    if(state.lodge&&names.indexOf(state.lodge)<0) sel.appendChild(el("option",{value:state.lodge},state.lodge));
+    sel.value=state.lodge;
+  }).catch(function(){ if(state.lodge){var sel=$("lg");sel.appendChild(el("option",{value:state.lodge},state.lodge));sel.value=state.lodge} });
+}
+
+// ---- recover, export/import, print ----
+function slug(s){return (s||"warden").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"warden"}
+function applyState(obj,keepId){
+  var b=blank(); b.id=keepId||state.id; b.name=String(obj.name||"").slice(0,40); b.lodge=String(obj.lodge||"").slice(0,40); b.data=merge(b.data,obj.data||obj.state); b.rev=state.rev+1; state=b; persist(); dirty=true;
+  $("nm").value=state.name; var sel=$("lg"); if(state.lodge&&![].some.call(sel.options,function(o){return o.value===state.lodge})) sel.appendChild(el("option",{value:state.lodge},state.lodge)); sel.value=state.lodge;
+  $("rc").textContent=state.id.replace(/(.{4})/g,"$1-").replace(/-$/,""); build(); scheduleBackup(); pollStatus();
+}
+function recover(){
+  var raw=$("recIn").value.toLowerCase().replace(/[^a-f0-9]/g,""), m=$("recMsg");
+  if(!ID_RE.test(raw)){m.textContent="Type the whole recovery code (letters a-f and numbers).";m.className="msg err";return}
+  var hasWork=SPEC.some(function(sp){return secState(sp)>0});
+  if(hasWork&&!confirm("This replaces what is on this device with the backup. Continue?")) return;
+  m.textContent="Looking for your backup…";m.className="msg";
+  fetch(API+"/restore?id="+raw,{cache:"no-store"}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(r.status===404?"No backup found for that code. Check it and try again, or ask your counselor.":(j.error||"Could not recover."));return j})})
+   .then(function(j){ applyState({name:state.name,lodge:state.lodge,data:j.state},raw); m.textContent="Recovered. Your work is back.";m.className="msg ok"})
+   .catch(function(e){m.textContent=e.message;m.className="msg err"});
+}
+function exportJson(){
+  var blob=new Blob([JSON.stringify({app:"warden-log",version:1,saved:new Date().toISOString(),name:state.name,lodge:state.lodge,data:state.data},null,2)],{type:"application/json"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Warden-Log-"+slug(state.name)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
+  $("recMsg").textContent="Saved "+a.download+".";$("recMsg").className="msg ok";
+}
+function importJson(f){
+  if(!f) return; var m=$("recMsg");
+  if(f.size>1000000){m.textContent="That file is too big to be a Warden Log.";m.className="msg err";return}
+  var r=new FileReader();r.onload=function(){try{var o=JSON.parse(r.result);if(!o||o.app!=="warden-log"||typeof o.data!=="object")throw 0;applyState(o);m.textContent="Loaded "+f.name+".";m.className="msg ok"}catch(e){m.textContent="That does not look like a Warden Log file.";m.className="msg err"}};r.readAsText(f);
+}
+function printLog(){
+  var pv=$("printView");pv.textContent="";
+  pv.appendChild(el("h1",null,"Warden Log: "+(state.name||"")));pv.appendChild(el("p",null,"Lodge: "+(state.lodge||"not sure yet")+"   |   Printed "+new Date().toLocaleDateString()));
+  SPEC.forEach(function(sp){
+    var s=el("section");s.appendChild(el("h2",null,sp.n+". "+sp.title+(sp.req?" ("+sp.reqLabel+")":"")));
+    var dl=el("dl"),d=state.data[sp.k];
+    function add(q,a){dl.appendChild(el("dt",null,q));dl.appendChild(el("dd",null,a&&String(a).trim()?a:"—"))}
+    sp.blocks.forEach(function(b){
+      if(b.f) add(b.label,d[b.f]);
+      else if(b.t==="rows") add(b.label+"s",d[b.k].filter(has).join("; "));
+      else if(b.t==="risk") add("Risk I picked",(d.risk||"")+(d.riskText?": "+d.riskText:""));
+      else if(b.t==="table") add("Connected devices",d.rows.filter(function(r){return has(r.device)}).map(function(r){return r.device+" | "+r.why+" | "+r.risk+" | "+r.protect}).join("\n"));
+    });
+    s.appendChild(dl);
+    var sg=signed[sp.req];if(!sp.nosign) s.appendChild(el("p",null,sg?"Signed off by "+sg.by+" on "+new Date(sg.at).toLocaleDateString():"Counselor sign-off: ____________________"));
+    pv.appendChild(s);
+  });
+  window.print();
+}
+
+load(); setupHeader(); jumps(); build(); pollStatus();
+$("recGo").onclick=recover; $("exp").onclick=exportJson; $("imp").onchange=function(){importJson(this.files[0]);this.value=""}; $("prn").onclick=printLog; $("prn2").onclick=printLog;
+if(dirty||state.rev>0) {dirty=true;scheduleBackup()}
+})();
+</script>
+</body>
+</html>

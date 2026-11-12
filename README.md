@@ -22,7 +22,7 @@ Total size is about 15 MB, well under the Free plan's 250 MB limit.
 | --- | --- |
 | `index.html`, `cybersecurity/`, `ai/` | Scout-facing pages |
 | `counselor/` | **Locked** to the `counselor` role: print packs, answer keys, trackers, class audio, class tools |
-| `tools/` | Interactive tools: A.I.R.A. Field Log, Two-Key Rite display |
+| `tools/` | Interactive tools: A.I.R.A. Field Log, Warden Log, Two-Key Rite display |
 | `files/` | Public downloads only (career worksheet, Scout Passport) |
 | `staticwebapp.config.json` | Azure routing and headers |
 | `access-denied.html` | Shown to signed-in users who lack the needed role |
@@ -139,3 +139,23 @@ Enter the same recovery code on the second device (Agent file > "Lost your progr
 ## Access code gate and certificate
 
 A Scout can only enter the access code for Level N once the scoreboard's "Levels completed" (set on `/ai/scoreboard/edit.html`) is at least N; until then the code box is disabled with a "locked" note, and pressing Unlock re-checks `GET /api/scores/ai`. If the scoreboard can't be reached the code is not accepted. This is a classroom gate: the code check itself still runs in the browser, so a determined Scout can bypass it with developer tools. After the final code (`won`), the Send & save page (and the "MIRAGE SHUT DOWN" card) offers a landscape PDF Certificate of Completion with the Scout's name, squad, date and optional member ID: print it, download it, or email it to themselves. It states that it is not an official Scouting America award.
+
+
+## Warden Log (Cybersecurity worksheets)
+
+`/tools/warden-log.html` is the online version of the 6-page per-Warden print pack (the PDF stays as the paper backup). A Warden enters a name and picks a lodge (names come from `GET /api/scores/cybersecurity`), then fills seven sections: career worksheet (req 9a, can be started at home), My Attack Surface (4f), Breach News Report (4e), Press the Seal (6c, with an in-browser SHA-256 "Check my hash" helper), Enchanted Objects (7), Spot the Forgery (optional) and Class reflection (optional). It autosaves to `localStorage` (`warden_log_v1`), backs up to the API keyed by a random private device id (the recovery code), can export/import `.json`, and has a print view. Text that looks like an email, phone number or password triggers a warning (never a block).
+
+Counselor initials are never typed by the Warden. Staff sign each requirement off from the dashboard (`/cybersecurity/scoreboard/logs.html`, counselor/scorekeeper roles); the Warden sees "Waiting for counselor" until then. A blocked Warden can tap "Ask counselor to waive"; staff approve it from the dashboard.
+
+API (`api/src/functions/wardenlog.js`, `api/src/lib/wardenlog.js`, tables `wardenlog` and `wardenlog-ovr`, separate from the Field Log):
+
+| Route | Who | Purpose |
+| --- | --- | --- |
+| `POST /api/wardenlog` | anyone with the id | back up a log (150,000 character cap, strings clamped to 1,000, 80 logs per class) |
+| `GET /api/wardenlog/restore?id=` | recovery code | get your own backup |
+| `GET /api/wardenlog/status?id=` | recovery code | sign-offs and waivers |
+| `POST /api/wardenlog/waive` | recovery code | ask staff to waive a requirement |
+| `GET /api/wardenlog/logs`, `GET /api/wardenlog/log?id=` | staff | list and read logs |
+| `POST /api/wardenlog/signoff`, `/grant`, `/delete`, `/reset` | staff | sign off or undo (`{id, req, signed}`), approve or revoke a waiver, delete one log, remove everything (`{confirm:"RESET"}`) |
+
+The dashboard has a class grid (Wardens down, requirements across), a lodge filter, one-click and "sign every finished requirement" sign-off, a printable view and `.json` per Warden, a CSV of all sign-offs, and Reset all Warden Logs (two confirmations). Run `node api/test-wardenlog.js` for the library tests. Sign-offs and waivers live in their own rows, so a Warden's autosave can never create or erase one.
