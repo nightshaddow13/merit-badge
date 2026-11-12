@@ -21,7 +21,8 @@ td.n{text-align:right}.done{color:var(--ok);font-weight:800}
 .tablewrap{overflow-x:auto}#sm{margin-top:10px;color:var(--mut);min-height:1.4em}
 button.alt{background:transparent;color:var(--text);border:2px solid #2B4B60;width:auto;font-size:16px;margin-top:10px;min-height:44px}
 .who{color:var(--mut);font-size:14px;margin-top:14px}
-</style></head><body><main>
+</style><script src="/assets/embed.js"></script>
+</head><body><main>
 <h1>Two-Key Rite: check your codes</h1>
 <p class="sub">Pick your lodge, then type the 6 digits from your Warden's authenticator app. Each lodge needs 2 correct codes, from 2 different moments (wait for the app to change). 1st lodge to finish earns 3 points, 2nd earns 2, and every other lodge that finishes earns 1. These are practice codes for the class QR cards only.</p>
 <div class="card"><form id="f" autocomplete="off">
@@ -39,7 +40,7 @@ button.alt{background:transparent;color:var(--text);border:2px solid #2B4B60;wid
 <p id="cfg" style="color:var(--mut);font-size:15px;margin:12px 0 6px"></p>
 <label for="sec" style="font-size:15px">Set up codes (scorekeepers): paste the lodge secrets, one per line or comma separated, Lodge 1 first</label>
 <textarea id="sec" rows="3" autocomplete="off" spellcheck="false" style="width:100%;font:15px Consolas,monospace;padding:10px;border-radius:8px;border:2px solid #2B4B60;background:#0F1F2B;color:var(--text)"></textarea>
-<button type="button" class="alt" id="savesec">Save secrets</button><br><button type="button" class="alt" id="apply">Apply points to scoreboard (1st +3, 2nd +2, others +1)</button> <button type="button" class="alt" id="reset">Reset scorecard</button></div></div>
+<button type="button" class="alt" id="savesec">Save secrets</button><br><button type="button" class="alt" id="apply">Award points to the Cup scoreboard (1st +3, 2nd +2, others +1)</button> <button type="button" class="alt" id="reset">Reset scorecard</button></div></div>
 <p><a href="/cybersecurity/">Back to Cybersecurity</a> &middot; <a href="/cybersecurity/scoreboard/">Cup scoreboard</a></p>
 <script>
 let names=[];

@@ -100,7 +100,7 @@
   saveBtn.addEventListener("click", save);
   reloadBtn.addEventListener("click", function () {
     if (dirty && !reloadBtn.dataset.armed) { reloadBtn.dataset.armed = "1"; reloadBtn.textContent = "Discard changes and reload?"; return; }
-    delete reloadBtn.dataset.armed; reloadBtn.textContent = "Reload from server"; load();
+    delete reloadBtn.dataset.armed; reloadBtn.textContent = "Reload saved scores"; load();
   });
   clearBtn.addEventListener("click", function () {
     if (!clearArmed) { clearArmed = true; clearBtn.textContent = "Clear all scores? Press again"; return; }

@@ -178,7 +178,7 @@ function ok(v){return String(v||"").trim().length>=3}
    box.appendChild(bt);g.appendChild(box)})(n);
   detail.appendChild(g);
   if(panelN)detail.appendChild(levelPanel(panelN,j));
-  var bar=E("div","savebar"),dl=E("button","btn ghost","Download as .json (loads in the Field Log)"),rm=E("button","btn ghost","Delete this log"),close=E("button","btn ghost","Close");
+  var bar=E("div","savebar"),dl=E("button","btn ghost","Download .json"),rm=E("button","btn ghost","Delete this log"),close=E("button","btn ghost","Close");
   dl.type=rm.type=close.type="button";dl.onclick=function(){download(m,j.state||{})};close.onclick=function(){detail.hidden=true;cur=null};
   var armed=false;rm.onclick=function(){if(!armed){armed=true;rm.textContent="Delete for good? Press again";return}api("/api/fieldlog/delete",{id:cur}).then(function(){detail.hidden=true;cur=null;say("Deleted.");return load()}).catch(function(e){say(e.message)})};
   bar.appendChild(dl);bar.appendChild(rm);bar.appendChild(close);detail.appendChild(bar);

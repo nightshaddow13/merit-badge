@@ -78,7 +78,7 @@ Each device scores a practice passphrase locally with zxcvbn (bundled into the p
 
 ## Two-Key Rite code check (public)
 
-`/cybersecurity/two-key-rite/` is open to everyone: each lodge picks itself and types the 6 digits from its authenticator. Codes are verified **on the server** (`POST /api/twokey/check`), so the secrets are not in the page. A lodge finishes after 2 valid codes from 2 different 30-second windows. Points by order of finishing: 1st = 3, 2nd = 2, every later lodge = 1, written automatically to the "Two-Key Rite (MFA)" row of the Cybersecurity scoreboard. Wrong guesses are limited to 10 per lodge per minute. Scorekeepers also get an **Apply points to scoreboard** button to re-write the standings on demand. **Reset scorecard** (scorekeepers only) clears the codes and removes those points.
+`/cybersecurity/two-key-rite/` is open to everyone: each lodge picks itself and types the 6 digits from its authenticator. Codes are verified **on the server** (`POST /api/twokey/check`), so the secrets are not in the page. A lodge finishes after 2 valid codes from 2 different 30-second windows. Points by order of finishing: 1st = 3, 2nd = 2, every later lodge = 1, written automatically to the "Two-Key Rite (MFA)" row of the Cybersecurity scoreboard. Wrong guesses are limited to 10 per lodge per minute. Scorekeepers also get an **Award points to the Cup scoreboard** button to re-write the standings on demand. **Reset scorecard** (scorekeepers only) clears the codes and removes those points.
 
 **Setup, one time (either way works):** a scorekeeper can paste the secrets into the **Set up codes** box on the check page (stored on the server in the same table, never shown again), or set the app setting below.
 

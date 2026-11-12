@@ -101,7 +101,7 @@
      c.onclick=function(){c.disabled=true;sign(l,r,!sg).then(function(){say(sg?"Undid req "+q[1]+" for "+l.name+".":"Signed req "+q[1]+" for "+l.name+".");paint()}).catch(function(e){say(e.message);c.disabled=false})};
      td.appendChild(c);tr.appendChild(td);
     });
-    var tdr=E("td"),sr=E("button","btn ghost","Sign done");sr.type="button";sr.disabled=!needs(l);sr.onclick=function(){sr.disabled=true;var p=REQS.filter(function(q){return isDone(l,q[0])&&!(l.signed&&l.signed[q[0]])}).reduce(function(pr,q){return pr.then(function(){return sign(l,q[0],true)})},Promise.resolve());p.then(function(){say("Signed everything finished for "+l.name+".");paint()}).catch(function(e){say(e.message);paint()})};tdr.appendChild(sr);tr.appendChild(tdr);
+    var tdr=E("td"),sr=E("button","btn ghost","Sign finished");sr.type="button";sr.disabled=!needs(l);sr.onclick=function(){sr.disabled=true;var p=REQS.filter(function(q){return isDone(l,q[0])&&!(l.signed&&l.signed[q[0]])}).reduce(function(pr,q){return pr.then(function(){return sign(l,q[0],true)})},Promise.resolve());p.then(function(){say("Signed everything finished for "+l.name+".");paint()}).catch(function(e){say(e.message);paint()})};tdr.appendChild(sr);tr.appendChild(tdr);
    } else {
     tr.className="lrow";tr.tabIndex=0;var c=counts(l);
     [l.name||"(no name)",l.lodge||"-",c.done+" / 7",c.signed+" / "+REQS.length,when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
