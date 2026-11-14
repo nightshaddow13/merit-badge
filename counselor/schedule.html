@@ -34,7 +34,7 @@
 .sgrid{display:grid;gap:16px;margin:12px 0}
 @media (min-width:1000px){main .wrap{max-width:min(1500px,calc(100vw - 48px))}.sgrid{grid-template-columns:1fr 1fr}}
 .scard{border:2px solid var(--ink);border-radius:12px;padding:16px;background:var(--white)}
-.scard h2{margin:0 0 8px}.scard h3{margin:18px 0 4px;font-size:17px}
+.scard h2{margin:0 0 8px;font-size:clamp(22px,3vw,30px)}.scard h3{margin:18px 0 4px;font-size:17px}
 .scard .row{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:6px 0}
 .scard label{display:block;font-weight:700;font-size:15px;margin:0 0 4px}
 .scard input[type=date],.scard input[type=time],.scard input[type=number]{min-height:44px;font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink)}

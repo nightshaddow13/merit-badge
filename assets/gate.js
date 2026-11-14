@@ -15,13 +15,15 @@
     if (st.open) return unhide();
     if (r[1]) {
       unhide();
-      document.addEventListener("DOMContentLoaded", function () {
+      var note = function () {
         if (window.top !== window) return; // inside an embedded tool: no banner
         var n = document.createElement("div"); n.setAttribute("role", "status");
         n.style.cssText = "background:#FFE08A;color:#4a3300;padding:10px 16px;font:700 15px/1.3 system-ui,sans-serif;text-align:center";
         n.textContent = "Closed to Scouts (" + (st.reason === "off" ? "badge turned off" : st.reason === "before" ? "opens " + MBSchedule.when(st.opensAt) : "closed " + MBSchedule.when(st.closesAt)) + "). You can see it because you are signed in as staff.";
         document.body.insertBefore(n, document.body.firstChild);
-      });
+      };
+      // the schedule often arrives after the page has finished loading, so do not wait for an event that already fired
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", note); else note();
       return;
     }
     location.replace("/closed.html?badge=" + badge);
