@@ -25,6 +25,7 @@
 <div class="wrap">
   <p id="msg" class="msg" role="status"></p>
   <section class="lvpanel" id="queue" aria-live="polite"></section>
+  <div class="savebar"><button id="expJson" class="btn" type="button">Export full Field Log (.json)</button><button id="expCsv" class="btn" type="button">Export full Field Log (.csv)</button></div>
   <div id="list"></div>
   <section id="detail" hidden></section>
   <section class="lvpanel" id="hnn"><h3>Human Neural Network mystery cards</h3>
@@ -223,6 +224,9 @@ function ok(v){return String(v||"").trim().length>=3}
   j.cards.forEach(function(c){var d=E("div",null,"");d.style.cssText="border:1px solid var(--line);border-radius:8px;padding:4px;font-size:12px;text-align:center;"+(c.used?"opacity:.45":"");var im=E("img");im.src=c.url;im.alt=c.answer;im.loading="lazy";im.style.cssText="width:100%;height:auto;border-radius:6px";d.appendChild(im);d.appendChild(E("div",null,c.answer+(c.used?" \u00b7 used by "+c.by:"")));g.appendChild(d)})}).catch(function(e){document.getElementById("hnnSum").textContent=e.message})}
  var hr=document.getElementById("hnnReset"),hArm=false;hr.onclick=function(){if(!hArm){hArm=true;hr.textContent="Make every card available again? Press again";setTimeout(function(){hArm=false;hr.textContent="Reset all mystery cards"},5000);return}hArm=false;hr.textContent="Reset all mystery cards";api("/api/hnn/reset",{}).then(function(){say("Mystery cards reset.");return hnnLoad()}).catch(function(e){say(e.message)})};
  document.getElementById("hnnKey").onclick=function(){var g=document.getElementById("hnnGrid");g.hidden=!g.hidden;this.textContent=g.hidden?"Show the answer key":"Hide the answer key"};
+ function expCfg(){return {badge:"ai",base:"/api/fieldlog",file:"AI-Field-Logs",kind:"ai",groupLabel:"Squad",groupKey:"squad",reqs:NAMES.map(function(nm,i){return [i+1,(i+1)+" "+nm]}),say:say}}
+ $("expJson").onclick=function(){var b=this;b.disabled=true;MBExport.run(expCfg(),"json").then(function(){b.disabled=false})};
+ $("expCsv").onclick=function(){var b=this;b.disabled=true;MBExport.run(expCfg(),"csv").then(function(){b.disabled=false})};
  hnnLoad();setInterval(function(){if(!document.hidden)hnnLoad()},30000);
  load();timer=setInterval(function(){
   if(document.hidden)return;
@@ -234,6 +238,7 @@ function ok(v){return String(v||"").trim().length>=3}
 },15000);
 })();
 </script>
+<script src="/assets/export.js"></script>
 <script src="/assets/app.js" defer></script>
 </body>
 </html>

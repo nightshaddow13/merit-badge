@@ -26,7 +26,7 @@
   <p id="msg" class="msg" role="status"></p>
   <div class="bar2"><label for="flt">Lodge</label><select id="flt"><option value="">All lodges</option></select>
    <button id="vGrid" class="btn" type="button" aria-pressed="true">Class grid</button><button id="vList" class="btn ghost" type="button" aria-pressed="false">List</button>
-   <button id="csv" class="btn ghost" type="button">Download all as CSV</button><button id="signAll" class="btn ghost" type="button">Sign every finished requirement</button></div>
+   <button id="csv" class="btn ghost" type="button">Download all as CSV</button><button id="expJson" class="btn" type="button">Export full Field Log (.json)</button><button id="expCsv" class="btn" type="button">Export full Field Log (.csv)</button><button id="signAll" class="btn ghost" type="button">Sign every finished requirement</button></div>
   <section class="lvpanel" id="queue" aria-live="polite"></section>
   <div id="list"></div>
   <section id="detail" hidden></section>
@@ -56,6 +56,7 @@
 @media print{body>*:not(#pv){display:none!important}#pv{display:block;color:#000;font:12pt/1.4 Georgia,serif}#pv h1{font-size:20pt}#pv h2{font-size:13pt;border-bottom:1px solid #000;margin:12pt 0 4pt}#pv dt{font-weight:700;margin-top:5pt}#pv dd{margin:0 0 0 12pt;white-space:pre-wrap}#pv section{break-inside:avoid}}
 </style>
 <script src="/assets/requirements.js"></script>
+<script src="/assets/export.js"></script>
 <script>
 (function(){
  // Requirement columns come from the shared list. A requirement with an `auto` worksheet counts as done when the Warden finishes it.
@@ -230,6 +231,9 @@
  $("vGrid").onclick=function(){view="grid";this.className="btn";$("vList").className="btn ghost";this.setAttribute("aria-pressed","true");$("vList").setAttribute("aria-pressed","false");paint()};
  $("vList").onclick=function(){view="list";this.className="btn";$("vGrid").className="btn ghost";this.setAttribute("aria-pressed","true");$("vGrid").setAttribute("aria-pressed","false");paint()};
  $("csv").onclick=csv;
+ function expCfg(){return {badge:"cybersecurity",base:"/api/wardenlog",file:"Cybersecurity-Warden-Logs",kind:"cy",groupLabel:"Lodge",groupKey:"lodge",reqs:REQS.map(function(q){return [q[0],q[1]]}),filter:flt?function(j){return j.meta&&j.meta.lodge===flt}:null,say:say}}
+ $("expJson").onclick=function(){var b=this;b.disabled=true;MBExport.run(expCfg(),"json").then(function(){b.disabled=false})};
+ $("expCsv").onclick=function(){var b=this;b.disabled=true;MBExport.run(expCfg(),"csv").then(function(){b.disabled=false})};
  $("signAll").onclick=function(){
   var jobs=[];shown().forEach(function(l){REQS.forEach(function(q){if(isDone(l,q[0])&&!(l.signed&&l.signed[q[0]]))jobs.push([l,q[0]])})});
   if(!jobs.length){say("Nothing finished is waiting for a sign-off.");return}
