@@ -12,7 +12,7 @@
 
 const { AUTO_ROWS } = require("./boards");
 
-const SLOTS = 4;
+const SLOTS = 6;
 const MAX_PER_SQUAD = 12;
 const MAX_TOTAL = 40;
 const CAPS = { vault: 10, terms: 16, levels: 8 };
@@ -51,7 +51,7 @@ function createAiraLog(store) {
     return sb.save(data);
   }
 
-  // Public. body: { id, slot (1-4), name, vault (0-10), terms (0-16), levels (0-8) }
+  // Public. body: { id, slot (1-6), name, vault (0-10), terms (0-16), levels (0-8) }
   async function submit(body, sb) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return { status: 400, body: { error: "Send a JSON object." } };
     if (typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };

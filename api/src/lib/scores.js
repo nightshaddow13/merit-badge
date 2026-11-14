@@ -77,6 +77,21 @@ function validate(boardId, body) {
   return { ok: true, value };
 }
 
+// Boards saved before a board gained squads or lodges hold shorter lists. Pad them with empty slots so every reader and
+// writer sees `slots` entries. Nothing already saved is changed, only extended.
+function padBoard(boardId, d) {
+  const b = getBoard(boardId);
+  if (!b || !d || typeof d !== "object") return d;
+  const out = Object.assign({}, d);
+  out.lodges = Array.from({ length: b.slots }, (_, i) => String((d.lodges || [])[i] || ""));
+  out.scores = {};
+  Object.keys(d.scores || {}).forEach((id) => {
+    const row = Array.isArray(d.scores[id]) ? d.scores[id] : [];
+    out.scores[id] = Array.from({ length: b.slots }, (_, i) => (row[i] === undefined ? null : row[i]));
+  });
+  return out;
+}
+
 // A scorekeeper page sends its whole table, but a page that was opened earlier (a second tab or device) holds a stale
 // copy and would wipe names and scores entered since. When the page says which fields it changed (`body.changed`),
 // apply only those onto the stored data. Without `changed` the body is used as sent.
@@ -98,4 +113,4 @@ function mergeChanges(boardId, stored, body) {
   return out;
 }
 
-module.exports = { emptyData, hasRole, validate, getBoard, mergeChanges };
+module.exports = { emptyData, hasRole, validate, getBoard, mergeChanges, padBoard };

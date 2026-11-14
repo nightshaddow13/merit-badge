@@ -19,7 +19,7 @@ const sub = (slot, o) => Object.assign({ id: hex(slot), slot, name: "Sam K", pro
   assert.strictEqual((await d.submit(sub(1), names)).status, 409, "no duel yet");
   assert.strictEqual((await d.control({ action: "reveal" }, names)).status, 409);
   await d.control({ action: "start" }, names);
-  for (const b of [{ id: "zz" }, { slot: 0 }, { slot: 5 }, { name: "Sam 9" }, { prompt: "short" }, { output: "" }]) assert.strictEqual((await d.submit(sub(1, b), names)).status, 400, JSON.stringify(b));
+  for (const b of [{ id: "zz" }, { slot: 0 }, { slot: 7 }, { name: "Sam 9" }, { prompt: "short" }, { output: "" }]) assert.strictEqual((await d.submit(sub(1, b), names)).status, 400, JSON.stringify(b));
   assert.strictEqual((await d.submit(sub(3), names)).status, 409, "squad not set up");
   assert.strictEqual((await d.control({ action: "reveal" }, names)).status, 409, "needs two entries");
   await d.submit(sub(1), names); await d.submit(sub(1, { prompt: "Second try prompt that is longer" }), names); await d.submit(sub(2, { name: "Ana B" }), names); await d.submit(sub(4, { name: "Zed Q", prompt: "Gold squad prompt here please" }), names);

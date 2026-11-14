@@ -10,7 +10,7 @@
 
 const ID_RE = /^[a-f0-9]{16,32}$/;
 const NAME_RE = /^[A-Za-z][A-Za-z'.\- ]{0,22}[A-Za-z.]$/;
-const SLOTS = 4;
+const SLOTS = 6;
 const MAX_PLAYERS = 60;
 const ROW = "hvm-avg";
 const MIN_SEC = 8; // 24 taps cannot be faster than this; anything quicker is not a real run
@@ -43,7 +43,7 @@ function createHvBoard(store) {
     return sb.save(data);
   }
 
-  // Public. body: { id, slot 1-4, name, sec, wrong 0-24 }
+  // Public. body: { id, slot 1-6, name, sec, wrong 0-24 }
   async function submit(body, sb) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return { status: 400, body: { error: "Send a JSON object." } };
     if (typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };

@@ -2,7 +2,7 @@
 
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
-const { emptyData, hasRole, validate, getBoard, mergeChanges } = require("../lib/scores");
+const { emptyData, hasRole, validate, getBoard, mergeChanges, padBoard } = require("../lib/scores");
 const { AUTO_ROWS } = require("../lib/boards");
 
 const TABLE = "cup";
@@ -35,7 +35,7 @@ app.http("scores", {
       if (request.method === "GET") {
         try {
           const entity = await client.getEntity(PARTITION, board.rowKey);
-          return { status: 200, headers: HEADERS, body: entity.data };
+          return { status: 200, headers: HEADERS, jsonBody: padBoard(boardId, JSON.parse(entity.data)) };
         } catch (e) {
           if (e.statusCode === 404) return { status: 200, headers: HEADERS, jsonBody: emptyData(boardId) };
           throw e;
@@ -55,7 +55,7 @@ app.http("scores", {
       }
       if (body && body.changed) {
         let stored = null;
-        try { stored = JSON.parse((await client.getEntity(PARTITION, board.rowKey)).data); } catch (e) { if (e.statusCode !== 404) throw e; }
+        try { stored = padBoard(boardId, JSON.parse((await client.getEntity(PARTITION, board.rowKey)).data)); } catch (e) { if (e.statusCode !== 404) throw e; }
         body = mergeChanges(boardId, stored, body);
       }
       const result = validate(boardId, body);
@@ -64,7 +64,7 @@ app.http("scores", {
       // Rows filled in by the server (AI Field Log averages) always keep their stored values.
       if (boardId === "ai") {
         let stored = {};
-        try { stored = JSON.parse((await client.getEntity(PARTITION, board.rowKey)).data).scores || {}; } catch (e) { if (e.statusCode !== 404) throw e; }
+        try { stored = padBoard("ai", JSON.parse((await client.getEntity(PARTITION, board.rowKey)).data)).scores || {}; } catch (e) { if (e.statusCode !== 404) throw e; }
         for (const id of AUTO_ROWS) { delete result.value.scores[id]; if (stored[id]) result.value.scores[id] = stored[id]; }
       }
       const saved = Object.assign({}, result.value, { updated: new Date().toISOString() });

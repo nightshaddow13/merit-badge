@@ -1,5 +1,7 @@
 "use strict";
 
+const { padBoard } = require("./scores");
+
 // Azure Table Storage adapter for the small stores in lib/forge.js and lib/twokey.js:
 // get(rowKey) / put(rowKey, obj) / list() / remove(rowKey), all within one partition.
 function tableStore(client, partition) {
@@ -43,7 +45,7 @@ function scoreboardAdapter(client, board, emptyData, boardId) {
         const e = await client.getEntity("cup", board.rowKey);
         const d = JSON.parse(e.data);
         d.scores = d.scores || {};
-        return d;
+        return padBoard(boardId, d);
       } catch (e) {
         if (e.statusCode === 404) return emptyData(boardId);
         throw e;

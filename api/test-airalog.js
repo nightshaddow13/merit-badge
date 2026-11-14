@@ -20,18 +20,18 @@ const body = (n, o) => Object.assign({ id: hex(n), slot: 1, name: "Sam K", vault
   const log = createAiraLog(memoryStore());
   let r = await log.submit(body(1), sb);
   assert.strictEqual(r.status, 200);
-  assert.deepStrictEqual(board.scores["vocab-vault-avg"], [6, null, null, null]);
-  assert.deepStrictEqual(board.scores["terms-avg"], [10, null, null, null]);
-  assert.deepStrictEqual(board.scores["levels-avg"], [10, null, null, null]);
+  assert.deepStrictEqual(board.scores["vocab-vault-avg"], [6, null, null, null, null, null]);
+  assert.deepStrictEqual(board.scores["terms-avg"], [10, null, null, null, null, null]);
+  assert.deepStrictEqual(board.scores["levels-avg"], [10, null, null, null, null, null]);
   assert.deepStrictEqual(board.scores["l1-boss"], [5, null, null, null], "other rows untouched");
 
   // second Scout with zeros counts in the average
   await log.submit(body(2, { name: "Ana B", vault: 0, terms: 0, levels: 0 }), sb);
-  assert.deepStrictEqual(board.scores["vocab-vault-avg"], [3, null, null, null]);
+  assert.deepStrictEqual(board.scores["vocab-vault-avg"], [3, null, null, null, null, null]);
   assert.strictEqual(r.body.members, 1);
 
   // validation
-  for (const b of [{ id: "xyz" }, { slot: 0 }, { slot: 5 }, { slot: 1.5 }, { name: "" }, { name: "Sam 9" }, { name: "<b>" }, { vault: 11 }, { terms: 17 }, { levels: 9 }, { vault: -1 }, { vault: "5" }, { vault: 1.5 }]) {
+  for (const b of [{ id: "xyz" }, { slot: 0 }, { slot: 7 }, { slot: 1.5 }, { name: "" }, { name: "Sam 9" }, { name: "<b>" }, { vault: 11 }, { terms: 17 }, { levels: 9 }, { vault: -1 }, { vault: "5" }, { vault: 1.5 }]) {
     assert.strictEqual((await log.submit(body(3, b), sb)).status, 400, JSON.stringify(b));
   }
   assert.strictEqual((await log.submit(null, sb)).status, 400);

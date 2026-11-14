@@ -11,7 +11,7 @@
 
 const ID_RE = /^[a-f0-9]{16,32}$/;
 const NAME_RE = /^[A-Za-z][A-Za-z'.\- ]{0,22}[A-Za-z.]$/;
-const SLOTS = 4, SCENARIOS = 10, STANCES = 3, MAX_ROWS = 900;
+const SLOTS = 6, SCENARIOS = 10, STANCES = 3, MAX_ROWS = 900;
 const META = "meta";
 const isInt = (n, lo, hi) => typeof n === "number" && Number.isInteger(n) && n >= lo && n <= hi;
 const txt = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max) : "");
@@ -24,7 +24,7 @@ function createWwyd(store, rand) {
   async function game() { return (await store.get(META)) || { active: false, order: [], round: 0, revealed: false, gid: 0 }; }
   const cur = (g) => (g.active ? g.order[g.round] : null);
 
-  // Public. body: { id, slot 1-4, name, scn 0-9, stance 0-2, why }. Only the current scenario, before the reveal.
+  // Public. body: { id, slot 1-6, name, scn 0-9, stance 0-2, why }. Only the current scenario, before the reveal.
   async function submit(body) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return { status: 400, body: { error: "Send a JSON object." } };
     if (typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };

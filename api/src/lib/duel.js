@@ -8,7 +8,7 @@
 
 const ID_RE = /^[a-f0-9]{16,32}$/;
 const NAME_RE = /^[A-Za-z][A-Za-z'.\- ]{0,22}[A-Za-z.]$/;
-const SLOTS = 4;
+const SLOTS = 6;
 const META = "meta";
 const isInt = (n, lo, hi) => typeof n === "number" && Number.isInteger(n) && n >= lo && n <= hi;
 const txt = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, " ").trim().slice(0, max) : "");
@@ -18,7 +18,7 @@ function createDuel(store, rand) {
   async function meta() { return (await store.get(META)) || { phase: "off", order: [], gid: 0 }; }
   async function rows(prefix) { return (await store.list()).filter((r) => r.rowKey.startsWith(prefix) && r.data).map((r) => r.data); }
 
-  // Public. body: { id, slot 1-4, name, prompt, output } during the write phase. One entry per squad (last one wins).
+  // Public. body: { id, slot 1-6, name, prompt, output } during the write phase. One entry per squad (last one wins).
   async function submit(body, names) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return { status: 400, body: { error: "Send a JSON object." } };
     if (typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };
@@ -35,7 +35,7 @@ function createDuel(store, rand) {
     return { status: 200, body: { saved: true } };
   }
 
-  // Public. body: { id, slot 1-4, vote: the number shown on the card }
+  // Public. body: { id, slot 1-6, vote: the number shown on the card }
   async function vote(body) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return { status: 400, body: { error: "Send a JSON object." } };
     if (typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };

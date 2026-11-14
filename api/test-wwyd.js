@@ -22,7 +22,7 @@ const a = (n, scn, o) => Object.assign({ id: hex(n), slot: 1, name: "Sam K", scn
   let st = (await w.state("", names)).body;
   assert.ok(st.active && st.total === 5 && st.round === 0 && st.revealed === false && Number.isInteger(st.scn));
   const s0 = st.scn;
-  for (const b of [{ id: "zz" }, { slot: 0 }, { slot: 5 }, { name: "Sam 9" }, { scn: 10 }, { stance: 3 }, { stance: 1.5 }]) {
+  for (const b of [{ id: "zz" }, { slot: 0 }, { slot: 7 }, { name: "Sam 9" }, { scn: 10 }, { stance: 3 }, { stance: 1.5 }]) {
     assert.strictEqual((await w.submit(a(1, s0, b))).status, 400, JSON.stringify(b));
   }
   assert.strictEqual((await w.submit(a(1, (s0 + 1) % 10))).status, 409, "wrong scenario");

@@ -26,7 +26,9 @@
     var names = [];
     for (var i = 0; i < B.slots; i++) names.push(String((d.lodges || [])[i] || ""));
     var lv = typeof d.levels === "number" ? d.levels : 0;
-    return { lodges: names, scores: d.scores || {}, levels: lv, updated: d.updated || null, source: d.source };
+    var scores = {};
+    Object.keys(d.scores || {}).forEach(function (id) { var r = d.scores[id] || []; scores[id] = []; for (var k = 0; k < B.slots; k++) scores[id].push(r[k] === undefined ? null : r[k]); });
+    return { lodges: names, scores: scores, levels: lv, updated: d.updated || null, source: d.source };
   }
 
   function el(tag, attrs, children) {
