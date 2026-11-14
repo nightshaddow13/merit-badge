@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <meta name="color-scheme" content="light">
 <title>Passphrase Forge</title>
 <meta name="description" content="Forge a passphrase, score it on your own device and compare lodges on a shared dashboard.">
@@ -73,6 +73,7 @@ footer{padding:20px 16px 40px;font:14px/1.4 system-ui,Arial,sans-serif;color:var
 @media (max-width:520px){.row{flex-direction:column}}
 
 </style>
+<script src="/assets/embed.js"></script>
 </head>
 <body>
 <div class="top"><a href="/cybersecurity/">&larr; Cybersecurity</a><a href="/cybersecurity/scoreboard/">Scoreboard</a><span id="who" role="status" style="color:#CFC8E0"></span></div>

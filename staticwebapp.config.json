@@ -405,6 +405,27 @@
       ]
     },
     {
+      "route": "/api/cybergame/control",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/cybersecurity/scoreboard/games.html",
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ],
+      "headers": {
+        "X-Robots-Tag": "noindex",
+        "Cache-Control": "private, no-store"
+      }
+    },
+    {
       "route": "/api/fieldlog/signoff",
       "methods": [
         "POST"

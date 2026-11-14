@@ -41,6 +41,9 @@ input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visib
 .tabs button .dot{width:10px;height:10px;border-radius:50%;border:2px solid var(--mut);flex:none}
 .tabs button.p .dot{border-color:var(--gold);background:linear-gradient(90deg,var(--gold) 50%,transparent 50%)}
 .tabs button.d .dot{border-color:var(--ok);background:var(--ok)}
+.toolblock{margin:16px 0;padding:12px;border:1px dashed var(--line);border-radius:10px;background:var(--panel2)}.toolblock h3{margin:0 0 4px;font-size:17px}.toolblock iframe{width:100%;height:74vh;min-height:480px;margin-top:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.gamebar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:10px 14px;background:var(--gold);color:#17112B;font-weight:700;border-radius:0 0 10px 10px}
+.gameov{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;background:var(--bg,#fff)}.gameov[hidden],.gamebar[hidden]{display:none}.gamebar .btn{background:#17112B;color:#fff;border-color:#17112B}.gameov-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 12px;background:var(--panel2);border-bottom:1px solid var(--line)}.gameov iframe{flex:1;width:100%;border:0;background:#fff}
 .tabs button.lk{opacity:.55;border-style:dashed}
 .tabs button.lk::after{content:"\1F512"}
 .tabs button[aria-selected=true]{background:var(--gold);color:#17112B;border-color:var(--gold);font-weight:700}
@@ -131,15 +134,17 @@ code.rc{font:16px Consolas,monospace;letter-spacing:.05em;word-break:break-all}
   <div class="tabs" id="tabs" role="tablist" aria-label="Worksheets"></div>
 </div>
 
+<div id="gameBar" class="gamebar" hidden role="status" aria-live="polite"><span id="gameTxt"></span> <button class="btn" id="gameJoin" type="button">Join the game</button></div>
+<div id="gameOv" class="gameov" hidden role="dialog" aria-modal="true" aria-label="Live game"><div class="gameov-bar"><b id="gameOvT">Live game</b><button class="btn ghost" id="gameOvX" type="button">Close</button></div><iframe id="gameFrame" title="Live game"></iframe></div>
 <div id="reqPanel" role="tabpanel" hidden>
 <section class="card" id="reqCard"><h2>My requirements</h2><p class="hint" id="reqSum"></p><div id="reqList"></div><p class="hint" style="margin-top:10px">A requirement turns green when your counselor signs it off. Worksheets here check themselves as &ldquo;Ready for counselor&rdquo; when you finish them; the rest happen in class. Wording is paraphrased: your counselor has the official text.</p></section>
 
 <section class="card"><h2>All done?</h2><p class="hint">When a section says <b>Done</b>, find your counselor. He signs it off here on his own screen. A paper backup of every page is also available.</p><div class="row"><button class="btn" id="prn2" type="button">Print my log</button></div></section>
 </div>
-<div id="toolsPanel" role="tabpanel" aria-labelledby="t-tools" hidden>
-<section class="card"><h2>Tools</h2><p class="hint">Use these when a worksheet asks for them. They open right here, so your log stays put.</p>
-<div class="chips" id="toolBtns"></div>
-<div id="toolBox" hidden><p class="hint" id="toolNote"></p><iframe id="toolFrame" title="Tool" loading="lazy" style="width:100%;height:78vh;min-height:520px;border:1px solid var(--line);border-radius:10px;background:#fff"></iframe><div class="row"><a class="btn ghost" id="toolNew" target="_blank" rel="noopener">Open in a new tab</a></div></div></section>
+<div id="toolsPanel" role="tabpanel" aria-labelledby="t-board" hidden>
+<section class="card"><h2>Scoreboard</h2><p class="hint">How every lodge is doing. It updates on its own, and live games show up here too.</p>
+<iframe id="boardFrame" title="Scoreboard" style="width:100%;height:78vh;min-height:520px;border:1px solid var(--line);border-radius:10px;background:#fff"></iframe>
+<div class="row"><a class="btn ghost" href="/cybersecurity/scoreboard/" target="_blank" rel="noopener">Open in a new tab</a></div></section>
 </div>
 <div id="secs"></div>
 <div id="printView" aria-hidden="true"></div>
@@ -182,7 +187,10 @@ var SPEC=[
   blocks:[
    {t:"rows",k:"items",n:5,grow:12,label:"Device or account type",max:60,add:"Add another"},
    {t:"risk"},
-   {f:"protect",label:"One way I will protect it",type:"area",opt:true}
+   {f:"protect",label:"One way I will protect it",type:"area",opt:true},
+   {t:"label",text:"Class games: protect your gates"},
+   {t:"tool",k:"forge"},
+   {t:"tool",k:"rite"}
   ],
   },
  {k:"breach",n:3,title:"My Breach News Report",req:"4e",reqLabel:"Req 4e",
@@ -202,7 +210,7 @@ var SPEC=[
   blocks:[
    {f:"tool",label:"Which tool did you use?",type:"radio",opts:["Wax Seal Lab","PowerShell","Terminal","Other"],opt:true},
    {f:"toolOther",label:"Other tool (name it)",type:"text",max:60,opt:true,showIf:function(d){return d.tool==="Other"}},
-   {t:"help",html:"Make a hash in the <button type=\"button\" class=\"btn ghost\" data-tool=\"hash\">Hash Lab</button> (it opens in the Tools tab), or use the <b>Check my hash</b> buttons below."},
+   {t:"tool",k:"hash"},
    {t:"label",text:"Step 1: seal a message"},
    {f:"msgA",label:"A short, kind message (one sentence, no personal details)",type:"text",max:200},
    {f:"hashA",label:"First 8 characters of its SHA-256 hash",type:"text",max:8,mono:true},
@@ -493,6 +501,7 @@ function build(){
     sp.blocks.forEach(function(b){
       if(b.t==="label") body.appendChild(el("div",{"class":"lbl",style:"color:var(--gold);margin-top:16px"},b.text));
       else if(b.t==="help"){var h=el("div",{"class":"help"});h.innerHTML=b.html;body.appendChild(h)}
+      else if(b.t==="tool"){body.appendChild(toolBlock(b.k,sp.k))}
       else if(b.t==="chips") body.appendChild(chipsBlock(sp,b));
       else if(b.t==="rows"){var rb=rowsBlock(sp,b);rb.dataset.rows=b.k;body.appendChild(rb)}
       else if(b.t==="risk") body.appendChild(riskBlock(sp));
@@ -526,8 +535,8 @@ function refresh(){
   $("pt").textContent=done+" of "+SPEC.length+" sections done";
   $("pb").style.width=Math.round(done/SPEC.length*100)+"%";
 }
-var TABS=[{k:"req",label:"My requirements"}].concat(SPEC.map(function(sp){return {k:sp.k,label:sp.n+". "+sp.title.split(":")[0].replace(/^My /,"")}})).concat([{k:"tools",label:"Tools"}]);
-var WORKSHEETS=TABS.filter(function(t){return t.k!=="tools"});
+var TABS=[{k:"req",label:"My requirements"}].concat(SPEC.map(function(sp){return {k:sp.k,label:sp.n+". "+sp.title.split(":")[0].replace(/^My /,"")}})).concat([{k:"board",label:"Scoreboard"}]);
+var WORKSHEETS=TABS.filter(function(t){return t.k!=="board"});
 var curTab="";
 function startTab(){
   var h=(location.hash||"").replace("#s-",""); if(TABS.some(function(t){return t.k===h})) return h;
@@ -545,7 +554,7 @@ function setTab(k,scroll){
   if(lk){ setStatus("Locked: finish "+lk.n+". "+lk.title.split(":")[0].replace(/^My /,"")+" first, or ask your counselor to waive it."); k=lk.k; }
   curTab=k;
   TABS.forEach(function(t){ var b=$("t-"+t.k); if(b){ b.setAttribute("aria-selected",t.k===k?"true":"false"); b.tabIndex=t.k===k?0:-1; } });
-  $("reqPanel").hidden=k!=="req"; $("toolsPanel").hidden=k!=="tools"; document.querySelectorAll("#secs .sec").forEach(function(d){ d.hidden=d.dataset.sec!==k; });
+  $("reqPanel").hidden=k!=="req"; $("toolsPanel").hidden=k!=="board"; if(k==="board"){var bf=$("boardFrame"); if(!bf.getAttribute("src")) bf.setAttribute("src","/cybersecurity/scoreboard/?embed=1"+(lodgeSlot()?"&lodge="+lodgeSlot():""));} document.querySelectorAll("#secs .sec").forEach(function(d){ d.hidden=d.dataset.sec!==k; });
   try{localStorage.setItem("warden_tab",k)}catch(e){}
   var sel=$("t-"+k); if(sel&&sel.scrollIntoView) sel.scrollIntoView({inline:"center",block:"nearest"});
   if(scroll) window.scrollTo({top:0,behavior:"smooth"});
@@ -563,38 +572,60 @@ function jumps(){
 window.addEventListener("hashchange",function(){var h=(location.hash||"").replace("#s-","");if(TABS.some(function(t){return t.k===h}))setTab(h,true)});
 
 // ---- Tools tab: each tool opens in a frame with ?embed=1 ----
-var TOOLS=[
-  {k:"hash",name:"Hash Lab",note:"Turn text into a hash and see one changed letter change everything (Req 6c).",url:"/cybersecurity/hash-lab/"},
-  {k:"forge",name:"Passphrase Forge",note:"Score a practice passphrase, then submit it to compare lodges. Never use a real password.",url:"/cybersecurity/passphrase-forge/"},
-  {k:"rite",name:"Two-Key Rite",note:"Type the 6 digits from your Warden's authenticator to check your codes.",url:"/cybersecurity/two-key-rite/"},
-  {k:"board",name:"Scoreboard",note:"See how every lodge is doing. It updates on its own.",url:"/cybersecurity/scoreboard/"}
-];
-function openTool(k){
-  var t=TOOLS.filter(function(x){return x.k===k})[0]; if(!t) return;
-  setTab("tools",false);
-  var u=t.url+"?embed=1"; if($("toolFrame").getAttribute("src")!==u) $("toolFrame").setAttribute("src",u);
-  $("toolFrame").title=t.name; $("toolNote").textContent=t.note; $("toolNew").href=t.url; $("toolBox").hidden=false;
-  document.querySelectorAll("#toolBtns button").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.k===k?"true":"false")});
-  try{localStorage.setItem("warden_tool",k)}catch(e){}
-  $("toolBox").scrollIntoView({behavior:"smooth",block:"start"});
+var TOOLS={
+  hash:{name:"Hash Lab",note:"Turn text into a hash and see one changed letter change everything. Use it for Step 1 and Step 2 below.",url:"/cybersecurity/hash-lab/"},
+  forge:{name:"Passphrase Forge",note:"Score a practice passphrase. When your counselor starts the game, your lodge is selected for you and you can submit. Never type a real password.",url:"/cybersecurity/passphrase-forge/"},
+  rite:{name:"Two-Key Rite",note:"Type the 6 digits from your lodge's authenticator. Your lodge is selected for you.",url:"/cybersecurity/two-key-rite/"}
+};
+var slots=[], toolBlocks={};
+// Games that need a team get the Scout's lodge from the header, so nobody picks the wrong one.
+function lodgeSlot(){ var n=(state.lodge||"").trim(); if(!n) return 0; var i=slots.indexOf(n); return i<0?0:i+1; }
+function toolUrl(base){ var n=lodgeSlot(); return base+"?embed=1"+(n?"&lodge="+n:""); }
+function toolBlock(k,tab){
+  var t=TOOLS[k], box=el("div",{"class":"toolblock"}), fr=null;
+  box.appendChild(el("h3",null,t.name)); box.appendChild(el("p",{"class":"hint"},t.note));
+  var row=el("div",{"class":"row"}), bt=el("button",{type:"button","class":"btn ghost","aria-expanded":"false"},"Open "+t.name+" here"), nw=el("a",{"class":"btn ghost",href:t.url,target:"_blank",rel:"noopener"},"Open in a new tab");
+  function open(on){
+    if(on&&!fr){ fr=el("iframe",{title:t.name}); fr.setAttribute("src",toolUrl(t.url)); box.appendChild(fr); }
+    if(fr) fr.hidden=!on; bt.setAttribute("aria-expanded",on?"true":"false"); bt.textContent=on?"Hide "+t.name:"Open "+t.name+" here";
+    if(on) try{localStorage.setItem("warden_tool",k)}catch(e){}
+  }
+  bt.onclick=function(){ open(!(fr&&!fr.hidden)); };
+  row.appendChild(bt); row.appendChild(nw); box.appendChild(row);
+  toolBlocks[k]={tab:tab,open:open,reload:function(){ if(fr) fr.setAttribute("src",toolUrl(t.url)); },box:box};
+  return box;
 }
+function openTool(k){ var b=toolBlocks[k]; if(!b) return; b.open(true); b.box.scrollIntoView({behavior:"smooth",block:"start"}); }
+function reloadTools(){ Object.keys(toolBlocks).forEach(function(k){toolBlocks[k].reload()}); var bf=$("boardFrame"); if(bf&&bf.getAttribute("src")) bf.setAttribute("src","/cybersecurity/scoreboard/?embed=1"+(lodgeSlot()?"&lodge="+lodgeSlot():"")); }
 function setupTools(){
-  var host=$("toolBtns");
-  TOOLS.forEach(function(t){var b=el("button",{type:"button","data-k":t.k,"aria-pressed":"false"},t.name);b.appendChild(el("small",null,t.note));b.onclick=function(){openTool(t.k)};host.appendChild(b)});
   document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("[data-tool]");if(b)openTool(b.dataset.tool)});
 }
+// ---- live games: the counselor starts one from the scoring dashboard and every log gets a Join banner ----
+var GAME_NAMES={forge:"Passphrase Forge",twokey:"Two-Key Rite"}, GAME_URL={forge:"/cybersecurity/passphrase-forge/",twokey:"/cybersecurity/two-key-rite/"}, liveGame=null;
+function pollGame(){
+  fetch("/api/cybergame",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
+    if(!j) return; var a=j.active||null;
+    if(a!==liveGame){ liveGame=a; if(!a) closeGame(); }
+    $("gameBar").hidden=!a;
+    if(a){ $("gameTxt").textContent="Live game: "+GAME_NAMES[a]+"."+(lodgeSlot()?" Your lodge is selected for you.":" Pick your lodge at the top of this page first."); }
+  }).catch(function(){});
+}
+function openGame(){ if(!liveGame) return; $("gameOvT").textContent=GAME_NAMES[liveGame]; $("gameFrame").setAttribute("src",toolUrl(GAME_URL[liveGame])); $("gameOv").hidden=false; }
+function closeGame(){ $("gameOv").hidden=true; $("gameFrame").removeAttribute("src"); }
+function setupGames(){ $("gameJoin").onclick=openGame; $("gameOvX").onclick=closeGame; pollGame(); setInterval(pollGame,6000); }
 // ---- header fields, lodges ----
 function setupHeader(){
   $("nm").value=state.name;
   $("nm").addEventListener("input",function(){state.name=$("nm").value;changed()});
   $("mid").value=state.memberId; $("mid").addEventListener("input",function(){var v=$("mid").value.replace(/\D/g,"").slice(0,12);if(v!==$("mid").value)$("mid").value=v;state.memberId=v;changed()});
-  $("lg").addEventListener("change",function(){state.lodge=$("lg").value;changed()});
+  $("lg").addEventListener("change",function(){state.lodge=$("lg").value;changed();reloadTools();pollGame()});
   $("rc").textContent=state.id.replace(/(.{4})/g,"$1-").replace(/-$/,"");
   fetch("/api/scores/cybersecurity",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
-    var names=((j&&j.lodges)||[]).map(function(x){return String(x||"").trim()}).filter(Boolean), sel=$("lg");
+    slots=((j&&j.lodges)||[]).map(function(x){return String(x||"").trim()});
+    var names=slots.filter(Boolean), sel=$("lg");
     names.forEach(function(nm){sel.appendChild(el("option",{value:nm},nm))});
     if(state.lodge&&names.indexOf(state.lodge)<0) sel.appendChild(el("option",{value:state.lodge},state.lodge));
-    sel.value=state.lodge;
+    sel.value=state.lodge; reloadTools();
   }).catch(function(){ if(state.lodge){var sel=$("lg");sel.appendChild(el("option",{value:state.lodge},state.lodge));sel.value=state.lodge} });
 }
 
@@ -645,7 +676,7 @@ function printLog(){
   window.print();
 }
 
-load(); setupHeader(); setupTools(); jumps(); build(); pollStatus();
+load(); setupHeader(); setupTools(); setupGames(); jumps(); build(); pollStatus();
 $("recGo").onclick=recover; $("exp").onclick=exportJson; $("imp").onchange=function(){importJson(this.files[0]);this.value=""}; $("prn").onclick=printLog; $("prn2").onclick=printLog;
 if(dirty||state.rev>0) {dirty=true;scheduleBackup()}
 })();
