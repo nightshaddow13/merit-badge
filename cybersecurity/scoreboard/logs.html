@@ -79,13 +79,15 @@
  function counts(l){var s=0,d=0;REQS.forEach(function(q){if(l.signed&&l.signed[q[0]])s++;});SEC.forEach(function(x){if(((l.summary||{})[x[0]]||0)===2)d++});return{signed:s,done:d}}
  function needs(l){return REQS.some(function(q){return isDone(l,q[0])&&!(l.signed&&l.signed[q[0]])})}
  function fillFilter(){var sel=$("flt"),cur0=sel.value,names={};logs.forEach(function(l){if(l.lodge)names[l.lodge]=1});sel.textContent="";sel.appendChild(new Option("All lodges",""));Object.keys(names).sort().forEach(function(n){sel.appendChild(new Option(n,n))});sel.value=names[cur0]?cur0:"";flt=sel.value}
+ function code(l){return String(l.id||"").replace(/(.{4})/g,"$1-").replace(/-$/,"")}
+ function copyBtn(text,label){var b=E("button","btn ghost",label||"Copy");b.type="button";b.onclick=function(e){e.stopPropagation();var done=function(){say("Copied "+text)};if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(done,function(){say("Select and copy: "+text)});else say("Select and copy: "+text)};return b}
  function sign(l,r,on){return api("/api/wardenlog/signoff",{id:l.id,req:r,signed:on}).then(function(j){l.signed=j.signed;return j})}
  function paint(){
   list.textContent="";var rows=shown();
   if(!logs.length){list.textContent="No Warden Logs backed up yet. They appear a few seconds after a Warden enters a name and starts working.";return}
   if(!rows.length){list.textContent="No Wardens in that lodge.";return}
   var t=E("table","grid"),h=E("thead"),hr=E("tr");
-  (view==="grid"?["Warden","Lodge"].concat(REQS.map(function(q){return q[1]})).concat(["Sign row"]):["Warden","Lodge","Sections done","Signed off","Updated","Needs you"]).forEach(function(x){var th=E("th",null,x);th.scope="col";var rq=REQS.filter(function(q){return q[1]===x})[0];if(rq&&view==="grid"){th.title=rq[4]+": "+rq[2]}hr.appendChild(th)});h.appendChild(hr);t.appendChild(h);
+  (view==="grid"?["Warden","Lodge"].concat(REQS.map(function(q){return q[1]})).concat(["Sign row"]):["Warden","Lodge","Recovery code","Sections done","Signed off","Updated","Needs you"]).forEach(function(x){var th=E("th",null,x);th.scope="col";var rq=REQS.filter(function(q){return q[1]===x})[0];if(rq&&view==="grid"){th.title=rq[4]+": "+rq[2]}hr.appendChild(th)});h.appendChild(hr);t.appendChild(h);
   var b=E("tbody");
   rows.forEach(function(l){
    var tr=E("tr");
@@ -104,7 +106,7 @@
     var tdr=E("td"),sr=E("button","btn ghost","Sign finished");sr.type="button";sr.disabled=!needs(l);sr.onclick=function(){sr.disabled=true;var p=REQS.filter(function(q){return isDone(l,q[0])&&!(l.signed&&l.signed[q[0]])}).reduce(function(pr,q){return pr.then(function(){return sign(l,q[0],true)})},Promise.resolve());p.then(function(){say("Signed everything finished for "+l.name+".");paint()}).catch(function(e){say(e.message);paint()})};tdr.appendChild(sr);tr.appendChild(tdr);
    } else {
     tr.className="lrow";tr.tabIndex=0;var c=counts(l);
-    [l.name||"(no name)",l.lodge||"-",c.done+" / 7",c.signed+" / "+REQS.length,when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
+    [l.name||"(no name)",l.lodge||"-",code(l),c.done+" / 7",c.signed+" / "+REQS.length,when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
     var td=E("td");if(needs(l))td.appendChild(E("span","pill warn","Needs sign-off"));Object.keys(l.waive||{}).forEach(function(k){if(l.waive[k].status==="pending")td.appendChild(E("span","pill warn","Waive: "+k))});tr.appendChild(td);
     tr.addEventListener("click",function(){openLog(l.id)});tr.addEventListener("keydown",function(e){if(e.key==="Enter")openLog(l.id)});
    }
@@ -137,6 +139,7 @@
  function renderDetail(j){
   detail.hidden=false;detail.textContent="";var m=j.meta;
   detail.appendChild(E("h2",null,(m.name||"(no name)")+" · "+(m.lodge||"no lodge")));detail.appendChild(E("p","muted","Last updated "+when(m.updated)+(m.memberId?" \u00b7 Scouting America member ID: "+m.memberId:"")));
+  var rc=E("p","muted","Recovery code: ");var cd=E("code",null,code(m));cd.style.cssText="font-size:1.05em;letter-spacing:.04em;user-select:all;word-break:break-all";rc.appendChild(cd);rc.appendChild(document.createTextNode(" "));rc.appendChild(copyBtn(code(m),"Copy code"));detail.appendChild(rc);
   var rq=E("div");rq.id="reqs";detail.appendChild(rq);paintReqs();
   var bar=E("div","savebar");
   var dl=E("button","btn ghost","Download .json");dl.type="button";dl.onclick=function(){var bl=new Blob([JSON.stringify({app:"warden-log",version:1,saved:m.updated,name:m.name,lodge:m.lodge,data:j.state},null,2)],{type:"application/json"});var a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download="Warden-Log-"+(m.name||"warden").replace(/[^a-z0-9]+/gi,"-")+".json";document.body.appendChild(a);a.click();a.remove()};
@@ -185,8 +188,8 @@
  }
  function csv(){
   var q=function(v){v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
-  var head=["Warden","Scouting America ID","Lodge","Sections done (of 7)"].concat(REQS.map(function(r){return "Req "+r[1]+" signed"})).concat(["Signed by (most recent)","Last updated"]);
-  var rows=[head].concat(shown().map(function(l){var s=l.signed||{},ks=Object.keys(s).sort(function(a,b){return s[a].at<s[b].at?1:-1});return [l.name,l.memberId||"",l.lodge,counts(l).done].concat(REQS.map(function(r){return s[r[0]]?"Yes":"No"})).concat([ks.length?s[ks[0]].by:"",l.updated])}));
+  var head=["Warden","Scouting America ID","Recovery code","Lodge","Sections done (of 7)"].concat(REQS.map(function(r){return "Req "+r[1]+" signed"})).concat(["Signed by (most recent)","Last updated"]);
+  var rows=[head].concat(shown().map(function(l){var s=l.signed||{},ks=Object.keys(s).sort(function(a,b){return s[a].at<s[b].at?1:-1});return [l.name,l.memberId||"",code(l),l.lodge,counts(l).done].concat(REQS.map(function(r){return s[r[0]]?"Yes":"No"})).concat([ks.length?s[ks[0]].by:"",l.updated])}));
   var bl=new Blob([rows.map(function(r){return r.map(q).join(",")}).join("\r\n")+"\r\n"],{type:"text/csv"});var a=document.createElement("a");a.href=URL.createObjectURL(bl);a.download="Warden-Log-signoffs.csv";document.body.appendChild(a);a.click();a.remove();say("CSV downloaded"+(flt?" for "+flt:"")+".");
  }
  $("flt").onchange=function(){flt=this.value;paint()};
