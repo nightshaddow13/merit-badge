@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en" class="cy">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live games: Cybersecurity</title>
+<meta name="description" content="Run the live Cybersecurity games.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/" aria-current="page">Cybersecurity</a><a href="/ai/">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">For counselors</p>
+  <h1>Live games</h1>
+  <p class="lead">Start a game and it takes over the public scoreboard (and shows a Join banner in every Warden Log) until you end it, just like the A.I.R.A. games. Scores that are already on the scoreboard are never changed by starting a game.</p>
+  <p class="jump"><a href="/cybersecurity/scoreboard/" target="_blank" rel="noopener">Open the scoreboard to project</a> &middot; <a href="/cybersecurity/scoreboard/edit.html">Scorekeeper</a> &middot; <a href="/cybersecurity/scoreboard/logs.html">Warden Log dashboard</a> &middot; <a href="/counselor/">Counselor page</a></p>
+</div></section>
+<div class="wrap">
+  <p id="msg" class="msg" role="status"></p>
+  <p>Now: <span id="state" class="pill">Loading&hellip;</span></p>
+
+  <section class="gm" id="forgeCard">
+    <h2>Passphrase Forge</h2>
+    <p class="muted">Each lodge forges a passphrase in its Warden Log and submits only its strength. The ranking shows on the scoreboard live. At the end, 1st gets +2 and 2nd gets +1.</p>
+    <div id="forgeSetup">
+      <div class="row2"><label for="fMode">Round type</label><select id="fMode"><option value="standard">Standard: strongest wins</option><option value="break">Break the weak one: biggest improvement wins (set the starter on the Forge page)</option></select></div>
+      <div class="row2"><label for="fBan">Banned words (optional, comma separated)</label><input id="fBan" type="text" autocomplete="off" maxlength="300"></div>
+      <div class="acts"><button id="fStart" class="btn" type="button">Start Passphrase Forge</button></div>
+      <p class="muted">Starting clears only the earlier Forge submissions, the same as Reset round on the Forge page.</p>
+    </div>
+    <div id="forgeLive" hidden>
+      <div id="forgeRank"></div>
+      <div class="acts"><button id="fEndAward" class="btn" type="button">End game and award points</button><button id="fEnd" class="btn ghost" type="button">End game without points</button></div>
+    </div>
+  </section>
+
+  <section class="gm" id="tkCard">
+    <h2>Two-Key Rite</h2>
+    <p class="muted">Each lodge types two different codes from its authenticator. Points are added to the scoreboard as lodges finish (1st +3, 2nd +2, everyone after +1).</p>
+    <div id="tkSetup">
+      <div class="acts"><button id="tStart" class="btn" type="button">Start Two-Key Rite</button></div>
+      <p class="muted">Starting keeps the current scorecard. For a fresh race, use <a href="/cybersecurity/two-key-rite/">Reset scorecard on the Two-Key page</a> first (it also removes this game's points from the scoreboard).</p>
+    </div>
+    <div id="tkLive" hidden>
+      <div id="tkRank"></div>
+      <div class="acts"><button id="tEnd" class="btn" type="button">End game</button></div>
+    </div>
+  </section>
+
+  <p class="muted">Other tools: <a href="/cybersecurity/passphrase-forge/">Passphrase Forge page</a> &middot; <a href="/cybersecurity/two-key-rite/">Two-Key Rite page</a> &middot; <a href="/counselor/tools/two-key-rite-display.html">Authenticator codes display</a></p>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouting America merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<style>
+.wrap .gm{border:2px solid var(--ink);border-radius:12px;padding:16px;margin:18px 0;background:var(--white)}.acts{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 4px}.gm h2{margin:0 0 6px}.muted{color:var(--mut)}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:14px;font-weight:700;background:#E2EAE5;color:#14201B}.pill.ok{background:#BFEBD0;color:#0b3a1f}.pill.warn{background:#FFE08A;color:#4a3300}
+.row2{margin:10px 0}.row2 label{display:block;font-weight:700;margin-bottom:4px}.row2 input,.row2 select{width:100%;max-width:640px;min-height:44px;font:inherit;padding:6px 10px;border:2px solid var(--ink);border-radius:8px;background:var(--white);color:var(--ink)}
+.gk{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line)}.gk b{min-width:150px}
+</style>
+<script>
+(function(){
+ var msg=document.getElementById("msg"),G=null,names=[];
+ function $(i){return document.getElementById(i)}
+ function say(t){msg.textContent=t}
+ function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+ function api(path,body){return fetch(path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(r.status===401||r.status===403?"Sign in as a counselor or scorekeeper to run games.":(j.error||"Request failed ("+r.status+")"));return j})})}
+ function lname(n){return names[n-1]||"Lodge "+n}
+ var ORD=["1st","2nd","3rd","4th","5th","6th"],LABELS=["Too guessable","Very guessable","Somewhat guessable","Safely unguessable","Very unguessable"];
+ function paint(j){
+  G=j;var a=j.active;
+  $("state").textContent=a==="forge"?"Passphrase Forge is on the scoreboard":a==="twokey"?"Two-Key Rite is on the scoreboard":"No game running. The scoreboard shows the standings.";
+  $("state").className="pill "+(a?"warn":"ok");
+  $("forgeSetup").hidden=a==="forge";$("forgeLive").hidden=a!=="forge";$("tkSetup").hidden=a==="twokey";$("tkLive").hidden=a!=="twokey";
+  $("fStart").disabled=!!a;$("tStart").disabled=!!a;
+  var fr=$("forgeRank");fr.textContent="";
+  if(a==="forge"&&j.forge){fr.appendChild(E("p","muted",j.forge.ranked.length+" lodge"+(j.forge.ranked.length===1?"":"s")+" submitted so far."));
+   j.forge.ranked.forEach(function(e){var r=E("div","gk");r.appendChild(E("b",null,ORD[e.place-1]+" \u00b7 "+lname(e.lodge)));r.appendChild(E("span",null,e.preview+" \u00b7 "+LABELS[e.score]+" \u00b7 "+e.length+" characters"));fr.appendChild(r)})}
+  var tr=$("tkRank");tr.textContent="";
+  if(a==="twokey"&&j.twokey){j.twokey.entries.forEach(function(e){if(!names[e.lodge-1]&&!e.codes&&!e.place)return;var r=E("div","gk");r.appendChild(E("b",null,lname(e.lodge)));r.appendChild(E("span",null,e.place?"Finished "+ORD[e.place-1]+" (+"+e.points+")":e.codes+" of "+j.twokey.needed+" codes"));tr.appendChild(r)})}
+ }
+ function load(){return api("/api/cybergame").then(paint).catch(function(e){say(e.message)})}
+ function ctl(body,done){return api("/api/cybergame/control",body).then(function(j){say(done||"");paint(j);return j}).catch(function(e){say(e.message)})}
+ $("fStart").onclick=function(){var ban=$("fBan").value.split(",").map(function(x){return x.trim()}).filter(Boolean);ctl({action:"start",game:"forge",mode:$("fMode").value,banned:ban},"Passphrase Forge started. It is on the scoreboard now.")};
+ $("fEndAward").onclick=function(){if(!confirm("End the game and put 1st +2 and 2nd +1 on the scoreboard?"))return;ctl({action:"end",award:true},"Game ended. Points added to the scoreboard.").then(function(j){if(j&&j.awarded&&j.awarded.length)say("Game ended. Added: "+j.awarded.map(function(a){return lname(a.lodge)+" +"+a.points}).join(", ")+".")})};
+ $("fEnd").onclick=function(){if(!confirm("End the game without adding any points?"))return;ctl({action:"end"},"Game ended. No points added.")};
+ $("tStart").onclick=function(){ctl({action:"start",game:"twokey"},"Two-Key Rite started. It is on the scoreboard now.")};
+ $("tEnd").onclick=function(){if(!confirm("End the Two-Key Rite? Points already earned stay on the scoreboard."))return;ctl({action:"end"},"Game ended. The scoreboard is back.")};
+ fetch("/api/scores/cybersecurity",{cache:"no-store"}).then(function(r){return r.json()}).then(function(d){names=(d.lodges||[]).map(String)}).catch(function(){}).then(function(){load();setInterval(load,4000)});
+})();
+</script>
+</body>
+</html>

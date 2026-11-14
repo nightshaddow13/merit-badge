@@ -23,16 +23,31 @@
   <p class="jump"><a id="editlink" href="/cybersecurity/scoreboard/edit.html" hidden>Edit scores</a></p>
 </div></section>
 <div class="wrap">
+  <section id="gameLive" class="wl" hidden aria-live="polite"></section>
+  <div id="boardWrap">
   <section><div id="board" aria-live="polite"><p class="empty">Loading standings…</p></div></section>
   <section id="detail"></section>
   <p class="note">Tied lodges are listed in lodge order until the counselor settles the tie.</p>
   <p id="status" class="note" role="status"></p>
+  </div>
 </div>
 </main>
 <footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<style>
+.wl{border:3px solid var(--ink);border-radius:16px;padding:22px;margin:18px 0;background:var(--white)}
+.wl .rd{font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:14px;color:var(--mut)}
+.wl h2{font-size:clamp(28px,5vw,48px);margin:6px 0}.wl .pr{font-size:clamp(18px,2.6vw,26px);margin:0 0 14px}
+.wl .wait{font-size:18px;font-weight:700}
+.gl-row{display:grid;grid-template-columns:minmax(120px,220px) 1fr;gap:4px 14px;align-items:center;margin:12px 0}
+.gl-name{font-weight:800;font-size:clamp(18px,2.4vw,26px)}.gl-note{grid-column:2;font-size:15px;color:var(--mut)}
+.gl-bar{height:22px;border-radius:99px;background:#E2EAE5;overflow:hidden}.gl-fill{height:100%;background:var(--ink);border-radius:99px}
+.gl-pips{display:flex;gap:8px}.gl-pip{width:34px;height:34px;border-radius:50%;border:3px solid var(--ink);display:inline-flex;align-items:center;justify-content:center;font-weight:900}.gl-pip.on{background:var(--ink);color:var(--white)}
+@media(max-width:560px){.gl-row{grid-template-columns:1fr}.gl-note{grid-column:1}}
+</style>
 <script>window.BOARD={"id": "cybersecurity", "entity": "Lodge", "slots": 6, "rowsUrl": "/cybersecurity/scoreboard/rows.json", "snapshotUrl": "/data/scoreboard-cybersecurity.json", "unit": "points"};</script>
 <script src="/assets/scoreboard/common.js"></script>
 <script src="/assets/scoreboard/board.js" defer></script>
+<script src="/assets/scoreboard/cybergame.js" defer></script>
 <script src="/assets/app.js" defer></script>
 </body>
 </html>
