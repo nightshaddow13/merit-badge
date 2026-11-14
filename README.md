@@ -106,7 +106,13 @@ Abuse limits: 12 Scouts per squad, 40 total. Scorekeepers can see the roster, re
 
 Every removal or clear on the roster page asks "are you sure?" first. **Reset everything** (scorekeepers only, type RESET to confirm) calls `POST /api/resetall` and clears every Scout, Class Race score, What Would You Do answer, Prompt Duel entry and vote, Human Neural Network card assignment, and every manual score and the Levels completed number on the AI scoreboard. Squad names stay and the Cybersecurity scoreboard is untouched. A checkbox (on by default) also deletes every backed-up Field Log and waiver.
 
-The red countdown appears only on the two badge doors on the home page (there is no top-of-page bar).
+The red countdown appears only on the two badge doors on the home page (there is no top-of-page bar). Its times come from the class schedule (next section).
+
+## Class schedule (`/counselor/schedule.html`)
+
+Counselors choose, per badge: **Active** on/off, the **class date, start time and length** (Eastern; drives the home-page countdown, "In session now" and "See you next time!"), and an optional **open from / close after** window. It is saved with `POST /api/schedule` (counselor or scorekeeper) and read by everyone with `GET /api/schedule` (which also returns the server clock, so a wrong device clock cannot open a closed badge). Storage is the `cup` table, partition `schedule`, row `config`; no new Azure setup. `POST /api/schedule/reset` returns to the built-in defaults (both badges active, the Nov 14 2026 class times, no window), which are also what the site uses if the schedule cannot be loaded, so a storage problem never locks Scouts out. Keep `DEFAULTS` in `assets/schedule.js` and `api/src/lib/schedule.js` equal (`api/test-schedule-client.js` checks).
+
+A badge that is not open (off, before its window, or after it) has its door hidden on the home page, and its Scout pages (intro, badge home, tools, games, Field Log / Warden Log, public scoreboard) load `assets/gate.js`, which sends Scouts to `/closed.html`. Staff always get in and see a yellow note. This is a front-door lock, not a security wall: the pages are static files, and the counselor-only files are still protected by sign-in on the server. Scouts' saved Field Logs are untouched. To close a new Scout page, add `<script src="/assets/schedule.js"></script><script src="/assets/gate.js" data-badge="cy"></script>` to its `<head>` (`ai` for the AI badge). The generated Passphrase Forge page needs the same lines in `build/template.html` (its checked-in `index.html` is newer than the template, so patch both rather than rebuilding).
 
 ## Field Log backup, dashboard and overrides
 
@@ -185,3 +191,9 @@ The dashboard has a class grid (Wardens down, requirements across), a lodge filt
   - Nothing that is already on the scoreboard (names, scores) is changed by starting a game.
   - API: `GET /api/cybergame` (public) and `POST /api/cybergame/control` (staff), state in table partition `cybergame`. Logic and tests: `api/src/lib/cybergame.js`, `api/test-cybergame.js`.
 - The Forge and Two-Key pages now allow scripts from the same site (`script-src 'self'`) so they can load `embed.js`; they still cannot contact any other host.
+
+## Instructor tools (`/instructor/`)
+
+The home page has an **Instructor tools** button. It opens `/instructor/` (counselor or scorekeeper sign-in; the sign-in page appears first if needed), one page that links to the Warden Log dashboard, the Field Log dashboard and roster, every live game (Cybersecurity Passphrase Forge and Two-Key Rite, What Would You Do?, Prompt Duel), both scorekeeper pages, the public scoreboards to project, and the class schedule. Each linked tool keeps its own role lock in `staticwebapp.config.json` (scorekeeper pages need `scorekeeper`; the schedule and counselor files need `counselor`). On the two public scoreboards a signed-in counselor or scorekeeper sees an "Instructor tools" link (`data-roles` in `assets/app.js`) instead of the old scorekeeper-only "Edit scores" link.
+
+The same tools also sit inside each merit badge page (`/cybersecurity/` and `/ai/`) in an **Instructor tools** section that only signed-in counselors and scorekeepers see (`data-roles="counselor scorekeeper"`, revealed by `assets/app.js`): Cybersecurity shows Warden Logs, live games, the scorecard, the scoreboard and the schedule; AI shows Field Logs, the roster, both live games, the scorecard, the scoreboard and the schedule. Scouts see only the normal page.

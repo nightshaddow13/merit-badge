@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" class="home">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Not open right now: Merit Badge Field Kit</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="index.html">Home</a><a href="counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">Merit Badge Field Kit</p>
+  <h1 id="h">This class is not open right now</h1>
+  <p class="lead" id="why">Ask your counselor when it opens.</p>
+  <p><a class="btn" href="index.html">Back to the home page</a></p>
+</div></section>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<script src="assets/schedule.js"></script>
+<script>
+(function(){
+ var S=window.MBSchedule,k=(new URLSearchParams(location.search).get("badge")||"").slice(0,2),name=S.NAMES[k];
+ if(name)document.getElementById("h").textContent=name+" is not open right now";
+ S.load().then(function(r){
+  var c=r.badges[k];if(!c)return;var st=S.status(c,Date.now()+r.skew),w=document.getElementById("why");
+  if(st.open){location.replace("index.html");return}
+  w.textContent=st.reason==="before"?"It opens "+S.when(st.opensAt)+". Class is "+S.label(c)+".":st.reason==="after"?"This class has finished. Thanks for coming!":"Your counselor has not opened this class yet. Ask when it starts.";
+ });
+})();
+</script>
+<script src="assets/app.js" defer></script>
+</body>
+</html>
