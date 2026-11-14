@@ -1,0 +1,53 @@
+/* Shared by the live scoreboard pages: live game panel, score pop-ups and full screen mode. */
+
+/* live game panel (shown while a game takes over the page) */
+.wl{border:3px solid var(--ink);border-radius:16px;padding:22px;margin:18px 0;background:var(--white)}
+.wl .rd{font-weight:800;letter-spacing:.06em;text-transform:uppercase;font-size:14px;color:var(--mut)}
+.wl h2{font-size:clamp(28px,5vw,48px);margin:6px 0}.wl .pr{font-size:clamp(18px,2.6vw,26px);margin:0 0 14px}
+.wl .wait{font-size:18px;font-weight:700}
+.gl-row{display:grid;grid-template-columns:minmax(120px,220px) 1fr;gap:4px 14px;align-items:center;margin:12px 0}
+.gl-name{font-weight:800;font-size:clamp(18px,2.4vw,26px)}.gl-note{grid-column:2;font-size:15px;color:var(--mut)}
+.gl-bar{height:22px;border-radius:99px;background:#E2EAE5;overflow:hidden}.gl-fill{height:100%;background:var(--ink);border-radius:99px}
+.gl-pips{display:flex;gap:8px}.gl-pip{width:34px;height:34px;border-radius:50%;border:3px solid var(--ink);display:inline-flex;align-items:center;justify-content:center;font-weight:900}.gl-pip.on{background:var(--ink);color:var(--white)}
+@media(max-width:560px){.gl-row{grid-template-columns:1fr}.gl-note{grid-column:1}}
+
+/* full screen button (matches the other pill buttons in the page header) */
+.jump button{font:inherit;font-weight:700;cursor:pointer;padding:8px 16px;border:2px solid var(--hi);border-radius:999px;background:transparent;color:var(--hi)}
+.jump button:hover{background:var(--hi);color:var(--a)}
+@media (max-width:640px){.jump button{min-height:44px}}
+.tv-exit{display:none;position:fixed;right:16px;bottom:16px;z-index:60;font:700 16px/1 var(--body);padding:10px 16px;border-radius:999px;border:2px solid var(--line);background:var(--white);color:var(--ink);cursor:pointer;opacity:.35}
+.tv-exit:hover,.tv-exit:focus-visible{opacity:1}
+html.tv-mode .tv-exit{display:block}
+
+/* score pop-ups */
+.toasts{position:fixed;z-index:50;top:16px;right:16px;display:flex;flex-direction:column;gap:10px;width:min(380px,calc(100vw - 32px));pointer-events:none}
+.toast{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"pts who" "pts for";align-items:center;gap:0 14px;padding:12px 18px;border-radius:14px;background:var(--a);color:var(--on-a);border:3px solid var(--hi);box-shadow:0 8px 28px rgba(0,0,0,.35);animation:toast-in .35s ease-out}
+.toast.out{opacity:0;transform:translateX(24px);transition:opacity .35s,transform .35s}
+.toast.neg{background:#5A1620;border-color:#FF9AA2}
+.toast-pts{grid-area:pts;font:900 clamp(34px,5vw,52px)/1 var(--display);color:var(--hi);font-variant-numeric:tabular-nums}
+.toast.neg .toast-pts{color:#FF9AA2}
+.toast-who{grid-area:who;font:900 clamp(20px,3vw,30px)/1.1 var(--display);text-transform:uppercase;overflow-wrap:anywhere}
+.toast-for{grid-area:for;font-size:15px;opacity:.9}
+.toast:not(:has(.toast-pts)){grid-template-areas:"who" "for";grid-template-columns:1fr}
+@keyframes toast-in{from{opacity:0;transform:translateX(40px) scale(.96)}to{opacity:1;transform:none}}
+
+/* full screen mode: top contenders only, big */
+html.tv-mode body{min-height:100vh}
+html.tv-mode .top,html.tv-mode .skip,html.tv-mode .band,html.tv-mode .foot,html.tv-mode #detail,html.tv-mode .note,html.tv-mode #code{display:none!important}
+html.tv-mode main{display:flex;min-height:100vh;align-items:flex-end}
+html.tv-mode .wrap{max-width:none;width:100%;padding:3vh 5vw}
+/* leave the top strip free so pop-ups never cover a score */
+html.tv-mode #boardWrap{padding-top:26vh}
+html.tv-mode .stand{padding:3.2vh 0 4.2vh;gap:4px 3vw}
+html.tv-mode .place{font-size:clamp(48px,9vh,120px)}
+html.tv-mode .lname{font-size:clamp(48px,11vh,150px)}
+html.tv-mode .pts{font-size:clamp(56px,13vh,180px)}
+html.tv-mode .bar{height:1.2vh;bottom:1.2vh;border-radius:99px}
+html.tv-mode .toasts{width:min(620px,50vw);top:2.5vh;right:3vw;flex-wrap:wrap;width:auto;max-width:94vw}
+html.tv-mode .toast{max-width:46vw}
+html.tv-mode .toast{padding:2vh 1.6vw}
+html.tv-mode .toast-pts{font-size:clamp(48px,9vh,110px)}
+html.tv-mode .toast-who{font-size:clamp(26px,5vh,56px)}
+html.tv-mode .toast-for{font-size:clamp(18px,2.6vh,30px)}
+html.tv-mode .wl{font-size:1.2em}
+@media (prefers-reduced-motion:reduce){.toast{animation:none}.toast.out{transition:none}}
