@@ -49,9 +49,9 @@
  },
  {
   "id": "count-the-open-gates",
-  "name": "Count the Open Gates",
+  "name": "Close the Gates",
   "time": "0:55",
-  "how": "+2 first bingo; +1 each extra bingo",
+  "how": "+1 per locked gate whose key fits the risk (up to +3 per lodge)",
   "min": -50,
   "max": 100
  },
@@ -121,9 +121,9 @@
  },
  {
   "id": "connected-device-draft",
-  "name": "Connected Device Draft",
+  "name": "Mystery Objects",
   "time": "2:44",
-  "how": "+3 longest unique list; +1 per Warden with four devices",
+  "how": "+1 first lodge to guess each object; +1 per Warden with four rows; +1 lodge's own device not on the slides",
   "min": -50,
   "max": 100
  },
