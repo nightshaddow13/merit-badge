@@ -115,7 +115,7 @@
   "id": "cyber-threat-defender",
   "name": "Cyber Threat Defender",
   "time": "2:14",
-  "how": "1st +5; 2nd +3; 3rd +1; +1 per Warden who explains a defense card",
+  "how": "Points your lodge earned minus the points the competing lodge earned. Can be negative (for example 8 vs 11 is -3)",
   "min": -50,
   "max": 100
  },
