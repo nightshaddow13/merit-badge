@@ -55,6 +55,8 @@ Two separate boards, one per badge:
 
 - Anyone can view a scoreboard. The **Edit scores** button appears only for signed-in users with the `scorekeeper` role.
 - `api/` is an Azure Functions API (managed by Static Web Apps) that stores scores in Azure Table Storage: `GET /api/scores/{board}` for anyone, `POST` for scorekeepers only.
+- **Full screen** (Cybersecurity board): the button on the scoreboard page shows only the top 3 lodges, big, with the page in browser full screen (Esc or the faint corner button exits). Add `?top=5` to show more, or `?tv=1` to open straight into the big view. It is built from shared pieces, so the A.I.R.A. board can use it by adding the same button and scripts (`assets/scoreboard/tv.js`, `alerts.js`, `scoreboard.css`).
+- **Score pop-ups**: whenever a live refresh (every 5 seconds) shows a team's points changed, a pop-up says who, how many points and which activity (negative changes show in red). Opening the page never pops, a saved snapshot never pops, and a bulk change (more than 8 at once, like a reset) shows one "Scores updated" note instead.
 - Until storage is connected, each public page shows the snapshot in `data/scoreboard-<board>.json`.
 - The rows on each board come from `<badge>/scoreboard/rows.json`. If you change a row id or its limits, change `api/src/lib/boards.js` too; `cd api && node test.js` checks that they match.
 

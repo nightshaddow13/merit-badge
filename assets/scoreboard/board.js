@@ -6,8 +6,14 @@
   var status = document.getElementById("status");
   var code = document.getElementById("code");
 
+  var last = null;
+  var tv = C.tv || { isOn: function () { return false; }, top: function () { return 99; }, onChange: function () {} };
+
   function render(data) {
-    var list = C.standings(data, rows);
+    last = data;
+    var all = C.standings(data, rows);
+    // Full screen mode shows only the top contenders.
+    var list = tv.isOn() ? all.slice(0, tv.top()) : all;
     board.textContent = "";
     detail.textContent = "";
 
@@ -20,7 +26,7 @@
     if (!list.length) {
       board.appendChild(el("p", { "class": "empty", text: "No scores yet. Standings appear here when class starts." }));
     } else {
-      var top = Math.max(1, list[0].total);
+      var top = Math.max(1, all[0].total);
       var ol = el("ol", { "class": "standings" });
       list.forEach(function (r, i) {
         var bar = el("span", { "class": "bar", "aria-hidden": "true" });
@@ -34,7 +40,7 @@
       });
       board.appendChild(ol);
 
-      var named = list.slice().sort(function (a, b) { return a.idx - b.idx; });
+      var named = all.slice().sort(function (a, b) { return a.idx - b.idx; });
       var thead = el("tr", {}, [el("th", { scope: "col", text: "Activity" })].concat(
         named.map(function (r) { return el("th", { scope: "col", text: r.name }); })));
       var tbody = el("tbody");
@@ -63,8 +69,13 @@
       : "Showing the saved snapshot. Live scores are not connected yet.";
   }
 
+  tv.onChange(function () { if (last) render(last); });
+
   function tick() {
-    C.loadScores().then(render).catch(function () {
+    C.loadScores().then(function (d) {
+      render(d);
+      if (C.alerts) C.alerts.update(d, rows);
+    }).catch(function () {
       status.textContent = "Can't load scores right now. Trying again.";
     });
   }
@@ -78,7 +89,7 @@
   C.loadRows().then(function (r) {
     rows = r;
     tick();
-    setInterval(function () { if (!document.hidden) tick(); }, 10000);
+    setInterval(function () { if (!document.hidden) tick(); }, 5000);
   }).catch(function () {
     status.textContent = "Can't load the scoreboard. Check your connection and reload.";
   });
