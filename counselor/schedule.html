@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en" class="co">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class schedule: counselor dashboard</title>
+<meta name="description" content="Choose which merit badges are active, when each class takes place and when each badge is open to Scouts.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="../index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="../index.html">Home</a><a href="../cybersecurity/">Cybersecurity</a><a href="../ai/">Artificial Intelligence</a><a href="../counselor/" aria-current="page">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">For counselors</p>
+  <h1>Class schedule</h1>
+  <p class="lead">Choose which merit badges are active, when each class takes place (this drives the countdown timers on the home page) and the dates each badge is open to Scouts. All times are Eastern.</p>
+  <p class="jump"><a href="/counselor/">Counselor page</a> &middot; <a href="/cybersecurity/scoreboard/logs.html">Warden Log dashboard</a> &middot; <a href="/ai/scoreboard/logs.html">Field Log dashboard</a></p>
+</div></section>
+<div class="wrap">
+  <p id="note" class="msg" role="status"></p>
+  <div id="cards" class="sgrid"></div>
+  <div class="savebar"><button id="save" class="btn" type="button">Save schedule</button><button id="reset" class="btn ghost" type="button">Reset to defaults</button><p id="msg" class="msg" role="status"></p></div>
+  <p class="muted small">A badge that is closed disappears from the home page and its Scout pages (including the Field Log tools and the public scoreboard) show a &ldquo;not open&rdquo; page. You, signed in as staff, can always see everything and a yellow note tells you when a page is closed to Scouts. Scouts who already have a Field Log keep their saved progress.</p>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<style>
+.sgrid{display:grid;gap:16px;margin:12px 0}
+@media (min-width:1000px){main .wrap{max-width:min(1500px,calc(100vw - 48px))}.sgrid{grid-template-columns:1fr 1fr}}
+.scard{border:2px solid var(--ink);border-radius:12px;padding:16px;background:var(--white)}
+.scard h2{margin:0 0 8px}.scard h3{margin:18px 0 4px;font-size:17px}
+.scard .row{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:6px 0}
+.scard label{display:block;font-weight:700;font-size:15px;margin:0 0 4px}
+.scard input[type=date],.scard input[type=time],.scard input[type=number]{min-height:44px;font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink)}
+.scard input[type=number]{width:7em}
+.onoff{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;cursor:pointer}
+.onoff input{width:26px;height:26px}
+.state{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:700;font-size:15px;margin:8px 0 0}
+.state.open{background:#BFEBD0;color:#0b3a1f}.state.shut{background:#FFE08A;color:#4a3300}
+.muted{color:var(--mut)}.hint{font-size:14px;color:var(--mut);margin:4px 0 0}
+.scard .btn{min-height:44px}
+</style>
+<script src="../assets/schedule.js"></script>
+<script>
+(function(){
+ var KEYS=["cy","ai"],S=window.MBSchedule,$=function(i){return document.getElementById(i)},cards={},server=null,skew=0,canSave=true;
+ function E(tag,cls,t){var e=document.createElement(tag);if(cls)e.className=cls;if(t!=null)e.textContent=t;return e}
+ function say(t,cls){var m=$("msg");m.textContent=t;m.className="msg"+(cls?" "+cls:"")}
+ function field(label,input,hint){var d=E("div");var l=E("label",null,label);l.htmlFor=input.id;d.appendChild(l);d.appendChild(input);if(hint)d.appendChild(E("div","hint",hint));return d}
+ function inp(id,type,val,extra){var i=document.createElement("input");i.type=type;i.id=id;i.value=val||"";if(extra)Object.keys(extra).forEach(function(k){i[k]=extra[k]});return i}
+
+ function build(k,cfg){
+  var c={},card=E("section","scard");card.setAttribute("aria-labelledby","h-"+k);var h=E("h2",null,S.NAMES[k]);h.id="h-"+k;card.appendChild(h);
+  var lb=E("label","onoff"),cb=inp(k+"-on","checkbox");cb.checked=cfg.active;lb.appendChild(cb);lb.appendChild(document.createTextNode("Active (open to Scouts)"));card.appendChild(lb);
+  card.appendChild(E("h3",null,"When the class takes place"));
+  var st=S.isoToEt(cfg.start),row=E("div","row");
+  c.date=inp(k+"-date","date",st.date);c.time=inp(k+"-time","time",st.time,{step:300});c.hours=inp(k+"-hrs","number",String(cfg.minutes/60),{min:0.25,max:12,step:0.25});
+  row.appendChild(field("Class date",c.date));row.appendChild(field("Start time (ET)",c.time));row.appendChild(field("Length (hours)",c.hours));card.appendChild(row);
+  card.appendChild(E("p","hint","The home page countdown counts down to this start time, shows “In session now” during the class and “See you next time!” after it."));
+  card.appendChild(E("h3",null,"When the badge is open to Scouts (optional)"));
+  var ff=S.isoToEt(cfg.showFrom),fu=S.isoToEt(cfg.showUntil),r2=E("div","row"),r3=E("div","row");
+  c.fd=inp(k+"-fd","date",ff.date);c.ft=inp(k+"-ft","time",ff.time,{step:300});c.ud=inp(k+"-ud","date",fu.date);c.ut=inp(k+"-ut","time",fu.time,{step:300});
+  r2.appendChild(field("Open from (date)",c.fd));r2.appendChild(field("Time (ET)",c.ft));r3.appendChild(field("Close after (date)",c.ud));r3.appendChild(field("Time (ET)",c.ut));
+  card.appendChild(r2);card.appendChild(r3);
+  card.appendChild(E("p","hint","Leave blank for no limit. Without dates the badge is open whenever it is Active."));
+  var pre=E("button","btn ghost","Open 7 days before, close the day after");pre.type="button";
+  pre.onclick=function(){var s=read(c,cb,true);if(!s){say("Set the class date and start time first.","err");return}var t=Date.parse(s.start),e=t+s.minutes*60000,a=S.isoToEt(new Date(t-7*86400000).toISOString()),b=S.isoToEt(new Date(e+86400000).toISOString());
+   c.fd.value=a.date;c.ft.value="00:00";c.ud.value=b.date;c.ut.value="23:59";paint(k)};
+  card.appendChild(pre);
+  var out=E("div");out.setAttribute("aria-live","polite");card.appendChild(out);
+  c.cb=cb;c.out=out;c.card=card;cards[k]=c;
+  card.addEventListener("input",function(){paint(k)});card.addEventListener("change",function(){paint(k)});
+  return card}
+
+ // form -> { active, start, minutes, showFrom, showUntil } in UTC, or null when the class date/time is missing
+ function read(c,cb,soft){
+  if(!c.date.value||!c.time.value)return null;
+  var d=c.date.value.split("-").map(Number),t=c.time.value.split(":").map(Number),h=parseFloat(c.hours.value);
+  var o={active:cb.checked,start:S.etToIso(d[0],d[1],d[2],t[0],t[1]),minutes:Math.round(h*60),showFrom:"",showUntil:""};
+  function opt(dv,tv,def){if(!dv.value)return "";var x=dv.value.split("-").map(Number),y=(tv.value||def).split(":").map(Number);return S.etToIso(x[0],x[1],x[2],y[0],y[1])}
+  o.showFrom=opt(c.fd,c.ft,"00:00");o.showUntil=opt(c.ud,c.ut,"23:59");
+  if(!isFinite(h)&&!soft)return null;
+  return o}
+ function problem(k,o){
+  if(!o)return "Set the class date, start time and length.";
+  if(!(o.minutes>=15&&o.minutes<=720))return "Class length must be between 15 minutes and 12 hours.";
+  if(o.showFrom&&o.showUntil&&Date.parse(o.showUntil)<=Date.parse(o.showFrom))return "“Close after” must be later than “Open from”.";
+  return ""}
+ function paint(k){
+  var c=cards[k],o=read(c,c.cb),p=problem(k,o);c.out.textContent="";
+  if(p){c.out.appendChild(E("p","state shut",p));return}
+  var st=S.status(o,Date.now()+skew),msg;
+  if(st.open)msg="Right now: open to Scouts";else if(st.reason==="off")msg="Right now: closed (badge is not active)";else if(st.reason==="before")msg="Right now: closed until "+S.when(st.opensAt);else msg="Right now: closed (window ended "+S.when(st.closesAt)+")";
+  c.out.appendChild(E("p","state "+(st.open?"open":"shut"),msg));
+  c.out.appendChild(E("p","hint","Class: "+S.label(o)+(st.phase==="live"?" (in session now)":st.phase==="done"?" (already over)":"")))}
+
+ function api(path,body){return fetch(path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(r.status===401||r.status===403?"Sign in as a counselor to change the schedule.":(j.error||"Request failed ("+r.status+")"));return j})})}
+ function show(j){
+  skew=isFinite(Date.parse(j.now))?Date.parse(j.now)-Date.now():0;server=j;var host=$("cards");host.textContent="";cards={};
+  KEYS.forEach(function(k){host.appendChild(build(k,Object.assign({},S.DEFAULTS[k],j.badges[k]||{})));paint(k)});
+  $("note").textContent=j.updated?"Last saved "+new Date(j.updated).toLocaleString([], {month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+(j.updatedBy?" by "+j.updatedBy:"")+".":"Nothing saved yet: these are the built-in defaults."}
+ function load(){return api("/api/schedule").then(show).catch(function(e){canSave=false;show({badges:S.DEFAULTS,now:new Date().toISOString(),updated:""});$("note").textContent=e.message+" Showing the defaults; saving may not work.";})}
+
+ $("save").onclick=function(){
+  var badges={};
+  for(var i=0;i<KEYS.length;i++){var k=KEYS[i],c=cards[k],o=read(c,c.cb),p=problem(k,o);if(p){say(S.NAMES[k]+": "+p,"err");c.date.focus();return}badges[k]=o}
+  var closing=KEYS.filter(function(k){return S.status(badges[k],Date.now()+skew).open===false&&(!server||S.status(Object.assign({},S.DEFAULTS[k],server.badges[k]||{}),Date.now()+skew).open)});
+  if(closing.length&&!confirm("This closes "+closing.map(function(k){return S.NAMES[k]}).join(" and ")+" to Scouts right now: the home page door disappears and its Scout pages show “not open”. Continue?"))return;
+  var b=$("save");b.disabled=true;say("Saving…");
+  api("/api/schedule",{badges:badges}).then(function(j){show(j);say("Saved.","ok")}).catch(function(e){say(e.message,"err")}).then(function(){b.disabled=false})};
+ $("reset").onclick=function(){
+  if(!confirm("Go back to the built-in schedule (both badges active, the Nov 14 class times, no open window)? Your saved dates will be replaced."))return;
+  api("/api/schedule/reset",{}).then(function(j){show(j);say("Back to the defaults.","ok")}).catch(function(e){say(e.message,"err")})};
+ load();setInterval(function(){Object.keys(cards).forEach(paint)},30000);
+})();
+</script>
+<script src="../assets/app.js" defer></script>
+</body>
+</html>
