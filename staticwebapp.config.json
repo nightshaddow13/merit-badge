@@ -324,6 +324,28 @@
       }
     },
     {
+      "route": "/instructor/",
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ],
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow",
+        "Cache-Control": "private, no-store"
+      }
+    },
+    {
+      "route": "/instructor/*",
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ],
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow",
+        "Cache-Control": "private, no-store"
+      }
+    },
+    {
       "route": "/counselor/",
       "allowedRoles": [
         "counselor"

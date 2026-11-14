@@ -189,3 +189,7 @@ The dashboard has a class grid (Wardens down, requirements across), a lodge filt
   - Nothing that is already on the scoreboard (names, scores) is changed by starting a game.
   - API: `GET /api/cybergame` (public) and `POST /api/cybergame/control` (staff), state in table partition `cybergame`. Logic and tests: `api/src/lib/cybergame.js`, `api/test-cybergame.js`.
 - The Forge and Two-Key pages now allow scripts from the same site (`script-src 'self'`) so they can load `embed.js`; they still cannot contact any other host.
+
+## Instructor tools (`/instructor/`)
+
+The home page has an **Instructor tools** button. It opens `/instructor/` (counselor or scorekeeper sign-in; the sign-in page appears first if needed), one page that links to the Warden Log dashboard, the Field Log dashboard and roster, every live game (Cybersecurity Passphrase Forge and Two-Key Rite, What Would You Do?, Prompt Duel), both scorekeeper pages, the public scoreboards to project, and the class schedule. Each linked tool keeps its own role lock in `staticwebapp.config.json` (scorekeeper pages need `scorekeeper`; the schedule and counselor files need `counselor`). On the two public scoreboards a signed-in counselor or scorekeeper sees an "Instructor tools" link (`data-roles` in `assets/app.js`) instead of the old scorekeeper-only "Edit scores" link.
