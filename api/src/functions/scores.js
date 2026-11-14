@@ -2,7 +2,7 @@
 
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
-const { emptyData, hasRole, validate, getBoard } = require("../lib/scores");
+const { emptyData, hasRole, validate, getBoard, mergeChanges } = require("../lib/scores");
 const { AUTO_ROWS } = require("../lib/boards");
 
 const TABLE = "cup";
@@ -52,6 +52,11 @@ app.http("scores", {
         body = await request.json();
       } catch (e) {
         return { status: 400, headers: HEADERS, jsonBody: { error: "Send valid JSON." } };
+      }
+      if (body && body.changed) {
+        let stored = null;
+        try { stored = JSON.parse((await client.getEntity(PARTITION, board.rowKey)).data); } catch (e) { if (e.statusCode !== 404) throw e; }
+        body = mergeChanges(boardId, stored, body);
       }
       const result = validate(boardId, body);
       if (!result.ok) return { status: 400, headers: HEADERS, jsonBody: { error: result.error } };

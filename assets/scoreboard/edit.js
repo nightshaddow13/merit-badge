@@ -1,6 +1,9 @@
 (function () {
   var C = window.Cup, B = C.B, el = C.el, SLOTS = B.slots;
   var rows = [], data = null, dirty = false, clearArmed = false;
+  // What this page changed since it loaded or last saved. The server applies only these, so an older tab can never wipe names or points entered elsewhere.
+  var chg = { lodges: {}, cells: {}, levels: false, clear: false };
+  function resetChg() { chg = { lodges: {}, cells: {}, levels: false, clear: false }; }
   var lodgeBox = document.getElementById("lodges");
   var gridBox = document.getElementById("grid");
   var levelsBox = document.getElementById("levels");
@@ -18,7 +21,7 @@
     for (var i = 0; i < SLOTS; i++) {
       (function (i) {
         var input = el("input", { type: "text", maxlength: "30", id: "lodge" + i, autocomplete: "off", value: data.lodges[i] });
-        input.addEventListener("input", function () { data.lodges[i] = input.value; markDirty(); updateTotals(); });
+        input.addEventListener("input", function () { data.lodges[i] = input.value; chg.lodges[i] = true; markDirty(); updateTotals(); });
         lodgeBox.appendChild(el("label", { "for": "lodge" + i }, [el("span", { text: B.entity + " " + (i + 1) + " name" }), input]));
       })(i);
     }
@@ -29,7 +32,7 @@
       lv.addEventListener("input", function () {
         var n = parseInt(lv.value, 10);
         data.levels = isNaN(n) ? 0 : Math.max(0, Math.min(8, n));
-        markDirty();
+        chg.levels = true; markDirty();
       });
       levelsBox.appendChild(el("label", { "for": "levelsIn" }, [el("span", { text: "Levels completed (0 to 8)" }), lv]));
     }
@@ -51,7 +54,7 @@
             if (a.auto) return;
             var row = data.scores[a.id] || (data.scores[a.id] = Array(SLOTS).fill(null));
             row[i] = input.value === "" ? null : parseInt(input.value, 10);
-            markDirty(); updateTotals();
+            chg.cells[a.id + "|" + i] = true; markDirty(); updateTotals();
           });
           tr.appendChild(el("td", {}, [input]));
         })(i);
@@ -77,21 +80,22 @@
 
   function load() {
     return C.loadScores().then(function (d) {
-      data = d; dirty = false; build();
+      data = d; dirty = false; resetChg(); build();
       if (d.source !== "live") say("Live storage is not connected, so scores can't be saved yet. See the setup steps in the README.", "err");
       else say(d.updated ? "Loaded. Last saved " + C.timeText(d.updated) + "." : "Loaded. No scores saved yet.", "ok");
     });
   }
 
   function save() {
+    if (data.source !== "live") { say("The saved scores could not be loaded, so saving is turned off to protect your names. Reload the page.", "err"); return; }
     saveBtn.disabled = true; say("Saving…", "");
-    var payload = { lodges: data.lodges, scores: data.scores };
+    var payload = { lodges: data.lodges, scores: data.scores, changed: { lodges: Object.keys(chg.lodges).map(Number), cells: Object.keys(chg.cells).map(function (k) { var x = k.split("|"); return [x[0], Number(x[1])]; }), levels: chg.levels, clear: chg.clear } };
     if (levelsBox) payload.levels = data.levels;
     fetch("/api/scores/" + B.id, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; }); })
       .then(function (res) {
         if (!res.ok) throw new Error(res.body && res.body.error ? res.body.error : "Save failed (" + res.status + ").");
-        dirty = false; say("Saved at " + C.timeText(res.body.updated) + ". The scoreboard updates within 10 seconds.", "ok");
+        dirty = false; resetChg(); data = C.normalize(Object.assign({ source: "live" }, res.body)); build(); say("Saved at " + C.timeText(res.body.updated) + ". The scoreboard updates within 10 seconds.", "ok");
       })
       .catch(function (e) { say(e.message + " Your entries are still on this page. Try Save again.", "err"); })
       .then(function () { saveBtn.disabled = false; });
@@ -105,7 +109,7 @@
   clearBtn.addEventListener("click", function () {
     if (!clearArmed) { clearArmed = true; clearBtn.textContent = "Clear all scores? Press again"; return; }
     clearArmed = false; clearBtn.textContent = "Clear all scores";
-    data.scores = {}; data.levels = 0; build(); markDirty(); say("Scores cleared on this page. Press Save scores to apply.", "");
+    data.scores = {}; data.levels = 0; chg.clear = true; chg.cells = {}; chg.levels = true; build(); markDirty(); say("Scores cleared on this page. Press Save scores to apply.", "");
   });
   window.addEventListener("beforeunload", function (e) { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
 

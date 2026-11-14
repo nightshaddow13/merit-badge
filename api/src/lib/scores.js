@@ -77,4 +77,25 @@ function validate(boardId, body) {
   return { ok: true, value };
 }
 
-module.exports = { emptyData, hasRole, validate, getBoard };
+// A scorekeeper page sends its whole table, but a page that was opened earlier (a second tab or device) holds a stale
+// copy and would wipe names and scores entered since. When the page says which fields it changed (`body.changed`),
+// apply only those onto the stored data. Without `changed` the body is used as sent.
+function mergeChanges(boardId, stored, body) {
+  const b = getBoard(boardId);
+  const ch = body && body.changed;
+  if (!b || !ch || typeof ch !== "object" || !body.lodges || !body.scores) return body;
+  const base = stored || emptyData(boardId);
+  const out = { lodges: Array.from({ length: b.slots }, (_, i) => String((base.lodges || [])[i] || "")), scores: JSON.parse(JSON.stringify(base.scores || {})) };
+  if (b.levels) out.levels = typeof base.levels === "number" ? base.levels : 0;
+  if (ch.clear === true) { out.scores = {}; if (b.levels) out.levels = 0; }
+  (Array.isArray(ch.lodges) ? ch.lodges : []).forEach((i) => { if (Number.isInteger(i) && i >= 0 && i < b.slots && Array.isArray(body.lodges)) out.lodges[i] = body.lodges[i]; });
+  (Array.isArray(ch.cells) ? ch.cells : []).forEach((c) => {
+    if (!Array.isArray(c) || typeof c[0] !== "string" || !Number.isInteger(c[1]) || c[1] < 0 || c[1] >= b.slots) return;
+    const mine = body.scores[c[0]], row = out.scores[c[0]] || (out.scores[c[0]] = Array(b.slots).fill(null));
+    row[c[1]] = Array.isArray(mine) && mine[c[1]] !== undefined ? mine[c[1]] : null;
+  });
+  if (ch.levels === true && b.levels) out.levels = body.levels;
+  return out;
+}
+
+module.exports = { emptyData, hasRole, validate, getBoard, mergeChanges };
