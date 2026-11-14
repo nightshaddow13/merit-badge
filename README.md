@@ -51,7 +51,7 @@ Two separate boards, one per badge:
 | Board | Public page | Scorekeeper page (sign-in) |
 | --- | --- | --- |
 | Cybersecurity: Cup of the Silver Padlock (6 lodges) | `/cybersecurity/scoreboard/` | `/cybersecurity/scoreboard/edit.html` |
-| Artificial Intelligence: A.I.R.A. (4 squads) | `/ai/scoreboard/` | `/ai/scoreboard/edit.html` |
+| Artificial Intelligence: A.I.R.A. (6 squads) | `/ai/scoreboard/` | `/ai/scoreboard/edit.html` |
 
 - Anyone can view a scoreboard. The **Edit scores** button appears only for signed-in users with the `scorekeeper` role.
 - `api/` is an Azure Functions API (managed by Static Web Apps) that stores scores in Azure Table Storage: `GET /api/scores/{board}` for anyone, `POST` for scorekeepers only.
@@ -94,7 +94,7 @@ The code display (`/counselor/tools/two-key-rite-display.html`) opens for either
 
 ## Field Log squad points (A.I.R.A.)
 
-The Field Log (`/tools/aira-field-log.html`) reads squad names from `GET /api/scores/ai` and lets each Scout pick a squad. The slot number (1 to 4) is saved with the name, so renaming a squad on the scoreboard does not break progress.
+The Field Log (`/tools/aira-field-log.html`) reads squad names from `GET /api/scores/ai` and lets each Scout pick a squad. The slot number (1 to 6) is saved with the name, so renaming a squad on the scoreboard does not break progress.
 
 Each Scout's device sends `POST /api/airalog` (public, no sign-in) with a random device id, first name + last initial, squad slot, and three numbers: Vocab Vault best (0-10), Level 1 terms done (0-16), levels cleared (0-8). The server validates and clamps everything and stores one record per Scout in the `airalog` partition of the `cup` table. Points only go up. Levels cleared are capped by the "Levels completed" number the counselor sets on the scorekeeper page.
 

@@ -29,18 +29,18 @@ assert.ok(!validate("cybersecurity", { lodges: fill(6, ""), scores: { ok: fill(6
 assert.ok(!validate("cybersecurity", { lodges: fill(6, ""), scores: { ok: fill(6, "5") } }).ok);
 
 // ---- ai (4 squads, levels, per-row limits)
-assert.deepStrictEqual(emptyData("ai"), { lodges: ["", "", "", ""], scores: {}, updated: null, levels: 0 });
-r = validate("ai", { lodges: ["Falcons", "", "", ""], scores: { "l7-boss": [100, null, null, null], "l1-boss": [50, 0, null, null], "l3-style": [10, null, null, null], "side-bonus": [15, null, null, null] }, levels: 3 });
+assert.deepStrictEqual(emptyData("ai"), { lodges: ["", "", "", "", "", ""], scores: {}, updated: null, levels: 0 });
+r = validate("ai", { lodges: ["Falcons", "", "", "", "", ""], scores: { "l7-boss": [100, null, null, null, null, null], "l1-boss": [50, 0, null, null, null, null], "l3-style": [10, null, null, null, null, null], "side-bonus": [15, null, null, null, null, null] }, levels: 3 });
 assert.ok(r.ok); assert.strictEqual(r.value.levels, 3);
-assert.ok(validate("ai", { lodges: fill(4, ""), scores: {} }).ok, "levels default to 0");
-assert.strictEqual(validate("ai", { lodges: fill(4, ""), scores: {} }).value.levels, 0);
-assert.ok(!validate("ai", { lodges: fill(6, ""), scores: {} }).ok, "needs 4 slots");
-assert.ok(!validate("ai", { lodges: fill(4, ""), scores: { "l1-boss": [51, null, null, null] } }).ok);
-assert.ok(!validate("ai", { lodges: fill(4, ""), scores: { "l7-boss": [101, null, null, null] } }).ok);
-assert.ok(!validate("ai", { lodges: fill(4, ""), scores: { "l2-style": [11, null, null, null] } }).ok);
-assert.ok(!validate("ai", { lodges: fill(4, ""), scores: { "l1-boss": [-1, null, null, null] } }).ok);
-assert.ok(!validate("ai", { lodges: fill(4, ""), scores: { "l9-boss": fill(4, 1) } }).ok);
-assert.ok(!validate("ai", { lodges: fill(4, ""), scores: { "line-of-oaths": fill(4, 1) } }).ok);
+assert.ok(validate("ai", { lodges: fill(6, ""), scores: {} }).ok, "levels default to 0");
+assert.strictEqual(validate("ai", { lodges: fill(6, ""), scores: {} }).value.levels, 0);
+assert.ok(!validate("ai", { lodges: fill(4, ""), scores: {} }).ok, "needs 6 slots");
+assert.ok(!validate("ai", { lodges: fill(6, ""), scores: { "l1-boss": [51, null, null, null, null, null] } }).ok);
+assert.ok(!validate("ai", { lodges: fill(6, ""), scores: { "l7-boss": [101, null, null, null, null, null] } }).ok);
+assert.ok(!validate("ai", { lodges: fill(6, ""), scores: { "l2-style": [11, null, null, null, null, null] } }).ok);
+assert.ok(!validate("ai", { lodges: fill(6, ""), scores: { "l1-boss": [-1, null, null, null, null, null] } }).ok);
+assert.ok(!validate("ai", { lodges: fill(6, ""), scores: { "l9-boss": fill(6, 1) } }).ok);
+assert.ok(!validate("ai", { lodges: fill(6, ""), scores: { "line-of-oaths": fill(6, 1) } }).ok);
 assert.ok(!validate("ai", { lodges: fill(4, ""), scores: {}, levels: 9 }).ok);
 assert.ok(!validate("ai", { lodges: fill(4, ""), scores: {}, levels: 2.5 }).ok);
 assert.ok(!validate("nope", { lodges: [], scores: {} }).ok);

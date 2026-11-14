@@ -20,10 +20,10 @@ const run = (n, o) => Object.assign({ id: hex(n), slot: 1, name: "Sam K", sec: 4
   assert.strictEqual((await hb.board(hex(1), sb)).status, 403, "must have played to see the board");
   let r = await hb.submit(run(1), sb);
   assert.strictEqual(r.status, 200); assert.strictEqual(r.body.you.points, 10);
-  assert.deepStrictEqual(board.scores["hvm-avg"], [10, null, null, null]);
+  assert.deepStrictEqual(board.scores["hvm-avg"], [10, null, null, null, null, null]);
   assert.deepStrictEqual(board.scores["l1-boss"], [5, null, null, null], "other rows untouched");
   // validation
-  for (const b of [{ id: "zz" }, { slot: 0 }, { slot: 5 }, { name: "Sam 9" }, { sec: -1 }, { sec: 4000 }, { sec: 3 }, { wrong: 25 }, { wrong: 1.5 }]) {
+  for (const b of [{ id: "zz" }, { slot: 0 }, { slot: 7 }, { name: "Sam 9" }, { sec: -1 }, { sec: 4000 }, { sec: 3 }, { wrong: 25 }, { wrong: 1.5 }]) {
     assert.strictEqual((await hb.submit(run(2, b), sb)).status, 400, JSON.stringify(b));
   }
   assert.strictEqual((await hb.submit(run(2, { slot: 3 }), sb)).status, 409, "squad not set up");
@@ -34,7 +34,7 @@ const run = (n, o) => Object.assign({ id: hex(n), slot: 1, name: "Sam K", sec: 4
   await hb.submit(run(2, { name: "Ana B", wrong: 12 }), sb); // 4 points
   assert.strictEqual(board.scores["hvm-avg"][0], 7, "(10 + 4) / 2");
   await hb.submit(run(3, { slot: 2, name: "Zed Q", wrong: 0, sec: 20 }), sb);
-  assert.deepStrictEqual(board.scores["hvm-avg"], [7, 10, null, null]);
+  assert.deepStrictEqual(board.scores["hvm-avg"], [7, 10, null, null, null, null]);
   // ranking: fewest wrong, then faster
   await hb.submit(run(4, { name: "Lee P", wrong: 0, sec: 25 }), sb);
   r = await hb.board(hex(1), sb);

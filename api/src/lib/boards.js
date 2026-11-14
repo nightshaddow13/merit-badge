@@ -17,7 +17,7 @@ const BOARDS = {
   },
   ai: {
     rowKey: "ai",
-    slots: 4,
+    slots: 6,
     levels: true,
     rule: (id) => {
       let m = /^l([1-8])-boss$/.exec(id);
