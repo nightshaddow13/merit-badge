@@ -324,7 +324,7 @@
       }
     },
     {
-      "route": "/instructor/",
+      "route": "/cybersecurity/instructor.html",
       "allowedRoles": [
         "counselor",
         "scorekeeper"
@@ -335,7 +335,7 @@
       }
     },
     {
-      "route": "/instructor/*",
+      "route": "/ai/instructor.html",
       "allowedRoles": [
         "counselor",
         "scorekeeper"
