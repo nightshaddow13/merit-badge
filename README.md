@@ -104,7 +104,13 @@ Abuse limits: 12 Scouts per squad, 40 total. Scorekeepers can see the roster, re
 
 Every removal or clear on the roster page asks "are you sure?" first. **Reset everything** (scorekeepers only, type RESET to confirm) calls `POST /api/resetall` and clears every Scout, Class Race score, What Would You Do answer, Prompt Duel entry and vote, Human Neural Network card assignment, and every manual score and the Levels completed number on the AI scoreboard. Squad names stay and the Cybersecurity scoreboard is untouched. A checkbox (on by default) also deletes every backed-up Field Log and waiver.
 
-The red countdown appears only on the two badge doors on the home page (there is no top-of-page bar).
+The red countdown appears only on the two badge doors on the home page (there is no top-of-page bar). Its times come from the class schedule (next section).
+
+## Class schedule (`/counselor/schedule.html`)
+
+Counselors choose, per badge: **Active** on/off, the **class date, start time and length** (Eastern; drives the home-page countdown, "In session now" and "See you next time!"), and an optional **open from / close after** window. It is saved with `POST /api/schedule` (counselor or scorekeeper) and read by everyone with `GET /api/schedule` (which also returns the server clock, so a wrong device clock cannot open a closed badge). Storage is the `cup` table, partition `schedule`, row `config`; no new Azure setup. `POST /api/schedule/reset` returns to the built-in defaults (both badges active, the Nov 14 2026 class times, no window), which are also what the site uses if the schedule cannot be loaded, so a storage problem never locks Scouts out. Keep `DEFAULTS` in `assets/schedule.js` and `api/src/lib/schedule.js` equal (`api/test-schedule-client.js` checks).
+
+A badge that is not open (off, before its window, or after it) has its door hidden on the home page, and its Scout pages (intro, badge home, tools, games, Field Log / Warden Log, public scoreboard) load `assets/gate.js`, which sends Scouts to `/closed.html`. Staff always get in and see a yellow note. This is a front-door lock, not a security wall: the pages are static files, and the counselor-only files are still protected by sign-in on the server. Scouts' saved Field Logs are untouched. To close a new Scout page, add `<script src="/assets/schedule.js"></script><script src="/assets/gate.js" data-badge="cy"></script>` to its `<head>` (`ai` for the AI badge). The generated Passphrase Forge page needs the same lines in `build/template.html` (its checked-in `index.html` is newer than the template, so patch both rather than rebuilding).
 
 ## Field Log backup, dashboard and overrides
 

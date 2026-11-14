@@ -92,36 +92,50 @@
   doors.forEach(function (a) { a.addEventListener("click", function (e) { if (seen()) return; e.preventDefault(); show(a.href, a); }); });
 })();
 
-// ---- Class countdowns: one red countdown on each badge door (home page) ------------------------
-// Both classes are Saturday Nov 14 2026 (Eastern time, EST = UTC-5) and run three hours.
+// ---- Class countdowns and badge doors (home page) ----------------------------------------------
+// The counselor sets which badges are active, the class times and the open window on /counselor/schedule.html
+// (assets/schedule.js loads it; the built-in defaults apply if it cannot be reached). A badge that is closed has
+// its door hidden from Scouts; staff still see it, marked as closed.
 (function () {
-  var HOUR = 3600000;
-  var CLASSES = [
-    { key: "cy", name: "Cybersecurity", start: Date.UTC(2026, 10, 14, 14, 0, 0), label: "Sat Nov 14 · 9:00 AM–12:00 PM ET" },
-    { key: "ai", name: "Artificial Intelligence", start: Date.UTC(2026, 10, 14, 18, 0, 0), label: "Sat Nov 14 · 1:00 PM–4:00 PM ET" }
-  ];
-  CLASSES.forEach(function (c) { c.end = c.start + 3 * HOUR; });
+  var S = window.MBSchedule;
+  if (!S || !document.querySelector("a.door")) return;
   function pad(n) { return (n < 10 ? "0" : "") + n; }
   function left(ms) {
     var s = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
     return (d ? d + "d " : "") + pad(h) + ":" + pad(m) + ":" + pad(x);
   }
-  function phase(c, now) { return now < c.start ? "before" : now < c.end ? "live" : "done"; }
-  var cds = {};
-  CLASSES.forEach(function (c) {
-    var door = document.querySelector("a.door." + c.key); if (!door) return;
+  var cds = {}, doors = {};
+  ["cy", "ai"].forEach(function (key) {
+    var door = document.querySelector("a.door." + key); if (!door) return;
     var e = document.createElement("span"); e.className = "door-cd";
     e.style.cssText = "display:inline-block;align-self:flex-start;margin-top:6px;padding:6px 12px;border-radius:8px;background:#C1121F;color:#fff;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums";
-    door.insertBefore(e, door.querySelector(".door-go")); cds[c.key] = e;
+    door.insertBefore(e, door.querySelector(".door-go")); cds[key] = e; doors[key] = door;
   });
-  function tick() {
-    var now = Date.now();
-    CLASSES.forEach(function (c) {
-      var p = phase(c, now), e = cds[c.key];
-      if (!e) return;
-      e.textContent = p === "before" ? "Starts in " + left(c.start - now) + "  ·  " + c.label : p === "live" ? "In session now · ends in " + left(c.end - now) : "See you next time!";
-      e.style.background = p === "done" ? "#2F6F4F" : "#C1121F";
-    });
-  }
-  tick(); setInterval(tick, 1000);
+  // keep the home page from flashing a door that is about to be hidden
+  var wrap = document.querySelector(".doors"); if (wrap) wrap.style.visibility = "hidden";
+  Promise.all([S.load(), S.isStaff()]).then(function (r) {
+    var cfg = r[0], staff = r[1], shownCount = 0, msg = document.getElementById("no-classes");
+    function tick() {
+      var now = Date.now() + cfg.skew;
+      Object.keys(doors).forEach(function (key) {
+        var c = cfg.badges[key], st = S.status(c, now), e = cds[key], door = doors[key];
+        door.hidden = !st.open && !staff;
+        if (!st.open && staff) {
+          e.textContent = "Closed to Scouts " + (st.reason === "off" ? "(badge is off)" : st.reason === "before" ? "(opens " + S.when(st.opensAt) + ")" : "(closed " + S.when(st.closesAt) + ")");
+          e.style.background = "#6B5B00"; door.style.opacity = ".75"; return;
+        }
+        door.style.opacity = "";
+        if (door.hidden) return;
+        e.textContent = st.phase === "before" ? "Starts in " + left(st.start - now) + "  \u00b7  " + S.label(c) : st.phase === "live" ? "In session now \u00b7 ends in " + left(st.end - now) : "See you next time!";
+        e.style.background = st.phase === "done" ? "#2F6F4F" : "#C1121F";
+      });
+      shownCount = Object.keys(doors).filter(function (k) { return !doors[k].hidden; }).length;
+      if (wrap) {
+        wrap.style.visibility = "";
+        if (!shownCount && !msg) { msg = document.createElement("p"); msg.id = "no-classes"; msg.className = "lead"; msg.style.cssText = "text-align:center;padding:24px 16px"; msg.textContent = "No classes are open right now. Check back soon!"; wrap.parentNode.insertBefore(msg, wrap.nextSibling); }
+        if (msg) msg.hidden = !!shownCount;
+      }
+    }
+    tick(); setInterval(tick, 1000);
+  });
 })();

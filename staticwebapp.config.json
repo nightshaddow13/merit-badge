@@ -293,6 +293,26 @@
       "statusCode": 301
     },
     {
+      "route": "/api/schedule",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
+      "route": "/api/schedule/reset",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/counselor/tools/two-key-rite-display.html",
       "allowedRoles": [
         "counselor",
