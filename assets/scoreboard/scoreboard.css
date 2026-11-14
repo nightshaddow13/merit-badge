@@ -15,7 +15,7 @@
 .jump button{font:inherit;font-weight:700;cursor:pointer;padding:8px 16px;border:2px solid var(--hi);border-radius:999px;background:transparent;color:var(--hi)}
 .jump button:hover{background:var(--hi);color:var(--a)}
 @media (max-width:640px){.jump button{min-height:44px}}
-.tv-exit{display:none;position:fixed;right:16px;bottom:16px;z-index:60;font:700 16px/1 var(--body);padding:10px 16px;border-radius:999px;border:2px solid var(--line);background:var(--white);color:var(--ink);cursor:pointer;opacity:.35}
+.tv-exit{display:none;position:fixed;left:16px;bottom:16px;z-index:60;font:700 16px/1 var(--body);padding:10px 16px;border-radius:999px;border:2px solid var(--line);background:var(--white);color:var(--ink);cursor:pointer;opacity:.35}
 .tv-exit:hover,.tv-exit:focus-visible{opacity:1}
 html.tv-mode .tv-exit{display:block}
 
@@ -34,16 +34,16 @@ html.tv-mode .tv-exit{display:block}
 /* full screen mode: top contenders only, big */
 html.tv-mode body{min-height:100vh}
 html.tv-mode .top,html.tv-mode .skip,html.tv-mode .band,html.tv-mode .foot,html.tv-mode #detail,html.tv-mode .note,html.tv-mode #code{display:none!important}
-html.tv-mode main{display:flex;min-height:100vh;align-items:flex-end}
+html.tv-mode main{display:flex;min-height:100vh;align-items:flex-start}
 html.tv-mode .wrap{max-width:none;width:100%;padding:3vh 5vw}
-/* leave the top strip free so pop-ups never cover a score */
-html.tv-mode #boardWrap{padding-top:26vh}
+/* standings start at the top of the screen; pop-ups use the free strip along the bottom so they never cover a score */
+html.tv-mode #boardWrap{padding-bottom:24vh}
 html.tv-mode .stand{padding:3.2vh 0 4.2vh;gap:4px 3vw}
 html.tv-mode .place{font-size:clamp(48px,9vh,120px)}
 html.tv-mode .lname{font-size:clamp(48px,11vh,150px)}
 html.tv-mode .pts{font-size:clamp(56px,13vh,180px)}
 html.tv-mode .bar{height:1.2vh;bottom:1.2vh;border-radius:99px}
-html.tv-mode .toasts{width:min(620px,50vw);top:2.5vh;right:3vw;flex-wrap:wrap;width:auto;max-width:94vw}
+html.tv-mode .toasts{width:min(620px,50vw);top:auto;bottom:2.5vh;right:3vw;flex-direction:row;justify-content:flex-end;flex-wrap:wrap;width:auto;max-width:94vw}
 html.tv-mode .toast{max-width:46vw}
 html.tv-mode .toast{padding:2vh 1.6vw}
 html.tv-mode .toast-pts{font-size:clamp(48px,9vh,110px)}
