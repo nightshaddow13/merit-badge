@@ -15,7 +15,7 @@
     ["4b", "4 Threats", "Locked Vault", "Explained one type of malware, its harm and a defense."],
     ["4c", "4 Threats", "Public Wi-Fi", "Identified two risks of public Wi-Fi and how to reduce them."],
     ["4d", "4 Threats", "Masked Messengers", "Described spoofing and phishing and how to recognize them.", ""],
-    ["4e", "4 Threats", "Herald Dispatch", "Reported on a recent incident and what it cost the victim.", "breach"],
+    ["4e", "4 Threats", "Herald Dispatch", "Read about a recent incident and explained how it happened and what it cost.", ""],
     ["4f", "4 Threats", "Close the Gates", "Listed their own cyber attack surface.", "surface"],
     ["5a", "5 Defenses", "Defenses", "Described three technologies that defend a computer or network."],
     ["5b", "5 Defenses", "Updates", "Explained why updates matter and checked for the latest ones."],
@@ -24,8 +24,8 @@
     ["5c3", "5 Defenses", "Choose three tasks", "System security task #3."],
     ["6a", "6 Crypto", "Sealed Scroll", "Researched three uses of encryption and why each matters."],
     ["6b", "6 Crypto", "Is it encrypted?", "Showed how to tell if a website connection is encrypted."],
-    ["6c", "6 Crypto", "Press the Seal", "Made and compared SHA-256 checksums to show integrity checking.", "seal"],
-    ["7", "7 IoT", "Mystery Objects", "Described four connected devices: benefit, risk and protection.", "objects"],
+    ["6c", "6 Crypto", "Press the Seal", "Used a hashing tool to show integrity checking.", ""],
+    ["7", "7 IoT", "Mystery Objects", "Described four connected devices: benefit, risk and protection.", ""],
     ["8", "8 Event", "Cyber Threat Defender", "Took part in a counselor-approved competition."],
     ["9", "9 Jobs", "Homework and class share", "Identified three cybersecurity careers and researched one.", "career"]
   ].map(function (r) { return { code: r[0], group: r[1], when: r[2], text: r[3], auto: r[4] || "" }; });
