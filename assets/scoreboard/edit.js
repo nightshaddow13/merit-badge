@@ -47,8 +47,11 @@
       for (var i = 0; i < SLOTS; i++) {
         (function (i) {
           var cur = C.cellValue(data, a.id, i);
-          var input = el("input", { type: "number", inputmode: "numeric", step: "1", min: String(a.min), max: String(a.max),
-            "aria-label": a.name + ", " + B.entity.toLowerCase() + " " + (i + 1), value: cur === null ? "" : String(cur) });
+          // A phone's numeric keypad has no minus sign, so rows that allow negative scores keep the full number keyboard.
+          var attrs = { type: "number", step: "1", min: String(a.min), max: String(a.max),
+            "aria-label": a.name + ", " + B.entity.toLowerCase() + " " + (i + 1), value: cur === null ? "" : String(cur) };
+          if (a.min >= 0) attrs.inputmode = "numeric";
+          var input = el("input", attrs);
           if (a.auto) { input.readOnly = true; input.tabIndex = -1; input.title = "Filled in automatically from Field Logs"; tr.className = "auto-row"; }
           input.addEventListener("input", function () {
             if (a.auto) return;
