@@ -131,7 +131,7 @@ code.rc{font:16px Consolas,monospace;letter-spacing:.05em;word-break:break-all}
 </section>
 
 <div class="progress" aria-live="polite">
-  <div class="pl"><span id="pt">0 of 7 sections done</span><span id="status">Saved on this device</span></div>
+  <div class="pl"><span id="pt">0 worksheets done</span><span id="status">Saved on this device</span></div>
   <div class="bar"><i id="pb"></i></div>
   <div class="tabs" id="tabs" role="tablist" aria-label="Worksheets"></div>
 </div>
@@ -185,76 +185,27 @@ var SPEC=[
   ],
   },
  {k:"surface",n:2,title:"My Attack Surface",req:"4f",reqLabel:"Req 4f",
-  inst:"List the devices and accounts you use. Write types only, such as “phone”, “game console” or “email”. Never write passwords or private details.",
+  inst:"Create a list of everything that is part of your cyber attack surface: all the ways someone could try to get at your information or devices, such as online accounts, apps, devices and your home network. Write types only, such as “phone”, “game console” or “email”. Never write passwords or private details.",
   blocks:[
-   {t:"rows",k:"items",n:5,grow:12,label:"Device or account type",max:60,add:"Add another"},
-   {t:"risk"},
-   {f:"protect",label:"One way I will protect it",type:"area",opt:true},
+   {t:"rows",k:"items",n:5,grow:12,label:"Device, account or app type",max:60,add:"Add another"},
    {t:"label",text:"Class games: protect your gates"},
    {t:"tool",k:"forge"},
    {t:"tool",k:"rite"}
   ],
   },
- {k:"breach",n:3,title:"My Breach News Report",req:"4e",reqLabel:"Req 4e",
-  inst:"Find a news article about a real data breach or cyber attack and report on it.",
+ {k:"breach",n:3,title:"Breach News Report",req:"4e",reqLabel:"Req 4e",nowrite:true,
+  inst:"Nothing to write here. Read an article or news report about a recent cybersecurity incident (or watch a movie or read a book where cybersecurity plays a role). Be ready to tell your counselor how it happened and what the consequences were. Your counselor signs this off in class.",
+  blocks:[],
+  },
+ {k:"seal",n:4,title:"Press the Seal",req:"6c",reqLabel:"Req 6c",nowrite:true,
+  inst:"Nothing to write here. Use the Hash Lab to seal a message, change one character and watch the hash change. Then show your counselor and explain what this tells you about checking that a file has not been changed. Your counselor signs this off in class.",
   blocks:[
-   {f:"headline",label:"Headline of my article",type:"text",max:200},
-   {f:"url",label:"Link to the article",type:"text",max:300,opt:true},
-   {f:"what",label:"What happened?",type:"area"},
-   {f:"how",label:"How did it happen?",type:"area"},
-   {f:"cost",label:"What did it cost the victim?",type:"area"},
-   {f:"stop",label:"One thing that could have stopped it",type:"area",opt:true},
-   {f:"oneline",label:"My report in one sentence",type:"text",max:200,opt:true}
+   {t:"tool",k:"hash"}
   ],
   },
- {k:"seal",n:4,title:"Press the Seal",req:"6c",reqLabel:"Req 6c",
-  inst:"Hashing: seal a message, change one character, and watch the seal change.",
-  blocks:[
-   {f:"tool",label:"Which tool did you use?",type:"radio",opts:["Wax Seal Lab","PowerShell","Terminal","Other"],opt:true},
-   {f:"toolOther",label:"Other tool (name it)",type:"text",max:60,opt:true,showIf:function(d){return d.tool==="Other"}},
-   {t:"tool",k:"hash"},
-   {t:"label",text:"Step 1: seal a message"},
-   {f:"msgA",label:"A short, kind message (one sentence, no personal details)",type:"text",max:200},
-   {f:"hashA",label:"First 8 characters of its SHA-256 hash",type:"text",max:8,mono:true},
-   {t:"hashcheck",m:"msgA",h:"hashA"},
-   {t:"label",text:"Step 2: a lodge mate changes one character"},
-   {f:"msgB",label:"The changed message",type:"text",max:200},
-   {f:"hashB",label:"First 8 characters of the new hash",type:"text",max:8,mono:true},
-   {t:"hashcheck",m:"msgB",h:"hashB"},
-   {t:"label",text:"Step 3: compare"},
-   {f:"match",label:"Do the two hashes match?",type:"radio",opts:["Yes","No"]},
-   {f:"changed",label:"How many of the 8 characters changed? (0 to 8)",type:"num",opt:true},
-   {f:"whichChar",label:"Which character did your lodge mate change?",type:"text",max:20,opt:true},
-   {f:"told",label:"What did the checksum tell you?",type:"area",opt:true},
-   {f:"hashVsEnc",label:"One difference between hashing and encryption",type:"area",opt:true}
-  ],
-  },
- {k:"objects",n:5,title:"Enchanted Objects: mystery objects",req:"7",reqLabel:"Req 7",
-  inst:"Connected devices are handy and risky. Guess four mystery objects as a lodge, then fill in a row for each.",
-  blocks:[
-   {t:"label",text:"Round 1: the mystery objects"},
-   {f:"list",label:"The mystery objects our lodge solved",type:"area",opt:true},
-   {t:"label",text:"Fill in four devices: why it is useful, the risk and how to protect it"},
-   {t:"table"},
-   {t:"label",text:"Round 2: our lodge's own device (not on the slides)"},
-   {f:"share",label:"Our device is…",type:"text",max:200,opt:true},
-   {f:"shareProtect",label:"and protect it by…",type:"text",max:200,opt:true}
-  ],
-  },
- {k:"forgery",n:6,title:"Spot the Forgery",req:"",reqLabel:"Class activity",optional:true,nosign:true,
-  inst:"Optional. In class, four documents are checked by comparing hashes, and one is a forgery.",
-  blocks:[
-   {f:"fake",label:"Which document was forged?",type:"select",opts:["Document 1","Document 2","Document 3","Document 4"]},
-   {f:"how",label:"How I know",type:"area"}
-  ],
-  },
- {k:"reflect",n:7,title:"Class reflection",req:"",reqLabel:"Optional",optional:true,nosign:true,
-  inst:"Three quick prompts at the end of class. Not signed by the counselor.",
-  blocks:[
-   {f:"learned",label:"The best thing I learned",type:"area"},
-   {f:"lodge",label:"How my lodge worked together",type:"area"},
-   {f:"next",label:"One habit I will change tonight",type:"area"}
-  ],
+ {k:"objects",n:5,title:"Enchanted Objects",req:"7",reqLabel:"Req 7",nowrite:true,
+  inst:"Nothing to write here. Be ready to describe four electronic devices you meet that could connect to the internet: why connecting them is useful, what the risks are and how they could be protected. For example, a smart doorbell lets you see visitors from anywhere, but a hacked camera could share your video, so use a strong password, multi-factor authentication and updates. Your counselor signs this off in class.",
+  blocks:[],
   }
 ];
 function has(v){return window.WARDEN_RULES.has(v)}
@@ -381,7 +332,7 @@ function rowsBlock(sp,b){
       var id="f"+(++uid), w=el("div"); w.appendChild(el("label",{"for":id},b.label+" "+(i+1)));
       var inp=el("input",{id:id,type:"text",maxlength:String(b.max||80),autocomplete:"off"}); inp.value=v;
       var warn=el("div",{"class":"warnmsg",role:"status"}); warn.textContent=sensitive(v);
-      inp.addEventListener("input",function(){arr[i]=inp.value;warn.textContent=sensitive(inp.value);changed();if(b.k==="items")fillRisk(sp)});
+      inp.addEventListener("input",function(){arr[i]=inp.value;warn.textContent=sensitive(inp.value);changed();});
       w.appendChild(inp);w.appendChild(warn);list.appendChild(w);
     });
   }
@@ -389,40 +340,6 @@ function rowsBlock(sp,b){
   if(b.add){var ab=el("button",{type:"button","class":"btn ghost"},b.add);ab.style.marginTop="8px";ab.onclick=function(){if(arr.length<b.grow){arr.push("");draw();changed();var ins=list.querySelectorAll("input");ins[ins.length-1].focus()}};box.appendChild(ab)}
   box._draw=draw;
   return box;
-}
-function fillRisk(sp){
-  var sel=document.getElementById("riskSel"); if(!sel) return; var d=state.data.surface, cur=d.risk; sel.textContent="";
-  sel.appendChild(el("option",{value:""},"Choose one you listed…"));
-  d.items.filter(has).forEach(function(v){sel.appendChild(el("option",{value:v},v))});
-  if(cur&&d.items.filter(has).indexOf(cur)<0){ d.risk=""; } sel.value=d.risk;
-}
-function riskBlock(sp){
-  var d=state.data.surface, w=el("div");
-  w.appendChild(el("label",{"for":"riskSel"},"Pick one item from your list"));
-  var sel=el("select",{id:"riskSel"}); w.appendChild(sel); sel.onchange=function(){d.risk=sel.value;changed()};
-  w.appendChild(el("label",{"for":"riskTxt"},"A risk it faces (for example: someone guesses the login, or it is lost)"));
-  var t=el("textarea",{id:"riskTxt",maxlength:"1000"}); t.value=d.riskText||"";
-  var warn=el("div",{"class":"warnmsg",role:"status"}); warn.textContent=sensitive(t.value);
-  t.oninput=function(){d.riskText=t.value;warn.textContent=sensitive(t.value);changed()};
-  w.appendChild(t); w.appendChild(warn); setTimeout(function(){fillRisk(sp)},0); return w;
-}
-function tableBlock(sp){
-  var d=state.data.objects, wrap=el("div",{"class":"tablewrap"}), t=el("table",{"class":"t"});
-  t.innerHTML="<thead><tr><th scope=col>Device</th><th scope=col>Why it is useful</th><th scope=col>Risk</th><th scope=col>How I protect it</th></tr></thead>";
-  var tb=el("tbody"), ex=el("tr",{"class":"ex"});
-  ["Smart doorbell","See visitors from anywhere","Hacked camera, shared video","Strong password, MFA, updates"].forEach(function(v){var td=el("td"),i=el("input",{type:"text",value:v,readonly:"","aria-label":"Example: "+v});td.appendChild(i);ex.appendChild(td)});
-  tb.appendChild(ex);
-  d.rows.forEach(function(r,ri){
-    var tr=el("tr");
-    [["device","Device"],["why","Why it is useful"],["risk","Risk"],["protect","How I protect it"]].forEach(function(c){
-      var td=el("td"),i=el("input",{type:"text",maxlength:"120","aria-label":c[1]+", row "+(ri+1),autocomplete:"off"}); i.value=r[c[0]]||"";
-      i.oninput=function(){r[c[0]]=i.value;changed()}; td.appendChild(i);tr.appendChild(td);
-    });
-    tb.appendChild(tr);
-  });
-  t.appendChild(tb);wrap.appendChild(t);
-  var h=el("p",{"class":"hint"},"The first row is an example. Fill in your own rows below it (two complete rows are needed).");h.style.marginTop="6px";
-  var o=el("div");o.appendChild(h);o.appendChild(wrap);return o;
 }
 function chipsBlock(sp,b){
   var d=state.data[sp.k], box=el("div",{"class":"chips"});
@@ -436,22 +353,6 @@ function chipsBlock(sp,b){
   });
   return box;
 }
-function hashBlock(sp,b){
-  var w=el("div"),out=el("div",{"class":"check",role:"status"}), bt=el("button",{type:"button","class":"btn ghost"},"Check my hash");
-  bt.style.marginTop="6px";
-  bt.onclick=function(){
-    var d=state.data.seal, msg=d[b.m];
-    if(!has(msg)){out.className="check no";out.textContent="Type the message first.";return}
-    if(!(window.crypto&&crypto.subtle)){out.className="check no";out.textContent="This browser cannot check hashes. Use the Hash Lab.";return}
-    crypto.subtle.digest("SHA-256",new TextEncoder().encode(msg)).then(function(buf){
-      var hex=Array.prototype.map.call(new Uint8Array(buf),function(x){return("0"+x.toString(16)).slice(-2)}).join(""), first=hex.slice(0,8), typed=(d[b.h]||"").trim().toLowerCase();
-      if(!typed){out.className="check";out.textContent="The first 8 characters of the SHA-256 of that exact message are "+first+". Type them in the box above, then check again."}
-      else if(typed===first){out.className="check ok";out.textContent="Match. "+first+" is right for that exact message."}
-      else{out.className="check no";out.textContent="Not quite. For that exact message (spaces and capitals count) the first 8 characters are "+first+". Check for a typo in the message or the hash."}
-    });
-  };
-  w.appendChild(bt);w.appendChild(out);return w;
-}
 function signBox(sp){
   var box=el("div",{"class":"sign"}); box.dataset.sign=sp.k;
   paintSign(sp,box); return box;
@@ -463,12 +364,13 @@ function paintSign(sp,box){
   box.hidden=false;
   if(s){box.className="sign ok";box.appendChild(el("div",null,"✓ Signed off by "+s.by+" ("+new Date(s.at).toLocaleString()+")"));return}
   if(w==="granted"){box.className="sign ok";box.appendChild(el("div",null,"Your counselor waived this requirement. He will sign it off."));return}
+  if(sp.nowrite){box.className="sign wait";box.appendChild(el("div",null,"Nothing to write. Your counselor signs this off in class."));return}
   box.className="sign wait";
   box.appendChild(el("div",null,st===2?"Waiting for counselor. Show him this screen to get it signed off.":"Finish this section, then show your counselor."));
   if(w==="pending"){box.appendChild(el("div",{"class":"hint"},"Waive request sent. Your counselor will see it."));return}
   var row=el("div",{"class":"row"}),bt=el("button",{type:"button","class":"btn ghost"},"Ask my counselor to waive this");
   bt.onclick=function(){
-    bt.disabled=true; var why=sp.k==="seal"&&state.data.seal.tool===""?"no device":"blocked";
+    bt.disabled=true; var why="blocked";
     backup().then(function(){return fetch(API+"/waive",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.id,req:sp.req,reason:why})})})
      .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||"Could not send");return j})})
      .then(function(j){waive=j.waive||waive;refresh()}).catch(function(e){bt.disabled=false;alert(e.message||"Could not send. Try again when you have Wi-Fi.")});
@@ -506,9 +408,6 @@ function build(){
       else if(b.t==="tool"){body.appendChild(toolBlock(b.k,sp.k))}
       else if(b.t==="chips") body.appendChild(chipsBlock(sp,b));
       else if(b.t==="rows"){var rb=rowsBlock(sp,b);rb.dataset.rows=b.k;body.appendChild(rb)}
-      else if(b.t==="risk") body.appendChild(riskBlock(sp));
-      else if(b.t==="table") body.appendChild(tableBlock(sp));
-      else if(b.t==="hashcheck") body.appendChild(hashBlock(sp,b));
       else body.appendChild(field(sp,b));
     });
     body.appendChild(signBox(sp));
@@ -525,17 +424,21 @@ function refresh(){
   SPEC.forEach(function(sp){
     var st=secState(sp), det=document.querySelector('[data-sec="'+sp.k+'"]'); if(!det) return;
     det.dataset.st=st; var chip=det.querySelector(".chip");
-    chip.textContent=st===2?(waive[sp.req]==="granted"&&!sp.nosign?"Waived":"Done"):st===1?"In progress":"Not started";
-    chip.className="chip"+(st===2?" d":st===1?" p":"");
-    if(st===2) done++;
+    if(sp.nowrite){ var sg=signed[sp.req]; chip.textContent=sg?"Signed off":"In class"; chip.className="chip"+(sg?" d":""); }
+    else{
+      chip.textContent=st===2?(waive[sp.req]==="granted"&&!sp.nosign?"Waived":"Done"):st===1?"In progress":"Not started";
+      chip.className="chip"+(st===2?" d":st===1?" p":"");
+      if(st===2) done++;
+    }
     paintSign(sp,det.querySelector(".sign"));
     var tb=document.getElementById("t-"+sp.k);
-    if(tb){ var lb=lockedBy(sp.k); tb.className=(st===2?"d":st===1?"p":"")+(lb?" lk":""); tb.setAttribute("aria-disabled",lb?"true":"false");
+    if(tb){ var lb=lockedBy(sp.k); tb.className=(sp.nowrite?(signed[sp.req]?"d":""):(st===2?"d":st===1?"p":""))+(lb?" lk":""); tb.setAttribute("aria-disabled",lb?"true":"false");
       tb.title=lb?"Locked until "+lb.n+". "+lb.title.split(":")[0].replace(/^My /,"")+" is done or waived":""; }
   });
   renderReqs();
-  $("pt").textContent=done+" of "+SPEC.length+" sections done";
-  $("pb").style.width=Math.round(done/SPEC.length*100)+"%";
+  var writing=SPEC.filter(function(sp){return !sp.nowrite}).length;
+  $("pt").textContent=done+" of "+writing+" worksheets done (the rest are signed off in class)";
+  $("pb").style.width=Math.round(done/writing*100)+"%";
 }
 var TABS=[{k:"req",label:"My requirements"}].concat(SPEC.map(function(sp){return {k:sp.k,label:sp.n+". "+sp.title.split(":")[0].replace(/^My /,"")}})).concat([{k:"board",label:"Scoreboard"}]);
 var WORKSHEETS=TABS.filter(function(t){return t.k!=="board"});
@@ -543,12 +446,12 @@ var curTab="";
 function startTab(){
   var h=(location.hash||"").replace("#s-",""); if(TABS.some(function(t){return t.k===h})) return h;
   try{var v=localStorage.getItem("warden_tab"); if(v&&TABS.some(function(t){return t.k===v})) return v;}catch(e){}
-  var f=SPEC.findIndex(function(sp){return secState(sp)<2}); return f<0?"req":SPEC[f].k;
+  var f=SPEC.findIndex(function(sp){return !sp.nowrite&&secState(sp)<2}); return f<0?"req":SPEC[f].k;
 }
 // Worksheets open in order: a tab stays locked until every earlier worksheet is done or waived by the counselor.
 function lockedBy(k){
   var i=SPEC.findIndex(function(sp){return sp.k===k}); if(i<0) return null;
-  for(var j=0;j<i;j++){ if(!SPEC[j].optional&&secState(SPEC[j])<2) return SPEC[j]; } return null;
+  for(var j=0;j<i;j++){ if(!SPEC[j].optional&&!SPEC[j].nowrite&&secState(SPEC[j])<2) return SPEC[j]; } return null;
 }
 function setTab(k,scroll){
   if(!TABS.some(function(t){return t.k===k})) k="req";
@@ -575,7 +478,7 @@ window.addEventListener("hashchange",function(){var h=(location.hash||"").replac
 
 // ---- Tools tab: each tool opens in a frame with ?embed=1 ----
 var TOOLS={
-  hash:{name:"Hash Lab",note:"Turn text into a hash and see one changed letter change everything. Use it for Step 1 and Step 2 below.",url:"/cybersecurity/hash-lab/"},
+  hash:{name:"Hash Lab",note:"Turn text into a hash and see one changed letter change everything. Try a short message, change one letter, and compare.",url:"/cybersecurity/hash-lab/"},
   forge:{name:"Passphrase Forge",note:"Score a practice passphrase. When your counselor starts the game, your lodge is selected for you and you can submit. Never type a real password.",url:"/cybersecurity/passphrase-forge/"},
   rite:{name:"Two-Key Rite",note:"Type the 6 digits from your lodge's authenticator. Your lodge is selected for you.",url:"/cybersecurity/two-key-rite/"}
 };
@@ -671,7 +574,7 @@ function printLog(){
       else if(b.t==="risk") add("Risk I picked",(d.risk||"")+(d.riskText?": "+d.riskText:""));
       else if(b.t==="table") add("Connected devices",d.rows.filter(function(r){return has(r.device)}).map(function(r){return r.device+" | "+r.why+" | "+r.risk+" | "+r.protect}).join("\n"));
     });
-    s.appendChild(dl);
+    s.appendChild(dl); if(sp.nowrite) s.appendChild(el("p",null,"Nothing to write. Discussed with the counselor in class."));
     var sg=signed[sp.req];if(!sp.nosign) s.appendChild(el("p",null,sg?"Signed off by "+sg.by+" on "+new Date(sg.at).toLocaleDateString():"Counselor sign-off: ____________________"));
     pv.appendChild(s);
   });

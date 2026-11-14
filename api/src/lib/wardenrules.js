@@ -1,14 +1,18 @@
 // Shared by the Warden Log page, the counselor dashboard and the API: when is a worksheet section started or finished?
+// Only the career worksheet (req 9) and the attack surface list (req 4f) ask a Scout to write anything.
 (function (g) {
   function has(v) { return typeof v === "string" && v.trim().length > 0; }
+  function none() { return false; }
   var R = {
     career: { need: function(d){return d.careers.every(has)&&["chosen","education","certs","experience","expenses","prospects","salary","advancement"].every(function(k){return has(d[k])})}, any: function(d){return d.careers.some(has)||["chosen","daily","why","education","certs","experience","expenses","prospects","salary","advancement","sources","learned"].some(function(k){return has(d[k])})} },
-    surface: { need: function(d){return d.items.some(has)}, any: function(d){return d.items.some(has)||has(d.risk)||has(d.riskText)||has(d.protect)} },
-    breach: { need: function(d){return ["headline","what","how","cost"].every(function(k){return has(d[k])})}, any: function(d){return ["headline","url","what","how","cost","stop","oneline"].some(function(k){return has(d[k])})} },
-    seal: { need: function(d){return ["msgA","hashA","msgB","hashB","match"].every(function(k){return has(d[k])})}, any: function(d){return ["tool","msgA","hashA","msgB","hashB","match","changed","whichChar","told","hashVsEnc"].some(function(k){return has(d[k])})} },
-    objects: { need: function(d){return d.rows.filter(function(r){return has(r.device)&&has(r.why)&&has(r.risk)&&has(r.protect)}).length>=4}, any: function(d){return has(d.list)||has(d.share)||has(d.shareProtect)||d.rows.some(function(r){return has(r.device)||has(r.why)||has(r.risk)||has(r.protect)})} },
-    forgery: { need: function(d){return has(d.fake)&&has(d.how)}, any: function(d){return has(d.fake)||has(d.how)} },
-    reflect: { need: function(d){return has(d.learned)&&has(d.lodge)&&has(d.next)}, any: function(d){return has(d.learned)||has(d.lodge)||has(d.next)} },
+    surface: { need: function(d){return d.items.some(has)}, any: function(d){return d.items.some(has)} },
+    // Nothing here has to be written: the requirement is discussed or demonstrated and the counselor signs it off.
+    // These stay in the list (with no work to check) so older saved logs and the class grid keep working.
+    breach: { need: none, any: none },
+    seal: { need: none, any: none },
+    objects: { need: none, any: none },
+    forgery: { need: none, any: none },
+    reflect: { need: none, any: none },
   };
   // 0 not started, 1 in progress, 2 done, for every section.
   function states(data) { var o = {}; Object.keys(R).forEach(function (k) { var d = (data || {})[k]; o[k] = d ? (R[k].need(d) ? 2 : R[k].any(d) ? 1 : 0) : 0; }); return o; }
