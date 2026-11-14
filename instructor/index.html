@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en" class="co">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instructor tools: Merit Badge Field Kit</title>
+<meta name="description" content="One place for instructors: Warden Logs, Field Logs, live games, scorecards and the class schedule.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="../index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="../index.html">Home</a><a href="../cybersecurity/">Cybersecurity</a><a href="../ai/">Artificial Intelligence</a><a href="../instructor/" aria-current="page">Instructors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">For instructors</p>
+  <h1>Instructor tools</h1>
+  <p class="lead">Everything you run during class, in one place: Warden Logs and Field Logs, the live games, the scorecards and the class schedule.</p>
+  <p class="jump"><a href="/counselor/">Counselor page: print packs, answer keys, audio</a></p>
+</div></section>
+<div class="wrap">
+  <div class="igrid">
+    <section class="icard cy" aria-labelledby="h-warden">
+      <h2 id="h-warden">Warden Logs <span>Cybersecurity</span></h2>
+      <p>Class grid to sign off requirements, read each Warden's answers, handle waive requests, edit a log, and export everything.</p>
+      <a class="btn" href="/cybersecurity/scoreboard/logs.html">Open the Warden Log dashboard</a>
+    </section>
+    <section class="icard ai" aria-labelledby="h-field">
+      <h2 id="h-field">Field Logs <span>Artificial Intelligence</span></h2>
+      <p>Every Scout's Field Log: sign off requirements, waive level pages, give back recovery codes, and export everything.</p>
+      <a class="btn" href="/ai/scoreboard/logs.html">Open the Field Log dashboard</a>
+      <a class="btn ghost" href="/ai/scoreboard/roster.html">Field Log roster <small>(scorekeeper)</small></a>
+    </section>
+    <section class="icard" aria-labelledby="h-games">
+      <h2 id="h-games">Live games</h2>
+      <p>Start a game and it takes over the public scoreboard and shows a Join banner in the Scouts' logs until you end it.</p>
+      <a class="btn" href="/cybersecurity/scoreboard/games.html">Cybersecurity: Passphrase Forge and Two-Key Rite</a>
+      <a class="btn" href="/ai/scoreboard/wwyd.html">A.I.R.A.: What Would You Do?</a>
+      <a class="btn" href="/ai/scoreboard/duel.html">A.I.R.A.: Prompt Duel</a>
+      <a class="btn ghost" href="/counselor/tools/two-key-rite-display.html">Two-Key Rite projector display <small>(counselor)</small></a>
+    </section>
+    <section class="icard" aria-labelledby="h-score">
+      <h2 id="h-score">Scorecards</h2>
+      <p>Enter points after each activity. The public scoreboards update within seconds.</p>
+      <a class="btn" href="/cybersecurity/scoreboard/edit.html">Cybersecurity: enter lodge points <small>(scorekeeper)</small></a>
+      <a class="btn" href="/ai/scoreboard/edit.html">A.I.R.A.: enter squad XP <small>(scorekeeper)</small></a>
+      <a class="btn ghost" href="/cybersecurity/scoreboard/" target="_blank" rel="noopener">Project the Cybersecurity scoreboard</a>
+      <a class="btn ghost" href="/ai/scoreboard/" target="_blank" rel="noopener">Project the A.I.R.A. scoreboard</a>
+    </section>
+    <section class="icard" aria-labelledby="h-sched">
+      <h2 id="h-sched">Class setup</h2>
+      <p>Choose which merit badges are active, when each class takes place (the countdown timers) and when each badge is open to Scouts.</p>
+      <a class="btn" href="/counselor/schedule.html">Class schedule <small>(counselor)</small></a>
+    </section>
+  </div>
+  <p class="muted small">Each tool asks for its own role, so a link marked (scorekeeper) or (counselor) opens only for someone with that role. Scouts never see this page.</p>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<style>
+.igrid{display:grid;gap:16px;margin:12px 0}
+@media (min-width:1000px){main .wrap{max-width:min(1500px,calc(100vw - 48px))}.igrid{grid-template-columns:1fr 1fr}}
+.icard{border:2px solid var(--ink);border-radius:12px;padding:16px;background:var(--white);display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.icard h2{margin:0;font-size:clamp(22px,3vw,30px)}.icard h2 span{display:block;font-size:15px;font-weight:700;color:var(--mut);letter-spacing:0;text-transform:none;font-family:inherit}
+.icard p{margin:0}.icard .btn{min-height:44px;display:inline-flex;align-items:center;white-space:normal;text-align:left;max-width:100%}.icard small{font-weight:400;margin-left:6px}
+.muted{color:var(--mut)}
+</style>
+<script src="../assets/app.js" defer></script>
+</body>
+</html>
