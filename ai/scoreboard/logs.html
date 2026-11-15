@@ -110,7 +110,7 @@
   var b=E("tbody");
   logs.forEach(function(l){var tr=E("tr","lrow");tr.tabIndex=0;var s=l.summary||{};
    var lvl=s.won?"MIRAGE shut down":"Level "+(s.unlocked||1);
-   [l.name||"(no name)",l.squad||"-",lvl,s.vault==null?"-":s.vault+" / 10",when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
+   [(l.name||"(no name)")+(l.legacy?" (old log, read-only)":""),l.squad||"-",lvl,s.vault==null?"-":s.vault+" / 10",when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
    var td=E("td");var p=pending(l);if(p.length)td.appendChild(E("span","pill warn","Override: level "+p.join(", ")));tr.appendChild(td);
    for(var q=1;q<=8;q++)(function(q){var c=E("td"),b=E("button","cell"),sg=reqSigned(l,q),dn=reqDone(l,q);b.type="button";
     if(sg){b.className="cell s";b.textContent="\u2713";b.title="Signed by "+l.signed[q].by+". Click to undo."}else if(dn){b.className="cell d";b.textContent="\u25CF";b.title="Finished. Click to sign off."}else{b.className="cell n";b.textContent="\u2013";b.title="Not finished. Click to sign off anyway."}
@@ -190,7 +190,7 @@ function ok(v){return String(v||"").trim().length>=3}
  function renderDetail(j){
   var m=j.meta,s=m.summary||{},ov=j.overrides||{};
   detail.hidden=false;detail.textContent="";
-  detail.appendChild(E("h2",null,(m.name||"(no name)")+(m.squad?" · "+m.squad:"")));
+  detail.appendChild(E("h2",null,(m.name||"(no name)")+(m.squad?" · "+m.squad:"")+(m.legacy?" · old log, read-only":"")));
   var mid=((j.state||{}).memberId||"").replace(/\D/g,"");if(mid)detail.appendChild(E("p","small","Scouting America member ID: "+mid));
   detail.appendChild(E("p","small","Recovery code (give it to the Scout if they lost it): "+m.id.replace(/(.{4})/g,"$1-").replace(/-$/,"")));
   detail.appendChild(E("p",null,"Last saved "+when(m.updated)+". "+(s.won?"MIRAGE shut down.":"Unlocked up to level "+(s.unlocked||1)+" of 8.")+" Vocab Vault best: "+(s.vault==null?"not taken":s.vault+" / 10")+". AI or Not best: "+(s.aiOrNot==null?"not played":s.aiOrNot+" / 10")+"."));

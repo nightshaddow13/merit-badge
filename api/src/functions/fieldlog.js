@@ -3,6 +3,7 @@
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
 const { createFieldLog } = require("../lib/fieldlog");
+const { rosterFor } = require("../lib/rosterfor");
 const { hasRole } = require("../lib/scores");
 const { tableStore, bigStore } = require("../lib/tablestore");
 
@@ -34,7 +35,7 @@ app.http("fieldlog", {
     const conn = process.env.STORAGE_CONNECTION_STRING;
     if (!conn) return { status: 503, headers: HEADERS, jsonBody: { error: "Storage is not set up yet." } };
     const client = TableClient.fromConnectionString(conn, TABLE);
-    const fl = createFieldLog({ logs: bigStore(client, "fieldlog"), ovr: tableStore(client, "fieldlog-ovr") });
+    const fl = createFieldLog({ logs: bigStore(client, "fieldlog"), ovr: tableStore(client, "fieldlog-ovr") }, rosterFor(client, "ai"));
     const action = request.params.action || "";
     const deny = { status: 403, headers: HEADERS, jsonBody: { error: "Only counselors and scorekeepers can do that." } };
     try {

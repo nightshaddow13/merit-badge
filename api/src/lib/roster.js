@@ -142,6 +142,11 @@ function createRoster(stores) {
   // body: { password }. Returns { id, name, slot, team } for a correct password. Wrong guesses are counted per minute
   // (for the whole badge) so the short password cannot be guessed by a script.
   async function login(body) {
+    // A device that already signed in can refresh who it is (name, team) by id; the id is as private as the log it opens.
+    if (body && typeof body.id === "string" && /^[a-f0-9]{16,32}$/.test(body.id)) {
+      const me = await find(body.id);
+      return me ? { status: 200, body: me } : { status: 404, body: { error: "That sign-in is no longer valid. Type your password again." } };
+    }
     const pw = normPw(body && body.password);
     if (pw.length < 4 || pw.length > 12) return { status: 400, body: { error: "Type the password your instructor gave you." } };
     const bucket = "m" + Math.floor(Date.now() / 60000);
@@ -150,7 +155,7 @@ function createRoster(stores) {
     const s = (await all()).find((x) => x.password === pw);
     if (!s) { t.n += 1; await tries.put(bucket, t); return { status: 401, body: { error: "That password is not right. Check it with your instructor." } }; }
     const data = await board.load();
-    return { status: 200, body: { id: s.id, name: s.name, slot: s.slot, team: (s.slot === null ? "" : String((data.lodges || [])[s.slot] || "")) } };
+    return { status: 200, body: { id: s.id, name: s.name, slot: s.slot, scoutId: s.scoutId || "", team: (s.slot === null ? "" : String((data.lodges || [])[s.slot] || "")) } };
   }
 
   // For the log code: who is this student id (or null), and what is their team called?
@@ -159,10 +164,17 @@ function createRoster(stores) {
     const s = await students.get("s-" + id);
     if (!s) return null;
     const data = await board.load();
-    return { id: s.id, name: s.name, slot: s.slot, team: (s.slot === null ? "" : String((data.lodges || [])[s.slot] || "")) };
+    return { id: s.id, name: s.name, slot: s.slot, scoutId: s.scoutId || "", team: (s.slot === null ? "" : String((data.lodges || [])[s.slot] || "")) };
   }
 
-  return { list, addTeam, renameTeam, removeTeam, addStudents, updateStudent, removeStudent, login, find, all };
+  // For dashboards: every student with their current team name (no passwords).
+  async function directory() {
+    const data = await board.load(), out = new Map();
+    for (const s of await all()) out.set(s.id, { id: s.id, name: s.name, slot: s.slot, scoutId: s.scoutId || "", team: (s.slot === null ? "" : String((data.lodges || [])[s.slot] || "")) });
+    return out;
+  }
+
+  return { list, addTeam, renameTeam, removeTeam, addStudents, updateStudent, removeStudent, login, find, all, directory };
 }
 
 module.exports = { createRoster, MAX_STUDENTS, PW_LEN, ALPHABET };

@@ -51,8 +51,8 @@ const mk = (id) => { const board = boardMem(id || "ai"); return { r: createRoste
   { const m = mk("ai"); await m.r.addTeam({ name: "A" });
     const added = (await m.r.addStudents({ names: ["Una S", "Bo T"] })).body.added;
     assert.ok(added.every((x) => x.slot === null));
-    assert.deepStrictEqual(await m.r.find(added[0].id), { id: added[0].id, name: "Una S", slot: null, team: "" });
-    assert.deepStrictEqual((await m.r.login({ password: added[0].password })).body, { id: added[0].id, name: "Una S", slot: null, team: "" });
+    assert.deepStrictEqual(await m.r.find(added[0].id), { id: added[0].id, name: "Una S", slot: null, scoutId: "", team: "" });
+    assert.deepStrictEqual((await m.r.login({ password: added[0].password })).body, { id: added[0].id, name: "Una S", slot: null, scoutId: "", team: "" });
     await m.r.updateStudent({ id: added[1].id, slot: 0 });
     assert.deepStrictEqual((await m.r.list()).body.students.map((x) => [x.name, x.slot]), [["Una S", null], ["Bo T", 0]], "unassigned students are listed first");
     assert.strictEqual((await m.r.updateStudent({ id: added[1].id, slot: null })).body.student.slot, null, "can go back to unassigned");
@@ -63,7 +63,7 @@ const mk = (id) => { const board = boardMem(id || "ai"); return { r: createRoste
   const sam = a.body.added[0];
   let l = await r.login({ password: " " + sam.password.toUpperCase().slice(0, 3) + "-" + sam.password.slice(3) + " " });
   assert.strictEqual(l.status, 200);
-  assert.deepStrictEqual(l.body, { id: sam.id, name: "Sam K", slot: 0, team: "Falcons" });
+  assert.deepStrictEqual(l.body, { id: sam.id, name: "Sam K", slot: 0, scoutId: "", team: "Falcons" });
   assert.strictEqual((await r.login({ password: "zzzzzz" })).status, 401);
   assert.strictEqual((await r.login({ password: "ab" })).status, 400);
   assert.strictEqual((await r.login({})).status, 400);
@@ -90,7 +90,7 @@ const mk = (id) => { const board = boardMem(id || "ai"); return { r: createRoste
   assert.strictEqual((await fresh.r.login({ password: u.body.student.password })).body.team, "B");
   // find() is what the log code uses; a team rename shows up straight away
   await fresh.r.renameTeam({ slot: 1, name: "Bees" });
-  assert.deepStrictEqual(await fresh.r.find(s1.id), { id: s1.id, name: "Patricia Q", slot: 1, team: "Bees" });
+  assert.deepStrictEqual(await fresh.r.find(s1.id), { id: s1.id, name: "Patricia Q", slot: 1, scoutId: "", team: "Bees" });
   assert.strictEqual(await fresh.r.find("nope"), null);
 
   // remove a team: needs confirm, must be empty, clears that slot's points (including automatic rows) and the name

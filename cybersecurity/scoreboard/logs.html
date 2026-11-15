@@ -127,7 +127,7 @@
   rows.forEach(function(l){
    var tr=E("tr");
    if(view==="grid"){
-    var th=E("th");var a=E("button","btn ghost",l.name||"(no name)");a.type="button";a.onclick=function(){openLog(l.id)};th.appendChild(a);tr.appendChild(th);tr.appendChild(E("td",null,l.lodge||"-"));
+    var th=E("th");var a=E("button","btn ghost",(l.name||"(no name)")+(l.legacy?" (old log, read-only)":""));a.type="button";a.onclick=function(){openLog(l.id)};th.appendChild(a);tr.appendChild(th);tr.appendChild(E("td",null,l.lodge||"-"));
     REQS.forEach(function(q){
      var td=E("td"),r=q[0],sg=l.signed&&l.signed[r],wv=l.waive&&l.waive[r],c=E("button","cell");c.type="button";
      if(sg){c.className="cell s";c.textContent="✓";c.title="Signed by "+sg.by+" "+when(sg.at)+". Click to undo.";c.setAttribute("aria-label",l.name+" req "+q[1]+" signed. Undo")}
@@ -141,7 +141,7 @@
     var tdr=E("td"),sr=E("button","btn ghost","Sign finished");sr.type="button";sr.disabled=!needs(l);sr.onclick=function(){sr.disabled=true;var p=REQS.filter(function(q){return isDone(l,q[0])&&!(l.signed&&l.signed[q[0]])}).reduce(function(pr,q){return pr.then(function(){return sign(l,q[0],true)})},Promise.resolve());p.then(function(){say("Signed everything finished for "+l.name+".");paint()}).catch(function(e){say(e.message);paint()})};tdr.appendChild(sr);tr.appendChild(tdr);
    } else {
     tr.className="lrow";tr.tabIndex=0;var c=counts(l);
-    [l.name||"(no name)",l.lodge||"-",code(l),c.done+" / 7",c.signed+" / "+REQS.length,when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
+    [(l.name||"(no name)")+(l.legacy?" (old log, read-only)":""),l.lodge||"-",code(l),c.done+" / 7",c.signed+" / "+REQS.length,when(l.updated)].forEach(function(x){tr.appendChild(E("td",null,x))});
     var td=E("td");if(needs(l))td.appendChild(E("span","pill warn","Needs sign-off"));Object.keys(l.waive||{}).forEach(function(k){if(l.waive[k].status==="pending")td.appendChild(E("span","pill warn","Waive: "+k))});tr.appendChild(td);
     tr.addEventListener("click",function(){openLog(l.id)});tr.addEventListener("keydown",function(e){if(e.key==="Enter")openLog(l.id)});
    }
@@ -173,7 +173,7 @@
  }
  function renderDetail(j){
   detail.hidden=false;detail.textContent="";var m=j.meta;
-  detail.appendChild(E("h2",null,(m.name||"(no name)")+" · "+(m.lodge||"no lodge")));detail.appendChild(E("p","muted","Last updated "+when(m.updated)+(m.memberId?" \u00b7 Scouting America member ID: "+m.memberId:"")));
+  detail.appendChild(E("h2",null,(m.name||"(no name)")+" · "+(m.lodge||"no lodge")+(m.legacy?" · old log, read-only":"")));detail.appendChild(E("p","muted","Last updated "+when(m.updated)+(m.memberId?" \u00b7 Scouting America member ID: "+m.memberId:"")));
   var rc=E("p","muted","Recovery code: ");var cd=E("code",null,code(m));cd.style.cssText="font-size:1.05em;letter-spacing:.04em;user-select:all;word-break:break-all";rc.appendChild(cd);rc.appendChild(document.createTextNode(" "));rc.appendChild(copyBtn(code(m),"Copy code"));detail.appendChild(rc);
   var rq=E("div");rq.id="reqs";detail.appendChild(rq);paintReqs();
   var bar=E("div","savebar");

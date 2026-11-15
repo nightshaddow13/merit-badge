@@ -34,9 +34,21 @@ function createAiraLog(store) {
   }
 
   // Squad average of every joined Scout, rounded to whole XP. Squads with no Scouts stay empty.
-  async function recompute(sb) {
+  // With a roster (`rs`), the team average covers every student on the team, zeros included for those who have not reported yet.
+  async function scoutsFor(rs) {
+    const saved = new Map((await all()).map((s) => [s.id, s]));
+    if (!rs) return [...saved.values()];
+    const out = [];
+    for (const d of (await rs.directory()).values()) {
+      if (d.slot === null) continue;
+      const s = saved.get(d.id);
+      out.push({ id: d.id, slot: d.slot, name: d.name, vault: s ? s.vault : 0, terms: s ? s.terms : 0, levels: s ? s.levels : 0 });
+    }
+    return out;
+  }
+  async function recompute(sb, rs) {
     const data = await sb.load();
-    const scouts = await all();
+    const scouts = await scoutsFor(rs);
     for (const metric of Object.keys(ROW)) {
       const row = Array(SLOTS).fill(null);
       for (let slot = 0; slot < SLOTS; slot++) {
@@ -52,12 +64,16 @@ function createAiraLog(store) {
   }
 
   // Public. body: { id, slot (1-6), name, vault (0-10), terms (0-16), levels (0-8) }
-  async function submit(body, sb) {
+  async function submit(body, sb, rs) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return { status: 400, body: { error: "Send a JSON object." } };
     if (typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };
-    if (!isInt(body.slot, 1, SLOTS)) return { status: 400, body: { error: "Choose your squad." } };
-    const name = typeof body.name === "string" ? body.name.trim().replace(/\s+/g, " ") : "";
-    if (!NAME_RE.test(name)) return { status: 400, body: { error: "Use your first name and last initial only, letters only (like Sam K)." } };
+    // With a roster, only a logged-in student can report, and name and team come from the roster.
+    const who = rs ? await rs.find(body.id) : null;
+    if (rs && !who) return { status: 403, body: { error: "Log in with your password first.", login: true } };
+    if (who && who.slot === null) return { status: 409, body: { error: "Your instructor has not put you on a team yet. Ask them, then try again." } };
+    if (!who && !isInt(body.slot, 1, SLOTS)) return { status: 400, body: { error: "Choose your squad." } };
+    const name = who ? who.name : typeof body.name === "string" ? body.name.trim().replace(/\s+/g, " ") : "";
+    if (!who && !NAME_RE.test(name)) return { status: 400, body: { error: "Use your first name and last initial only, letters only (like Sam K)." } };
     const vault = body.vault === null || body.vault === undefined ? 0 : body.vault;
     const terms = body.terms === null || body.terms === undefined ? 0 : body.terms;
     const levels = body.levels === null || body.levels === undefined ? 0 : body.levels;
@@ -66,12 +82,12 @@ function createAiraLog(store) {
     }
 
     const board = await sb.load();
-    const slot = body.slot - 1;
+    const slot = who ? who.slot : body.slot - 1;
     if (!board.lodges[slot]) return { status: 409, body: { error: "That squad is not set up yet. Ask your counselor." } };
 
     const key = "scout-" + body.id;
     const old = await store.get(key);
-    if (!old) {
+    if (!old && !rs) {
       const scouts = await all();
       if (scouts.length >= MAX_TOTAL) return { status: 409, body: { error: "The class roster is full. Ask your counselor." } };
       if (scouts.filter((s) => s.slot === slot).length >= MAX_PER_SQUAD) return { status: 409, body: { error: "That squad already has " + MAX_PER_SQUAD + " agents. Ask your counselor." } };
@@ -88,26 +104,26 @@ function createAiraLog(store) {
       at: new Date().toISOString(),
     };
     await store.put(key, rec);
-    await recompute(sb);
-    const members = (await all()).filter((s) => s.slot === slot).length;
+    await recompute(sb, rs);
+    const members = (await scoutsFor(rs)).filter((s) => s.slot === slot).length;
     return { status: 200, body: { saved: { vault: rec.vault, terms: rec.terms, levels: rec.levels }, members } };
   }
 
   // Scorekeepers only (the caller checks the role).
-  async function roster() {
-    const scouts = (await all()).sort((a, b) => a.slot - b.slot || a.name.localeCompare(b.name));
+  async function roster(rs) {
+    const scouts = (await scoutsFor(rs)).sort((a, b) => a.slot - b.slot || a.name.localeCompare(b.name));
     return { status: 200, body: { scouts: scouts.map((s) => ({ id: s.id, slot: s.slot + 1, name: s.name, vault: s.vault, terms: s.terms, levels: s.levels })), per: PER, caps: CAPS, maxPerSquad: MAX_PER_SQUAD } };
   }
-  async function remove(body, sb) {
+  async function remove(body, sb, rs) {
     if (!body || typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };
     await store.remove("scout-" + body.id);
-    await recompute(sb);
-    return roster();
+    await recompute(sb, rs);
+    return roster(rs);
   }
-  async function reset(sb) {
+  async function reset(sb, rs) {
     for (const r of await store.list()) if (/^scout-/.test(r.rowKey)) await store.remove(r.rowKey);
-    await recompute(sb);
-    return roster();
+    await recompute(sb, rs);
+    return roster(rs);
   }
 
   return { submit, roster, remove, reset, recompute };
