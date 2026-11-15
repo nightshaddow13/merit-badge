@@ -116,11 +116,11 @@ function createWardenLog(stores, roster) {
   // Staff: what every Warden wrote in one section, for the instructor's live view. body: [{ id, name, lodge, data }]
   async function answers(section) {
     if (!SECTIONS.includes(section)) return { status: 400, body: { error: "Unknown section." } };
-    const out = [];
+    const out = [], dir = roster ? await roster.directory() : null;
     for (const r of await logs.list()) {
-      const m = r.data.meta, rec = await logs.get(r.rowKey);
+      const m = withWho(r.data.meta, dir), rec = await logs.get(r.rowKey);
       const d = rec && rec.state && typeof rec.state === "object" ? rec.state[section] : null;
-      out.push({ id: m.id, name: m.name || "", lodge: m.lodge || "", data: d && typeof d === "object" ? d : {} });
+      out.push({ id: m.id, name: m.name || "", lodge: m.lodge || "", legacy: !!m.legacy, data: d && typeof d === "object" ? d : {} });
     }
     return { status: 200, body: { section, answers: out } };
   }

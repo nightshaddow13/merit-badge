@@ -35,7 +35,7 @@
       <div id="teams"></div>
       <form id="addTeamForm" class="row"><div><label for="newTeam">New team name</label><input id="newTeam" type="text" maxlength="30" autocomplete="off"></div><button id="addTeam" class="btn" type="submit">Create team</button></form>
       <p id="teamHint" class="hint"></p>
-      <p class="hint">Teams appear on the public scoreboard as soon as they are created. Removing a team clears its points.</p>
+      <p class="hint">Teams appear on the public scoreboard as soon as they are created. Removing a team clears its points and moves its students to &ldquo;Not on a team&rdquo;.</p>
     </section>
     <section class="scard"><h2>Add students</h2>
       <form id="addForm">
@@ -72,9 +72,11 @@ code.pw{font-size:1.15em;letter-spacing:.08em;font-weight:700;user-select:all}
 .scard,.stgrid>*{min-width:0}
 #students{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .grid td input,.grid td select{width:100%;min-width:120px}
+@media (max-width:700px){.grid{min-width:0!important}.grid td{text-align:left!important}.grid,.grid tbody,.grid tr,.grid td{display:block;width:100%;box-sizing:border-box}.grid thead{display:none}.grid tr{border:1px solid var(--line);border-radius:10px;margin:0 0 10px;padding:6px 10px}.grid td{border:0;padding:4px 0}.grid td[data-label]::before{content:attr(data-label);display:block;font-size:13px;font-weight:700;color:var(--mut)}.grid td input,.grid td select{min-width:0}.grid td.acts{white-space:normal;display:flex;gap:8px;flex-wrap:wrap}.grid tr.unassigned{background:rgba(255,224,138,.35)}}
 #pv{display:none}
 @media print{body>*:not(#pv){display:none!important}#pv{display:block;color:#000;font:12pt/1.4 Georgia,serif}#pv h1{font-size:20pt}#pv h2{font-size:14pt;border-bottom:1px solid #000;margin:14pt 0 6pt}#pv section{break-inside:avoid}#pv .card{display:inline-flex;flex-direction:column;gap:4pt;border:1px dashed #000;padding:8pt 12pt;margin:0 8pt 8pt 0;min-width:150pt}#pv .card b{font:700 18pt ui-monospace,monospace;letter-spacing:.1em}}
 </style>
+<script src="/assets/csvsafe.js"></script>
 <script src="/assets/students.js"></script>
 <script src="/assets/app.js" defer></script>
 </body>

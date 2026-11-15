@@ -48,9 +48,9 @@
       save.onclick = function () { save.disabled = true; api("/team-rename", { slot: t.slot, name: inp.value }).then(function () { say("Renamed to " + inp.value.trim() + ".", "ok"); return load(); }).catch(function (e) { say(e.message, "err"); save.disabled = false; }); };
       var rm = E("button", "btn ghost", "Remove"); rm.type = "button";
       rm.onclick = function () {
-        if (n) { say("Move or remove the " + n + " student" + (n === 1 ? "" : "s") + " on " + t.name + " first.", "err"); return; }
-        if (!confirm("Remove " + t.name + "? Its points on the scoreboard are cleared too.")) return;
-        api("/team-remove", { slot: t.slot, confirm: true }).then(function () { say("Removed " + t.name + ".", "ok"); return load(); }).catch(function (e) { say(e.message, "err"); });
+        var who = n ? " The " + n + " student" + (n === 1 ? "" : "s") + " on it will go to \u201cNot on a team\u201d (they keep their passwords and logs)." : "";
+        if (!confirm("Remove " + t.name + "?" + who + " Its points on the scoreboard are cleared too.")) return;
+        api("/team-remove", { slot: t.slot, confirm: true }).then(function (j) { say("Removed " + t.name + (j.unassigned ? ". " + j.unassigned + " student" + (j.unassigned === 1 ? " is" : "s are") + " not on a team now." : "."), "ok"); return load(); }).catch(function (e) { say(e.message, "err"); });
       };
       row.appendChild(inp); row.appendChild(E("span", "cnt", n + " student" + (n === 1 ? "" : "s"))); row.appendChild(save); row.appendChild(rm);
       box.appendChild(row);
@@ -58,7 +58,7 @@
     var full = teams.length >= slots;
     $("newTeam").disabled = full; $("addTeam").disabled = full;
     $("teamHint").textContent = full ? "This badge holds up to " + slots + " teams." : "You can add up to " + (slots - teams.length) + " more.";
-    if (!teams.length && !$("newTeam").value) $("newTeam").placeholder = "e.g. " + (BADGE === "cy" ? "Lodge 1" : "Squad 1");
+    if (!teams.length && !$("newTeam").value) $("newTeam").value = (BADGE === "cy" ? "Lodge" : "Squad") + " 1";
   }
 
   function paintAdd() {
@@ -86,15 +86,15 @@
       var tr = E("tr");
       var nm = document.createElement("input"); nm.type = "text"; nm.maxLength = 40; nm.value = s.name; nm.setAttribute("aria-label", "Name");
       nm.onchange = function () { var v = nm.value.trim(); if (!v || v === s.name) { nm.value = s.name; return; } api("/update", { id: s.id, name: v }).then(function () { say("Renamed " + s.name + " to " + v + ".", "ok"); return load(); }).catch(function (e) { say(e.message, "err"); nm.value = s.name; }); };
-      var td1 = E("td"); td1.appendChild(nm); tr.appendChild(td1);
+      var td1 = E("td"); td1.setAttribute("data-label", "Name"); td1.appendChild(nm); tr.appendChild(td1);
       var sid = document.createElement("input"); sid.type = "text"; sid.maxLength = 20; sid.value = s.scoutId || ""; sid.placeholder = "optional"; sid.setAttribute("aria-label", "Scouting ID for " + s.name);
       sid.onchange = function () { var v = sid.value.trim(); if (v === (s.scoutId || "")) return; api("/update", { id: s.id, scoutId: v }).then(function (j) { say("Saved the scouting ID for " + s.name + ".", "ok"); sid.value = j.student.scoutId; s.scoutId = j.student.scoutId; }).catch(function (e) { say(e.message, "err"); sid.value = s.scoutId || ""; }); };
-      var tdi = E("td"); tdi.appendChild(sid); tr.appendChild(tdi);
+      var tdi = E("td"); tdi.setAttribute("data-label", "Scout ID"); tdi.appendChild(sid); tr.appendChild(tdi);
       var ts = teamSelect("", s.slot); ts.setAttribute("aria-label", "Team for " + s.name);
       if (s.slot === null) tr.className = "unassigned";
       ts.onchange = function () { var v = slotVal(ts.value); api("/update", { id: s.id, slot: v }).then(function () { say(s.name + (v === null ? " is not on a team." : " is now on " + teamName(v) + "."), "ok"); return load(); }).catch(function (e) { say(e.message, "err"); ts.value = s.slot === null ? "" : String(s.slot); }); };
-      var td2 = E("td"); td2.appendChild(ts); tr.appendChild(td2);
-      var td3 = E("td"); var pw = E("code", "pw", pretty(s.password)); td3.appendChild(pw); tr.appendChild(td3);
+      var td2 = E("td"); td2.setAttribute("data-label", "Team"); td2.appendChild(ts); tr.appendChild(td2);
+      var td3 = E("td"); td3.setAttribute("data-label", "Password"); var pw = E("code", "pw", pretty(s.password)); td3.appendChild(pw); tr.appendChild(td3);
       var td4 = E("td", "acts");
       var rs = E("button", "btn ghost", "New password"); rs.type = "button";
       rs.onclick = function () { if (!confirm("Give " + s.name + " a new password? The old one stops working.")) return; api("/update", { id: s.id, resetPassword: true }).then(function (j) { say(s.name + "'s new password is " + pretty(j.student.password) + ".", "ok"); return load(); }).catch(function (e) { say(e.message, "err"); }); };
@@ -123,10 +123,9 @@
     window.print();
   }
   function csv() {
-    var q = function (v) { v = v == null ? "" : String(v); if (/^([=+@\t\r]|-(?!\d))/.test(v)) v = "'" + v; return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
     var rows = [["Name", "Scout ID", "Team", "Password"]].concat(students.map(function (s) { return [s.name, s.scoutId || "", s.slot === null ? "" : teamName(s.slot), s.password]; }));
     var a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob(["﻿" + rows.map(function (r) { return r.map(q).join(","); }).join("\r\n") + "\r\n"], { type: "text/csv" }));
+    a.href = URL.createObjectURL(new Blob(["\ufeff" + CsvSafe.toCsv(rows)], { type: "text/csv" }));
     a.download = (BADGE === "cy" ? "Cybersecurity" : "AI") + "-students.csv"; document.body.appendChild(a); a.click(); a.remove();
     say("Downloaded the student list. It has passwords in it, so keep it private.", "ok");
   }

@@ -75,17 +75,19 @@ function createRoster(stores) {
     return { status: 200, body: { team: { slot: body.slot, name } } };
   }
 
-  // A team can only be removed once it has no students. Its points are cleared too, so a new team that later takes the
-  // same slot does not inherit them. body: { slot, confirm: true }
+  // Removing a team un-assigns its students (they stay on the roster as "Not on a team", keep their passwords and logs) and
+  // clears the team's points, so a new team that later takes the same slot does not inherit them. The caller must have
+  // confirmed with the instructor first. body: { slot, confirm: true } -> { removed, unassigned }
   async function removeTeam(body) {
     const data = await board.load();
     if (!body || !isInt(body.slot, 0, (data.lodges || []).length - 1) || !String(data.lodges[body.slot] || "").trim()) return { status: 404, body: { error: "No such team." } };
     if (body.confirm !== true) return { status: 400, body: { error: "Confirm removing the team." } };
-    if ((await all()).some((s) => s.slot === body.slot)) return { status: 409, body: { error: "Move or remove the students on this team first." } };
+    let unassigned = 0;
+    for (const s of await all()) if (s.slot === body.slot) { s.slot = null; await students.put("s-" + s.id, s); unassigned++; }
     data.lodges[body.slot] = "";
     Object.keys(data.scores || {}).forEach((id) => { if (Array.isArray(data.scores[id])) data.scores[id][body.slot] = null; });
     await board.save(data);
-    return { status: 200, body: { removed: true } };
+    return { status: 200, body: { removed: true, unassigned } };
   }
 
   // body: { names: [..] or "one per line", slot }. Adds each name with a fresh password and returns them.
