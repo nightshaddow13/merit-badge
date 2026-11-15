@@ -68,6 +68,6 @@ function mem() {
   const run = fs.readFileSync(__dirname + "/../ai/scoreboard/run.html", "utf8");
   const runKeys = [...run.match(/var PAGES=\[([\s\S]*?)\n \];/)[1].matchAll(/\["(\w+(?:\.\w+)?)","/g)].map((m) => m[1]);
   assert.deepStrictEqual(runKeys, PAGES, "Run the class lists every page in order");
-  DISCUSSION.forEach((k) => assert.ok(new RegExp('\\["' + k + '","[^"]*","[^"]*Scouts see My requirements').test(run), k + " is labelled on the run page"));
+  DISCUSSION.forEach((k) => assert.ok(new RegExp('\\["' + k + '","[^"]*","[^"]*Scouts stay where they are').test(run), k + " is labelled on the run page"));
   console.log("aiflow tests passed");
 })().catch((e) => { console.error(e); process.exit(1); });
