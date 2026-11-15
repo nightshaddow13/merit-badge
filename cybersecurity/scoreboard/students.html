@@ -19,11 +19,17 @@
 <section class="band"><div class="wrap">
   <p class="crumb">For instructors</p>
   <h1>Students and teams</h1>
-  <p class="lead">Create your lodges, add your students, and give each one a short password. A student types only that password to open their Warden Log on any device. Each badge has its own list.</p>
+  <p class="lead">Add your students, assign each one to a team with the dropdown, and each gets a short password. A student types only that password to open their Warden Log on any device. Each badge has its own list.</p>
   <p class="jump"><a href="/cybersecurity/instructor.html">Back to Cybersecurity instructor tools</a> &middot; <a href="/cybersecurity/scoreboard/logs.html">Warden Log dashboard</a></p>
 </div></section>
 <div class="wrap">
   <p id="msg" class="msg" role="status"></p>
+  <section class="scard wide"><h2>Students <span id="count" class="cnt"></span></h2>
+    <div class="row"><div><label for="flt">Show</label><select id="flt"><option value="">All teams</option></select></div>
+      <button id="print" class="btn ghost" type="button">Print passwords</button><button id="csv" class="btn ghost" type="button">Download list (.csv)</button></div>
+    <div id="students"></div>
+    <p class="hint">Passwords are 6 letters and numbers, easy to read aloud (no 0, O, 1 or l). Typing capitals, spaces or dashes makes no difference. Anyone with a password can open that student's log, so hand them out privately.</p>
+  </section>
   <div class="stgrid">
     <section class="scard"><h2>Teams</h2>
       <div id="teams"></div>
@@ -33,20 +39,14 @@
     </section>
     <section class="scard"><h2>Add students</h2>
       <form id="addForm">
-        <label for="addTeamSel">Team</label><select id="addTeamSel"></select>
-        <label for="names">Names, one per line (first name and last initial works well)</label>
-        <textarea id="names" rows="6" maxlength="4000" placeholder="Sam K&#10;Ana B"></textarea>
+        <label for="addTeamSel">Put them on</label><select id="addTeamSel"></select>
+        <label for="names">Names, one per line (first name and last initial works well). To add a scouting ID, put it after a comma: Sam K, 1234567. It is optional.</label>
+        <textarea id="names" rows="6" maxlength="4000" placeholder="Sam K, 1234567&#10;Ana B"></textarea>
         <p><button id="addBtn" class="btn" type="submit">Add students</button> <span id="addNote" class="hint"></span></p>
       </form>
       <div id="fresh" class="fresh" hidden></div>
     </section>
   </div>
-  <section class="scard wide"><h2>Students <span id="count" class="cnt"></span></h2>
-    <div class="row"><div><label for="flt">Show</label><select id="flt"><option value="">All teams</option></select></div>
-      <button id="print" class="btn ghost" type="button">Print passwords</button><button id="csv" class="btn ghost" type="button">Download list (.csv)</button></div>
-    <div id="students"></div>
-    <p class="hint">Passwords are 6 letters and numbers, easy to read aloud (no 0, O, 1 or l). Typing capitals, spaces or dashes makes no difference. Anyone with a password can open that student's log, so hand them out privately.</p>
-  </section>
 </div>
 </main>
 <footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
@@ -67,7 +67,10 @@
 .fresh{border:2px dashed var(--line);border-radius:10px;padding:12px;margin-top:12px}.fresh h3{margin:0 0 6px}
 .plainpw{list-style:none;margin:0 0 10px;padding:0}.plainpw li{margin:4px 0}
 code.pw{font-size:1.15em;letter-spacing:.08em;font-weight:700;user-select:all}
+.grid tr.unassigned td{background:rgba(255,224,138,.35)}
 .grid td.acts{white-space:nowrap}.grid .btn{margin-right:6px}
+.scard,.stgrid>*{min-width:0}
+#students{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .grid td input,.grid td select{width:100%;min-width:120px}
 #pv{display:none}
 @media print{body>*:not(#pv){display:none!important}#pv{display:block;color:#000;font:12pt/1.4 Georgia,serif}#pv h1{font-size:20pt}#pv h2{font-size:14pt;border-bottom:1px solid #000;margin:14pt 0 6pt}#pv section{break-inside:avoid}#pv .card{display:inline-flex;flex-direction:column;gap:4pt;border:1px dashed #000;padding:8pt 12pt;margin:0 8pt 8pt 0;min-width:150pt}#pv .card b{font:700 18pt ui-monospace,monospace;letter-spacing:.1em}}

@@ -17,7 +17,8 @@
       });
     });
   }
-  function teamName(slot) { var t = teams.filter(function (x) { return x.slot === slot; })[0]; return t ? t.name : "(no team)"; }
+  function teamName(slot) { if (slot === null || slot === undefined) return "Not on a team"; var t = teams.filter(function (x) { return x.slot === slot; })[0]; return t ? t.name : "(no team)"; }
+  function slotVal(v) { return v === "" ? null : +v; }
   function pretty(pw) { return String(pw || "").replace(/(.{3})(?=.)/g, "$1 "); }
   function countOn(slot) { return students.filter(function (s) { return s.slot === slot; }).length; }
 
@@ -27,7 +28,7 @@
 
   function teamSelect(id, value, includeAll) {
     var s = document.createElement("select"); if (id) s.id = id;
-    if (includeAll) { var o = new Option("All teams", ""); s.appendChild(o); }
+    s.appendChild(new Option(includeAll ? "All teams" : "Not on a team", ""));
     teams.forEach(function (t) { s.appendChild(new Option(t.name, String(t.slot))); });
     s.value = value === undefined || value === null ? "" : String(value);
     return s;
@@ -61,23 +62,24 @@
   }
 
   function paintAdd() {
-    var sel = $("addTeamSel"), keep = sel.value; sel.textContent = "";
+    var sel = $("addTeamSel"), keep = sel.value; sel.textContent = ""; sel.appendChild(new Option("Not on a team yet (assign below)", ""));
     teams.forEach(function (t) { sel.appendChild(new Option(t.name, String(t.slot))); });
     if (keep && teams.some(function (t) { return String(t.slot) === keep; })) sel.value = keep;
-    $("addBtn").disabled = !teams.length;
-    $("addNote").textContent = teams.length ? "" : "Create a team above first.";
+    $("addBtn").disabled = false;
+    $("addNote").textContent = "";
   }
 
   function paintStudents() {
     var box = $("students"); box.textContent = "";
-    var fsel = $("flt"), keep = fsel.value; fsel.textContent = ""; fsel.appendChild(new Option("All teams", ""));
+    var fsel = $("flt"), keep = fsel.value; fsel.textContent = ""; fsel.appendChild(new Option("All teams", "")); fsel.appendChild(new Option("Not on a team", "none"));
     teams.forEach(function (t) { fsel.appendChild(new Option(t.name, String(t.slot))); });
-    fsel.value = teams.some(function (t) { return String(t.slot) === keep; }) ? keep : ""; filter = fsel.value;
-    $("count").textContent = students.length + " of " + max + " students";
-    var rows = students.filter(function (s) { return filter === "" || String(s.slot) === filter; });
-    if (!rows.length) { box.appendChild(E("p", "hint", students.length ? "No students on that team." : "No students yet. Add some above.")); return; }
+    fsel.value = keep === "none" || teams.some(function (t) { return String(t.slot) === keep; }) ? keep : ""; filter = fsel.value;
+    var un = students.filter(function (s) { return s.slot === null; }).length;
+    $("count").textContent = students.length + " of " + max + " students" + (un ? " \u00b7 " + un + " not on a team yet" : "");
+    var rows = students.filter(matches);
+    if (!rows.length) { box.appendChild(E("p", "hint", students.length ? "No students match that filter." : "No students yet. Add some below, then assign each one a team here.")); return; }
     var t = E("table", "grid"), h = E("thead"), hr = E("tr");
-    ["Name", "Team", "Password", ""].forEach(function (x) { var th = E("th", null, x); th.scope = "col"; hr.appendChild(th); });
+    ["Name", "Scout ID", "Team", "Password", ""].forEach(function (x) { var th = E("th", null, x); th.scope = "col"; hr.appendChild(th); });
     h.appendChild(hr); t.appendChild(h);
     var b = E("tbody");
     rows.forEach(function (s) {
@@ -85,8 +87,12 @@
       var nm = document.createElement("input"); nm.type = "text"; nm.maxLength = 40; nm.value = s.name; nm.setAttribute("aria-label", "Name");
       nm.onchange = function () { var v = nm.value.trim(); if (!v || v === s.name) { nm.value = s.name; return; } api("/update", { id: s.id, name: v }).then(function () { say("Renamed " + s.name + " to " + v + ".", "ok"); return load(); }).catch(function (e) { say(e.message, "err"); nm.value = s.name; }); };
       var td1 = E("td"); td1.appendChild(nm); tr.appendChild(td1);
+      var sid = document.createElement("input"); sid.type = "text"; sid.maxLength = 20; sid.value = s.scoutId || ""; sid.placeholder = "optional"; sid.setAttribute("aria-label", "Scouting ID for " + s.name);
+      sid.onchange = function () { var v = sid.value.trim(); if (v === (s.scoutId || "")) return; api("/update", { id: s.id, scoutId: v }).then(function (j) { say("Saved the scouting ID for " + s.name + ".", "ok"); sid.value = j.student.scoutId; s.scoutId = j.student.scoutId; }).catch(function (e) { say(e.message, "err"); sid.value = s.scoutId || ""; }); };
+      var tdi = E("td"); tdi.appendChild(sid); tr.appendChild(tdi);
       var ts = teamSelect("", s.slot); ts.setAttribute("aria-label", "Team for " + s.name);
-      ts.onchange = function () { api("/update", { id: s.id, slot: +ts.value }).then(function () { say(s.name + " is now on " + teamName(+ts.value) + ".", "ok"); return load(); }).catch(function (e) { say(e.message, "err"); ts.value = String(s.slot); }); };
+      if (s.slot === null) tr.className = "unassigned";
+      ts.onchange = function () { var v = slotVal(ts.value); api("/update", { id: s.id, slot: v }).then(function () { say(s.name + (v === null ? " is not on a team." : " is now on " + teamName(v) + "."), "ok"); return load(); }).catch(function (e) { say(e.message, "err"); ts.value = s.slot === null ? "" : String(s.slot); }); };
       var td2 = E("td"); td2.appendChild(ts); tr.appendChild(td2);
       var td3 = E("td"); var pw = E("code", "pw", pretty(s.password)); td3.appendChild(pw); tr.appendChild(td3);
       var td4 = E("td", "acts");
@@ -99,6 +105,7 @@
     t.appendChild(b); var w = E("div", "tablewrap"); w.appendChild(t); box.appendChild(w);
   }
 
+  function matches(s) { return filter === "" || (filter === "none" ? s.slot === null : String(s.slot) === filter); }
   function paint() { paintTeams(); paintAdd(); paintStudents(); }
 
   // ---- print / export ----
@@ -108,8 +115,8 @@
     pv.appendChild(E("p", null, "Type the password at the Warden Log / Field Log sign-in. Keep it to yourself."));
     var byTeam = {};
     list.forEach(function (s) { (byTeam[s.slot] = byTeam[s.slot] || []).push(s); });
-    Object.keys(byTeam).sort(function (a, b) { return a - b; }).forEach(function (k) {
-      var sec = E("section"); sec.appendChild(E("h2", null, teamName(+k)));
+    Object.keys(byTeam).sort(function (a, b) { return (a === "null" ? -1 : +a) - (b === "null" ? -1 : +b); }).forEach(function (k) {
+      var sec = E("section"); sec.appendChild(E("h2", null, teamName(k === "null" ? null : +k)));
       byTeam[k].forEach(function (s) { var c = E("div", "card"); c.appendChild(E("span", null, s.name)); c.appendChild(E("b", null, pretty(s.password))); sec.appendChild(c); });
       pv.appendChild(sec);
     });
@@ -117,7 +124,7 @@
   }
   function csv() {
     var q = function (v) { v = v == null ? "" : String(v); if (/^([=+@\t\r]|-(?!\d))/.test(v)) v = "'" + v; return /[",\r\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    var rows = [["Name", "Team", "Password"]].concat(students.map(function (s) { return [s.name, teamName(s.slot), s.password]; }));
+    var rows = [["Name", "Scout ID", "Team", "Password"]].concat(students.map(function (s) { return [s.name, s.scoutId || "", s.slot === null ? "" : teamName(s.slot), s.password]; }));
     var a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["﻿" + rows.map(function (r) { return r.map(q).join(","); }).join("\r\n") + "\r\n"], { type: "text/csv" }));
     a.download = (BADGE === "cy" ? "Cybersecurity" : "AI") + "-students.csv"; document.body.appendChild(a); a.click(); a.remove();
@@ -133,7 +140,7 @@
   $("addForm").onsubmit = function (e) {
     e.preventDefault(); var names = $("names").value; if (!names.trim()) { say("Type at least one name, one per line.", "err"); return; }
     $("addBtn").disabled = true;
-    api("/add", { names: names, slot: +$("addTeamSel").value }).then(function (j) {
+    api("/add", { names: names, slot: slotVal($("addTeamSel").value) }).then(function (j) {
       $("names").value = ""; var out = $("fresh"); out.textContent = ""; out.hidden = false;
       out.appendChild(E("h3", null, "New students and passwords"));
       var ul = E("ul", "plainpw"); j.added.forEach(function (s) { var li = E("li"); li.appendChild(E("span", null, s.name + " ")); li.appendChild(E("code", "pw", pretty(s.password))); ul.appendChild(li); }); out.appendChild(ul);
@@ -142,7 +149,7 @@
     }).catch(function (er) { say(er.message, "err"); }).then(function () { paintAdd(); });
   };
   $("flt").onchange = function () { filter = this.value; paintStudents(); };
-  $("print").onclick = function () { if (!students.length) { say("No students to print yet.", "err"); return; } printList(students.filter(function (s) { return filter === "" || String(s.slot) === filter; }), "Student passwords"); };
+  $("print").onclick = function () { if (!students.length) { say("No students to print yet.", "err"); return; } printList(students.filter(matches), "Student passwords"); };
   $("csv").onclick = function () { if (!students.length) { say("No students yet.", "err"); return; } csv(); };
   load(); setInterval(function () { if (!document.hidden && !document.activeElement.matches("input,select,textarea")) load(); }, 20000);
 })();

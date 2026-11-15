@@ -19,7 +19,7 @@ const mk = (id) => { const board = boardMem(id || "ai"); return { r: createRoste
   // starts with no teams
   let x = await r.list();
   assert.deepStrictEqual(x.body.teams, []); assert.strictEqual(x.body.slots, 6);
-  assert.strictEqual((await r.addStudents({ names: ["Sam K"], slot: 0 })).status, 400, "needs a team first");
+  assert.strictEqual((await r.addStudents({ names: ["Sam K"], slot: 0 })).status, 400, "slot 0 is not a team yet");
 
   // teams: first team, more teams fill the first free slot, names unique, cap at the 6 slots
   let t = await r.addTeam({ name: "  Falcons " }); assert.deepStrictEqual(t.body.team, { slot: 0, name: "Falcons" });
@@ -46,6 +46,18 @@ const mk = (id) => { const board = boardMem(id || "ai"); return { r: createRoste
   assert.ok(a.body.added.every((s) => /^[a-f0-9]{16}$/.test(s.id)), "ids fit the existing log key format");
   // adding to a slot that is not a team is refused
   { const m = mk("ai"); await m.r.addTeam({ name: "Only" }); assert.strictEqual((await m.r.addStudents({ names: ["x"], slot: 3 })).status, 400); assert.strictEqual((await m.r.addStudents({ names: [], slot: 0 })).status, 400); }
+
+  // students can be added with no team and assigned later from the table
+  { const m = mk("ai"); await m.r.addTeam({ name: "A" });
+    const added = (await m.r.addStudents({ names: ["Una S", "Bo T"] })).body.added;
+    assert.ok(added.every((x) => x.slot === null));
+    assert.deepStrictEqual(await m.r.find(added[0].id), { id: added[0].id, name: "Una S", slot: null, team: "" });
+    assert.deepStrictEqual((await m.r.login({ password: added[0].password })).body, { id: added[0].id, name: "Una S", slot: null, team: "" });
+    await m.r.updateStudent({ id: added[1].id, slot: 0 });
+    assert.deepStrictEqual((await m.r.list()).body.students.map((x) => [x.name, x.slot]), [["Una S", null], ["Bo T", 0]], "unassigned students are listed first");
+    assert.strictEqual((await m.r.updateStudent({ id: added[1].id, slot: null })).body.student.slot, null, "can go back to unassigned");
+    assert.strictEqual((await m.r.removeTeam({ slot: 0, confirm: true })).status, 200, "a team with no students can go");
+  }
 
   // login: only the password; case, spaces and dashes do not matter
   const sam = a.body.added[0];
@@ -112,3 +124,19 @@ const mk = (id) => { const board = boardMem(id || "ai"); return { r: createRoste
   assert.deepStrictEqual((await l3.r.list()).body.students.map((s) => s.name), ["Mia", "Abe", "Zoe"]);
   console.log("roster tests passed");
 })().catch((e) => { console.error(e); process.exit(1); });
+// scouting id (optional)
+(async () => {
+  const { r } = mk("ai");
+  const a = await r.addStudents({ names: "Sam K, 123-4567\nAna B\nLee, Jo" });
+  assert.strictEqual(a.status, 200);
+  const by = Object.fromEntries(a.body.added.map((x) => [x.name, x]));
+  assert.strictEqual(by["Sam K"].scoutId, "1234567".slice(0, 3) + "-4567");
+  assert.strictEqual(by["Ana B"].scoutId, "");
+  assert.ok(by["Lee, Jo"] && by["Lee, Jo"].scoutId === "", "comma without digits stays in the name");
+  let u = await r.updateStudent({ id: by["Ana B"].id, scoutId: " 99 88<x> " });
+  assert.strictEqual(u.body.student.scoutId, "9988x");
+  u = await r.updateStudent({ id: by["Ana B"].id, scoutId: "" });
+  assert.strictEqual(u.body.student.scoutId, "");
+  const l = await r.list(); assert.ok(l.body.students.every((x) => typeof x.scoutId === "string"));
+  console.log("scout id tests passed");
+})();

@@ -18,6 +18,9 @@ const TEAM_NAME = 30;              // matches the scoreboard's name limit (lib/s
 const ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789"; // no 0/o, 1/l/i
 const PW_LEN = 6;
 const MAX_BAD_LOGINS_PER_MIN = 40;
+const cleanScoutId = (v) => (typeof v === "string" || typeof v === "number" ? String(v).replace(/[^A-Za-z0-9-]/g, "").slice(0, 20) : "");
+// "Sam K, 1234567" -> name + optional scouting id (a trailing comma part that contains a digit)
+const splitLine = (line) => { const m = typeof line === "string" ? line.match(/^(.*?)[,\t]\s*([A-Za-z0-9-]*\d[A-Za-z0-9-]*)\s*$/) : null; return m ? { name: m[1], scoutId: cleanScoutId(m[2]) } : { name: line, scoutId: "" }; };
 const clean = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max) : "");
 const normPw = (v) => (typeof v === "string" ? v.toLowerCase().replace(/[\s-]/g, "") : "");
 const isInt = (n, lo, hi) => typeof n === "number" && Number.isInteger(n) && n >= lo && n <= hi;
@@ -36,11 +39,11 @@ function createRoster(stores) {
 
   async function all() {
     const rows = (await students.list()).map((r) => r.data);
-    rows.sort((a, b) => (a.slot - b.slot) || a.name.localeCompare(b.name) || (a.created < b.created ? -1 : 1));
+    rows.sort((a, b) => ((a.slot === null ? -1 : a.slot) - (b.slot === null ? -1 : b.slot)) || a.name.localeCompare(b.name) || (a.created < b.created ? -1 : 1));
     return rows;
   }
   const teamsOf = (data) => (data.lodges || []).map((name, i) => ({ slot: i, name: String(name || "") })).filter((t) => t.name);
-  const publicStudent = (s) => ({ id: s.id, name: s.name, slot: s.slot, password: s.password, created: s.created });
+  const publicStudent = (s) => ({ id: s.id, name: s.name, slot: s.slot, password: s.password, scoutId: s.scoutId || "", created: s.created });
 
   // ---- staff ----
   async function list() {
@@ -89,15 +92,17 @@ function createRoster(stores) {
   async function addStudents(body) {
     if (!body || typeof body !== "object") return { status: 400, body: { error: "Send a JSON object." } };
     const data = await board.load();
-    if (!isInt(body.slot, 0, (data.lodges || []).length - 1) || !String(data.lodges[body.slot] || "").trim()) return { status: 400, body: { error: "Choose a team first (create one if there are none)." } };
+    const slot = body.slot === undefined || body.slot === null || body.slot === "" ? null : body.slot;
+    if (slot !== null && (!isInt(slot, 0, (data.lodges || []).length - 1) || !String(data.lodges[slot] || "").trim())) return { status: 400, body: { error: "No such team." } };
     const raw = Array.isArray(body.names) ? body.names : typeof body.names === "string" ? body.names.split(/\r?\n/) : [];
-    const names = raw.map((n) => clean(n, MAX_NAME)).filter(Boolean);
+    const parsed = raw.map(splitLine).map((p) => ({ name: clean(p.name, MAX_NAME), scoutId: p.scoutId })).filter((p) => p.name);
+    const names = parsed;
     if (!names.length) return { status: 400, body: { error: "Type at least one name." } };
     const rows = await all();
     if (rows.length + names.length > MAX_STUDENTS) return { status: 409, body: { error: "A badge holds up to " + MAX_STUDENTS + " students. You have " + rows.length + "." } };
     const taken = new Set(rows.map((s) => s.password)), added = [];
-    for (const name of names) {
-      const s = { id: newId(), name, slot: body.slot, password: newPassword(taken), created: new Date().toISOString() };
+    for (const { name, scoutId } of names) {
+      const s = { id: newId(), name, scoutId, slot, password: newPassword(taken), created: new Date().toISOString() };
       taken.add(s.password);
       await students.put("s-" + s.id, s);
       added.push(publicStudent(s));
@@ -111,10 +116,14 @@ function createRoster(stores) {
     const s = await students.get("s-" + body.id);
     if (!s) return { status: 404, body: { error: "No such student." } };
     if (body.name !== undefined) { const n = clean(body.name, MAX_NAME); if (!n) return { status: 400, body: { error: "A student needs a name." } }; s.name = n; }
+    if (body.scoutId !== undefined) s.scoutId = cleanScoutId(body.scoutId); // optional; empty clears it
     if (body.slot !== undefined) {
-      const data = await board.load();
-      if (!isInt(body.slot, 0, (data.lodges || []).length - 1) || !String(data.lodges[body.slot] || "").trim()) return { status: 400, body: { error: "No such team." } };
-      s.slot = body.slot;
+      if (body.slot === null) s.slot = null; // not on a team yet
+      else {
+        const data = await board.load();
+        if (!isInt(body.slot, 0, (data.lodges || []).length - 1) || !String(data.lodges[body.slot] || "").trim()) return { status: 400, body: { error: "No such team." } };
+        s.slot = body.slot;
+      }
     }
     if (body.resetPassword === true) s.password = newPassword(new Set((await all()).map((x) => x.password)));
     await students.put("s-" + s.id, s);
@@ -141,7 +150,7 @@ function createRoster(stores) {
     const s = (await all()).find((x) => x.password === pw);
     if (!s) { t.n += 1; await tries.put(bucket, t); return { status: 401, body: { error: "That password is not right. Check it with your instructor." } }; }
     const data = await board.load();
-    return { status: 200, body: { id: s.id, name: s.name, slot: s.slot, team: String((data.lodges || [])[s.slot] || "") } };
+    return { status: 200, body: { id: s.id, name: s.name, slot: s.slot, team: (s.slot === null ? "" : String((data.lodges || [])[s.slot] || "")) } };
   }
 
   // For the log code: who is this student id (or null), and what is their team called?
@@ -150,7 +159,7 @@ function createRoster(stores) {
     const s = await students.get("s-" + id);
     if (!s) return null;
     const data = await board.load();
-    return { id: s.id, name: s.name, slot: s.slot, team: String((data.lodges || [])[s.slot] || "") };
+    return { id: s.id, name: s.name, slot: s.slot, team: (s.slot === null ? "" : String((data.lodges || [])[s.slot] || "")) };
   }
 
   return { list, addTeam, renameTeam, removeTeam, addStudents, updateStudent, removeStudent, login, find, all };
