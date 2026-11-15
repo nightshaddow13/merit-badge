@@ -506,6 +506,16 @@
       ]
     },
     {
+      "route": "/api/aiflow/control",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/cybersecurity/scoreboard/games.html",
       "allowedRoles": [
         "counselor",
@@ -518,6 +528,17 @@
     },
     {
       "route": "/cybersecurity/scoreboard/run.html",
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ],
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow",
+        "Cache-Control": "private, no-store"
+      }
+    },
+    {
+      "route": "/ai/scoreboard/run.html",
       "allowedRoles": [
         "counselor",
         "scorekeeper"

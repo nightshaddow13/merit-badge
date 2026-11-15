@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" class="ai">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Run the class: Artificial Intelligence</title>
+<meta name="description" content="Lead the class from one screen: move every Field Log to a page, hold screens or show the scoreboard.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/">Cybersecurity</a><a href="/ai/" aria-current="page">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">For instructors</p>
+  <h1>Run the class</h1>
+  <p class="lead">Lead every Field Log from this screen. Pick a page and every Scout's screen moves to it, hold screens when you need their attention, or put the scoreboard up. Nothing a Scout has typed is ever changed.</p>
+  <p class="jump"><a href="/ai/instructor.html">Instructor tools</a> &middot; <a href="/ai/scoreboard/" target="_blank" rel="noopener">Open the scoreboard to project</a> &middot; <a href="/ai/scoreboard/wwyd.html">What Would You Do?</a> &middot; <a href="/ai/scoreboard/duel.html">Prompt Duel</a></p>
+</div></section>
+<div class="wrap">
+  <p id="msg" class="msg" role="status"></p>
+  <p>Scouts see: <span id="state" class="pill">Loading&hellip;</span></p>
+
+  <section class="gm" aria-labelledby="hPages">
+    <h2 id="hPages">Move every Scout to a page</h2>
+    <div class="acts">
+      <button id="prev" class="btn ghost" type="button">&larr; Previous page</button>
+      <button id="next" class="btn" type="button">Next page &rarr;</button>
+    </div>
+    <div id="pages" role="group" aria-label="Pages"></div>
+    <p class="muted small">Tip: the left and right arrow keys move to the previous or next page when you are not typing in the message box. Scouts cannot change pages while you lead.</p>
+  </section>
+
+  <section class="gm" aria-labelledby="hHold">
+    <h2 id="hHold">Get everyone's attention</h2>
+    <div class="acts">
+      <button id="hold" class="btn" type="button">Hold screens</button>
+      <button id="board" class="btn" type="button">Show the scoreboard</button>
+      <button id="free" class="btn ghost" type="button">Let Scouts roam freely</button>
+    </div>
+    <div class="row2"><label for="holdMsg">Message on the holding page <span class="muted">(optional)</span></label>
+      <textarea id="holdMsg" maxlength="200" rows="2" placeholder="Eyes up front. Your instructor is about to explain the next activity."></textarea>
+      <p class="muted small"><span id="count">0</span> of 200 characters. Leave it empty to show the standard message.</p>
+      <div class="acts"><button id="saveMsg" class="btn ghost" type="button">Save message</button>
+        <span class="chips" id="chips" aria-label="Quick messages"></span></div>
+    </div>
+    <p class="muted small">Holding keeps the page you were on. Choose a page above to send Scouts back to work, or Let Scouts roam freely to give them their navigation back.</p>
+  </section>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouting America merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<style>
+.wrap .gm{border:2px solid var(--ink);border-radius:12px;padding:16px;margin:18px 0;background:var(--white)}.acts{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 4px;align-items:center}.gm h2{margin:0 0 6px}.muted{color:var(--mut)}.small{font-size:15px}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:14px;font-weight:700;background:#E2EAE5;color:#14201B}.pill.ok{background:#BFEBD0;color:#0b3a1f}.pill.warn{background:#FFE08A;color:#4a3300}
+.btn{min-height:44px;cursor:pointer;border:0;font:inherit;font-weight:700}.btn.ghost{background:transparent!important;color:var(--ink)!important;border:2px solid var(--line)}.btn:disabled{opacity:.55;cursor:wait}
+.row2{margin:10px 0}.row2 label{display:block;font-weight:700;margin-bottom:4px}.row2 textarea{width:100%;max-width:640px;font:inherit;padding:8px 10px;border:2px solid var(--ink);border-radius:8px;background:var(--white);color:var(--ink);resize:vertical}
+.pagelist{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:8px 0 14px}
+.pgroup{margin:14px 0 0;font-size:18px}
+.pagelist button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;min-height:64px;padding:10px 14px;border:2px solid var(--line);border-radius:10px;background:var(--white);color:var(--ink);font:inherit;font-weight:700;cursor:pointer}
+.pagelist button small{font-weight:400;color:var(--mut)}
+.pagelist button[aria-pressed=true]{border-color:var(--ink);background:var(--hi);color:#14201B}.pagelist button[aria-pressed=true] small{color:#14201B}
+.chips{display:inline-flex;flex-wrap:wrap;gap:8px}.chips button{font:inherit;font-size:15px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--white);color:var(--ink);cursor:pointer;min-height:40px}
+@media (min-width:1000px){main .wrap{max-width:min(1100px,calc(100vw - 48px))}}
+</style>
+<script>
+(function(){
+ // Keys match api/src/lib/aiflow.js PAGES and the in-page tabs of tools/aira-field-log.html (api/test-aiflow.js checks all three).
+ var GROUPS={L1:"Level 1 \u00b7 The Decoder",L2:"Level 2 \u00b7 AI Basics",L3:"Level 3 \u00b7 Automation",L4:"Level 4 \u00b7 Ethics in AI",L5:"Level 5 \u00b7 Deepfakes",L6:"Level 6 \u00b7 AI Skills",L7:"Level 7 \u00b7 Train Your Own AI",L8:"Level 8 \u00b7 Career Exploration",send:"The end"};
+ var PAGES=[
+ ["L1","Terms","Match 16 terms to definitions (req 1)"],
+ ["V1","Vocab Vault","Quiz and the Level 1 access code"],
+ ["L2.ex","2a\u20132c Examples","Discussion: be ready to name examples"],
+ ["L2.aion","AI or Not?","Class game (req 2d)"],
+ ["L2.tl","AI timeline","Drag the milestones into order (req 2e)"],
+ ["L2.unlock","Unlock Level 3","Access code"],
+ ["L3.hvm","Class Race","Human Versus Machine race"],
+ ["L3.home","3a\u20133c Examples","Discussion: be ready to name examples"],
+ ["L3.hist","3e Timeline","Five automation milestones"],
+ ["L3.boss","3f Boss Challenge","Design a workflow; counselor scores it"],
+ ["L3.unlock","Unlock Level 4","Access code"],
+ ["L4.wwyd","What Would You Do?","Class game (req 4b)"],
+ ["L4.lawnote","Scout Law meets AI","Guidelines (req 4c) and charter"],
+ ["L4.big","Ethics worksheet","Discussion: ethics and the Turing test (4a, 4d)"],
+ ["L4.unlock","Unlock Level 5","Access code"],
+ ["L5.sf","Spot the Fake","Optional practice"],
+ ["L5.what","5a What is a deepfake?","Discussion"],
+ ["L5.act","5b If it targets you","Discussion"],
+ ["L5.unlock","Unlock Level 6","Access code"],
+ ["L6.hnote","Hallucination Hunt","Activity with ChatGPT"],
+ ["L6.nnote","Human Neural Network","Class activity"],
+ ["L6.dnote","Prompt Duel","Class game"],
+ ["L6.meth","6b Five ways","Discussion"],
+ ["L6.why","6c Why it matters","Discussion"],
+ ["L6.pr","6d Your prompts","Three prompts for a school task"],
+ ["L6.unlock","Unlock Level 7","Access code"],
+ ["L7.plan","7a Plan it","Plan an AI project"],
+ ["L7.tm","Build it","Teachable Machine"],
+ ["L7.share","7a Share it","Discussion"],
+ ["L7.unlock","Unlock Level 8","Access code"],
+ ["L8.who","8b Interview","Interview an AI professional"],
+ ["L8.unlock","Shut it down","Final access code"],
+ ["send","Send & save","My requirements, certificate, backup"]
+ ];
+ var QUICK=["Eyes up front. Your instructor is talking.","Hands off the keyboards for a moment.","Back in five minutes.","Time to move: wait for the next instruction."];
+ var msg=document.getElementById("msg"),S=null,busy=false,dirty=false;
+ function $(i){return document.getElementById(i)}
+ function say(t){msg.textContent=t}
+ function E(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+ function api(path,body){return fetch(path,body===undefined?{cache:"no-store"}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(j.error||"Something went wrong ("+r.status+").");return j})})}
+ function idx(){for(var i=0;i<PAGES.length;i++)if(PAGES[i][0]===S.page)return i;return 0}
+ function group(k){return k==="send"?"send":k.slice(0,2)}
+ function paint(j){
+  S=j;
+  var name=PAGES[idx()][1];
+  $("state").textContent=j.mode==="free"?"Free to move through the pages themselves":j.mode==="page"?"Page: "+name:j.mode==="hold"?"The holding page":"The scoreboard";
+  $("state").className="pill "+(j.mode==="free"?"ok":"warn");
+  var box=$("pages"); box.textContent="";
+  var cur=null,list=null;
+  PAGES.forEach(function(p){
+   var g=group(p[0]);
+   if(g!==cur){cur=g;box.appendChild(E("h3","pgroup",GROUPS[g]));list=E("div","pagelist");box.appendChild(list)}
+   var b=E("button",null,p[1]);b.type="button";b.appendChild(E("small",null,p[2]));b.setAttribute("aria-pressed",String(j.mode==="page"&&j.page===p[0]));b.onclick=function(){go(p[0])};list.appendChild(b)});
+  $("prev").disabled=busy||(j.mode==="page"&&idx()===0);$("next").disabled=busy||(j.mode==="page"&&idx()===PAGES.length-1);
+  $("hold").setAttribute("aria-pressed",String(j.mode==="hold"));$("board").setAttribute("aria-pressed",String(j.mode==="board"));$("free").disabled=j.mode==="free";
+  if(document.activeElement!==$("holdMsg")&&!dirty){$("holdMsg").value=j.message||"";count()}
+ }
+ function count(){$("count").textContent=$("holdMsg").value.length}
+ function ctl(body,done){busy=true;if(S)paint(S);return api("/api/aiflow/control",body).then(function(j){busy=false;say(done||"");paint(j);return j}).catch(function(e){busy=false;say(/401|403|Sign in/.test(e.message)?"Sign in as a counselor or scorekeeper.":e.message);if(S)paint(S)})}
+ function go(page){dirty=false;ctl({mode:"page",page:page},"Every Field Log is moving to "+PAGES.filter(function(p){return p[0]===page})[0][1]+".")}
+ function step(d){if(!S)return;var i=S.mode==="page"?idx()+d:idx();i=Math.max(0,Math.min(PAGES.length-1,i));go(PAGES[i][0])}
+ $("prev").onclick=function(){step(-1)};$("next").onclick=function(){step(1)};
+ $("hold").onclick=function(){dirty=false;ctl({mode:"hold",message:$("holdMsg").value},"Screens are held.")};
+ $("board").onclick=function(){ctl({mode:"board"},"The scoreboard is on every Scout's screen.")};
+ $("free").onclick=function(){if(!confirm("Let every Scout move through the pages themselves?"))return;ctl({mode:"free"},"Scouts can move through the pages themselves.")};
+ $("saveMsg").onclick=function(){dirty=false;ctl({message:$("holdMsg").value},"Message saved.")};
+ $("holdMsg").addEventListener("input",function(){dirty=true;count()});
+ QUICK.forEach(function(t){var b=E("button",null,t);b.type="button";b.onclick=function(){$("holdMsg").value=t;dirty=true;count()};$("chips").appendChild(b)});
+ document.addEventListener("keydown",function(e){var t=e.target&&e.target.tagName;if(t==="TEXTAREA"||t==="INPUT"||t==="SELECT"||e.altKey||e.ctrlKey||e.metaKey)return;if(!S)return;if(e.key==="ArrowRight"){e.preventDefault();step(1)}else if(e.key==="ArrowLeft"){e.preventDefault();step(-1)}});
+ function load(){return api("/api/aiflow").then(function(j){if(!S||j.rev!==S.rev)paint(j)}).catch(function(e){say(e.message)})}
+ load();setInterval(load,4000);
+})();
+</script>
+</body>
+</html>
