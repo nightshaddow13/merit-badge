@@ -462,7 +462,7 @@ var PANES={
  7:[["7a Plan it",["plan"]],["Build it",["tm"]]],
  8:[]};
 // Stable keys for the in-page tabs of each level, in tab order (the last one is the access-code tab).
-// Sections with nothing for a Scout to enter (discussion, spoken, or done on paper) have no tab. They stay listed and signed off on My requirements, and any answers saved earlier are kept.
+// Sections with nothing for a Scout to enter (discussion, spoken, or done on paper) have no tab. The counselor still signs them off in class, and any answers saved earlier are kept.
 // The instructor's Run the class page (ai/scoreboard/run.html) and api/src/lib/aiflow.js use "L3.hist"-style keys built from these.
 var PANEKEYS={2:["aion","tl","unlock"],3:["hvm","hist","unlock"],4:["wwyd","lawnote","unlock"],5:["sf","unlock"],6:["hnote","nnote","dnote","pr","unlock"],7:["plan","tm","unlock"],8:["unlock"]};
 var paneSel={}, paneLbl={};
@@ -1337,10 +1337,10 @@ function curKey(){
 }
 function goPage(k,force){
   var m=/^L(\d)\.(\w+)$/.exec(k||"");
-  if(!m){ show(k,false,force); return; }
+  if(!m){ show(k,false,force); return true; }
   var n=+m[1], i=(PANEKEYS[n]||[]).indexOf(m[2]);
-  if(i<0){ show("send",false,force); return; } // a discussion page has no Scout tab: Scouts see My requirements
-  show("L"+n,false,force); setPane(n,i,force);
+  if(i<0) return false; // a discussion page has no Scout tab: Scouts stay where they are
+  show("L"+n,false,force); setPane(n,i,force); return true;
 }
 function boardSrc(){ return "/ai/scoreboard/?embed=1"+(state.squadSlot>0?"&lodge="+state.squadSlot:""); }
 function applyFlow(j){
@@ -1353,8 +1353,10 @@ function applyFlow(j){
   if(wrap){ if(hold||board) wrap.setAttribute("inert",""); else wrap.removeAttribute("inert"); }
   if(hold) $("holdMsg").textContent=flow.message||"Pay attention to your instructor.";
   var fr=$("boardOvFrame"); if(board){ if(!fr.getAttribute("src")) fr.setAttribute("src",boardSrc()); } else fr.removeAttribute("src");
-  if(flow.mode==="page") goPage(flow.page,true);
+  var onTab=true;
+  if(flow.mode==="page") onTab=goPage(flow.page,true)!==false;
   else if(flow.mode==="free"&&was!=="free"){ var back=freeKey; freeKey=""; if(back) goPage(back,true); }
+  $("ledBar").textContent=onTab?"Your instructor is leading the class. Your screen follows theirs.":"Your instructor is leading a class discussion. Eyes up front.";
 }
 function pollFlow(){
   fetch("/api/aiflow",{cache:"no-store"}).then(function(r){ return r.ok?r.json():null; }).then(function(j){

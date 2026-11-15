@@ -28,7 +28,7 @@ const PAGES = [
   "send",
 ];
 // Pages the Field Log has no tab for (nothing for a Scout to enter). The instructor can still lead and sign off here;
-// Scouts see "My requirements" (the "send" page) while the instructor is on one.
+// Scouts stay on whatever page they are on (with a "your instructor is leading a discussion" bar) while the instructor is on one.
 const DISCUSSION = ["L2.ex", "L3.home", "L3.boss", "L4.big", "L5.what", "L5.act", "L6.meth", "L6.why", "L7.share", "L8.who"];
 const MAX_MESSAGE = 200;
 
