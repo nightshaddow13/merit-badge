@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en" class="ai" data-badge="ai">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Students and teams: Artificial Intelligence</title>
+<meta name="description" content="Add teams and students and give each student a short password for their log.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><a class="brand" href="/index.html">Merit Badge Field Kit</a><nav aria-label="Main"><a href="/index.html">Home</a><a href="/cybersecurity/">Cybersecurity</a><a href="/ai/" aria-current="page">Artificial Intelligence</a><a href="/counselor/">Counselors</a></nav></header>
+<main id="main">
+<section class="band"><div class="wrap">
+  <p class="crumb">For instructors</p>
+  <h1>Students and teams</h1>
+  <p class="lead">Create your squads, add your students, and give each one a short password. A student types only that password to open their Field Log on any device. Each badge has its own list.</p>
+  <p class="jump"><a href="/ai/instructor.html">Back to Artificial Intelligence instructor tools</a> &middot; <a href="/ai/scoreboard/logs.html">Field Log dashboard</a></p>
+</div></section>
+<div class="wrap">
+  <p id="msg" class="msg" role="status"></p>
+  <div class="stgrid">
+    <section class="scard"><h2>Teams</h2>
+      <div id="teams"></div>
+      <form id="addTeamForm" class="row"><div><label for="newTeam">New team name</label><input id="newTeam" type="text" maxlength="30" autocomplete="off"></div><button id="addTeam" class="btn" type="submit">Create team</button></form>
+      <p id="teamHint" class="hint"></p>
+      <p class="hint">Teams appear on the public scoreboard as soon as they are created. Removing a team clears its points.</p>
+    </section>
+    <section class="scard"><h2>Add students</h2>
+      <form id="addForm">
+        <label for="addTeamSel">Team</label><select id="addTeamSel"></select>
+        <label for="names">Names, one per line (first name and last initial works well)</label>
+        <textarea id="names" rows="6" maxlength="4000" placeholder="Sam K&#10;Ana B"></textarea>
+        <p><button id="addBtn" class="btn" type="submit">Add students</button> <span id="addNote" class="hint"></span></p>
+      </form>
+      <div id="fresh" class="fresh" hidden></div>
+    </section>
+  </div>
+  <section class="scard wide"><h2>Students <span id="count" class="cnt"></span></h2>
+    <div class="row"><div><label for="flt">Show</label><select id="flt"><option value="">All teams</option></select></div>
+      <button id="print" class="btn ghost" type="button">Print passwords</button><button id="csv" class="btn ghost" type="button">Download list (.csv)</button></div>
+    <div id="students"></div>
+    <p class="hint">Passwords are 6 letters and numbers, easy to read aloud (no 0, O, 1 or l). Typing capitals, spaces or dashes makes no difference. Anyone with a password can open that student's log, so hand them out privately.</p>
+  </section>
+</div>
+</main>
+<footer class="foot"><p>An unofficial unit resource for Scouts and merit badge counselors. Not affiliated with or endorsed by Scouting America.</p></footer>
+<div id="pv" aria-hidden="true"></div>
+<style>
+.stgrid{display:grid;gap:16px;margin:12px 0}
+@media (min-width:1000px){main .wrap{max-width:min(1500px,calc(100vw - 48px))}.stgrid{grid-template-columns:1fr 1fr}}
+.wrap .scard{border:2px solid var(--ink);border-radius:12px;padding:18px 20px;background:var(--white);margin:12px 0}
+.stgrid .scard{margin:0}
+.scard h2{margin:0 0 10px;font-size:clamp(22px,3vw,30px)}
+.scard label{display:block;font-weight:700;font-size:15px;margin:10px 0 4px}
+.scard input[type=text],.scard select,.scard textarea{min-height:44px;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink);max-width:100%}
+.scard textarea{width:100%;box-sizing:border-box}
+.scard .btn{min-height:44px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:8px 0}
+.trow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}.trow input{flex:1 1 110px;min-width:0}.cnt{color:var(--mut);font-size:15px;font-weight:400}
+.hint{font-size:14px;color:var(--mut);margin:6px 0 0}
+.fresh{border:2px dashed var(--line);border-radius:10px;padding:12px;margin-top:12px}.fresh h3{margin:0 0 6px}
+.plainpw{list-style:none;margin:0 0 10px;padding:0}.plainpw li{margin:4px 0}
+code.pw{font-size:1.15em;letter-spacing:.08em;font-weight:700;user-select:all}
+.grid td.acts{white-space:nowrap}.grid .btn{margin-right:6px}
+.grid td input,.grid td select{width:100%;min-width:120px}
+#pv{display:none}
+@media print{body>*:not(#pv){display:none!important}#pv{display:block;color:#000;font:12pt/1.4 Georgia,serif}#pv h1{font-size:20pt}#pv h2{font-size:14pt;border-bottom:1px solid #000;margin:14pt 0 6pt}#pv section{break-inside:avoid}#pv .card{display:inline-flex;flex-direction:column;gap:4pt;border:1px dashed #000;padding:8pt 12pt;margin:0 8pt 8pt 0;min-width:150pt}#pv .card b{font:700 18pt ui-monospace,monospace;letter-spacing:.1em}}
+</style>
+<script src="/assets/students.js"></script>
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
