@@ -517,15 +517,16 @@ function curPage(){ return state.page||"L1"; }
 var SUBS={L1:[["L1","Terms"],["V1","Vocab Vault"]]};
 // Levels whose long page is split into in-page tabs. Order follows the Requirement order (and the slides).
 var PANES={
- 3:[["Class Race",["hvm"]],["3a\u20133c Examples",["home","work","school"]],["3e Timeline",["hist"]],["3f Boss Challenge",["boss"]]],
- 4:[["What Would You Do?",["wwyd"]],["Scout Law meets AI",["lawnote","law","charter","lawdisc"]],["Ethics worksheet",["big","tur"]]],
- 5:[["Spot the Fake",["sf"]],["5a What is a deepfake?",["what"]],["5b If it targets you",["act"]]],
- 6:[["Hallucination Hunt",["hnote","hunt"]],["Human Neural Network",["nnote","hnn"]],["Prompt Duel",["dnote","duel"]],["6b Five ways",["meth"]],["6c Why it matters",["why"]],["6d Your prompts",["pr"]]],
- 7:[["7a Plan it",["plan"]],["Build it",["tm"]],["7a Share it",["share"]]],
- 8:[["8b Interview",["who"]]]};
+ 3:[["Class Race",["hvm"]],["3e Timeline",["hist"]]],
+ 4:[["What Would You Do?",["wwyd"]],["Scout Law meets AI",["lawnote","law","charter","lawdisc"]]],
+ 5:[["Spot the Fake",["sf"]]],
+ 6:[["Hallucination Hunt",["hnote","hunt"]],["Human Neural Network",["nnote","hnn"]],["Prompt Duel",["dnote","duel"]],["6d Your prompts",["pr"]]],
+ 7:[["7a Plan it",["plan"]],["Build it",["tm"]]],
+ 8:[]};
 // Stable keys for the in-page tabs of each level, in tab order (the last one is the access-code tab).
+// Sections with nothing for a Scout to enter (discussion, spoken, or done on paper) have no tab. They stay listed and signed off on My requirements, and any answers saved earlier are kept.
 // The instructor's Run the class page (ai/scoreboard/run.html) and api/src/lib/aiflow.js use "L3.hist"-style keys built from these.
-var PANEKEYS={2:["ex","aion","tl","unlock"],3:["hvm","home","hist","boss","unlock"],4:["wwyd","lawnote","big","unlock"],5:["sf","what","act","unlock"],6:["hnote","nnote","dnote","meth","why","pr","unlock"],7:["plan","tm","share","unlock"],8:["who","unlock"]};
+var PANEKEYS={2:["aion","tl","unlock"],3:["hvm","hist","unlock"],4:["wwyd","lawnote","unlock"],5:["sf","unlock"],6:["hnote","nnote","dnote","pr","unlock"],7:["plan","tm","unlock"],8:["unlock"]};
 var paneSel={}, paneLbl={};
 function lvPage(i){ return "L"+i; }
 function parentLevel(p){ return p==="V1"?"L1":p==="G4"?"L4":p; }
@@ -544,7 +545,7 @@ function setupPanes(n,pg){
   } else if(PANES[n]){
     labels=PANES[n].map(function(x){ return x[0]; });
     kids.forEach(function(e){
-      if(e.dataset.sk){ for(var i=0;i<PANES[n].length;i++) if(PANES[n][i][1].indexOf(e.dataset.sk)>=0){ e.dataset.pane=i; break; } }
+      if(e.dataset.sk){ e.dataset.pane=-1; for(var i=0;i<PANES[n].length;i++) if(PANES[n][i][1].indexOf(e.dataset.sk)>=0){ e.dataset.pane=i; break; } } // -1: no tab, never shown
     });
     labels.push(n<8?"Unlock Level "+(n+1):"Shut it down"); var last=labels.length-1;
     kids.forEach(function(e){ if(e.classList.contains("codebox")) e.dataset.pane=last; });
@@ -718,12 +719,10 @@ function l2Refresh(){
 function buildL2(pg){
   state.l2=fixL2(state.l2);
   var top=el("div","progress"); top.innerHTML='<div class="pl"><span id="l2label"></span><span id="l2pct"></span></div><div class="bar"><i id="l2bar"></i></div>'; pg.appendChild(top);
-  var s1=el("div","stephead"); s1.innerHTML="<b>Step 1 &middot; Examples (nothing to write)</b> <span>2a, 2b, 2c. Be ready to identify the examples out loud. Ask Scoutly if you are stuck.</span>"; pg.appendChild(s1);
-  var ex=el("section","card"); ex.appendChild(el("h2",null,"2a, 2b, 2c \u00b7 AI examples")); ex.appendChild(el("p","hint","Be ready to identify ten examples of AI in everyday life (think home, phone, car, games, shopping and around town), five at work and five that support school or learning. Say how each one uses AI. Your counselor signs these off in class.")); pg.appendChild(ex);
-  var s2=el("div","stephead"); s2.innerHTML="<b>Step 2 &middot; AI or Not? (required)</b> <span>Requirement 2d. Ten rounds. Your squad votes together on one device: is it AI, or just automation following fixed rules? Your counselor leads the talk after each reveal.</span>"; pg.appendChild(s2);
+  var s2=el("div","stephead"); s2.innerHTML="<b>Step 1 &middot; AI or Not? (required)</b> <span>Requirement 2d. Ten rounds. Your squad votes together on one device: is it AI, or just automation following fixed rules? Your counselor leads the talk after each reveal.</span>"; pg.appendChild(s2);
   var g=el("section","card"); var gh=el("h2",null,"AI or Not? "); var gs=el("span","small"); gs.id="l2ai"; gh.appendChild(gs); g.appendChild(gh);
   var ad=el("div"); ad.id="aion"; g.appendChild(ad); pg.appendChild(g);
-  var s3=el("div","stephead"); s3.innerHTML="<b>Step 3 &middot; AI timeline (required)</b> <span>Requirement 2e. Drag the 8 milestone cards into order, oldest first. Check your order, then each scout writes the timeline down.</span>"; pg.appendChild(s3);
+  var s3=el("div","stephead"); s3.innerHTML="<b>Step 2 &middot; AI timeline (required)</b> <span>Requirement 2e. Drag the 8 milestone cards into order, oldest first. Check your order, then each scout writes the timeline down.</span>"; pg.appendChild(s3);
   var t=el("section","card"); var th=el("h2",null,"AI timeline "); var tc=el("span","small"); tc.id="l2c-tl"; th.appendChild(tc); t.appendChild(th);
   t.appendChild(el("p","hint","Talk it over as a squad. Drag a card by its handle (or use the up and down buttons) so the oldest event is at the top. Press Check order. Cards in the right place turn green. Move the others and check again."));
   if(state.l2.tlOrder.length!==8) state.l2.tlOrder=shuffled8();
@@ -764,7 +763,7 @@ function buildL2(pg){
   });
   t.appendChild(chk); t.appendChild(tlMsg);
   drawList(); pg.appendChild(t);
-  var s4=el("div","stephead"); s4.innerHTML="<b>Step 4 &middot; Unlock Level 3</b> <span>Finish every required item, then enter the code letter your counselor gives you.</span>"; pg.appendChild(s4);
+  var s4=el("div","stephead"); s4.innerHTML="<b>Step 3 &middot; Unlock Level 3</b> <span>Finish every required item, then enter the code letter your counselor gives you.</span>"; pg.appendChild(s4);
   l2Refresh();
 }
 var FIVE=["Be specific","Give context and a role","Show an example","Set the format and limits","Follow up"];
@@ -811,7 +810,7 @@ var LV={
  {k:"tm",t:"note",h:"Build it",hint:"Build your model, then test it.",link:["https://teachablemachine.withgoogle.com/","Open Teachable Machine"]},
  {k:"share",gone:1,nh:"Nothing to write. Be ready to share the steps you followed, what went wrong and what you would change.",t:"form",opt:1,h:"7a \u00b7 Share what you did",hint:"",f:[{k:"steps",label:"What steps did you follow?",area:1},{k:"exp",label:"What went wrong, and what would you change?",area:1}]}]},
 8:{secs:[
- {k:"who",t:"form",opt:1,h:"8b \u00b7 Interview an AI professional",hint:"Write notes from the press conference.",f:[{k:"role",label:"Who you interviewed (job title)"},{k:"day",label:"Daily work",area:1},{k:"chal",label:"Challenges",area:1},{k:"vis",label:"Vision for the field",area:1},{k:"train",label:"Training, education, certification, experience, and costs",area:1}]}]}
+ {k:"who",gone:1,nh:"Nothing to write. Be ready to talk about the AI professional you interviewed: their daily work, the challenges, their vision for the field, and the training and costs. Your counselor signs it off in class.",t:"form",opt:1,h:"8b \u00b7 Interview an AI professional",hint:"Write notes from the press conference.",f:[{k:"role",label:"Who you interviewed (job title)"},{k:"day",label:"Daily work",area:1},{k:"chal",label:"Challenges",area:1},{k:"vis",label:"Vision for the field",area:1},{k:"train",label:"Training, education, certification, experience, and costs",area:1}]}]}
 };
 function lvNew(){ var o={}; Object.keys(LV).forEach(function(n){ o[n]={}; LV[n].secs.forEach(function(s){
   if(s.t==="game"||s.t==="note"||(s.t==="hvm"||s.t==="hnn"||s.t==="duel")) return;
@@ -877,7 +876,7 @@ function buildPages(){
     var c=document.createElement("section"); c.className="card stub";
     c.innerHTML='<div class="big">'+n+'</div><h2>Level '+n+' &middot; '+META[n-1][0]+'</h2><p class="hint">Operation: '+META[n-1][1]+' &middot; '+META[n-1][2]+'</p>'+
       '<p>Your mission worksheet for this level will appear here. For now, follow along in class.</p>';
-    if(n===2){ c.className='card'; c.innerHTML='<h2>Level 2 &middot; AI Basics</h2><p class="hint">Operation: SLEEPER CELL &middot; Requirement 2. Work down the page, Step 1 to Step 4, the same order as the slides. Everything saves on this device.</p>'; pg.appendChild(c); buildL2(pg); }
+    if(n===2){ c.className='card'; c.innerHTML='<h2>Level 2 &middot; AI Basics</h2><p class="hint">Operation: SLEEPER CELL &middot; Requirement 2. Work down the page, Step 1 to Step 3, the same order as the slides. Everything saves on this device.</p>'; pg.appendChild(c); buildL2(pg); }
     else { c.className='card'; c.innerHTML='<h2>Level '+n+' &middot; '+META[n-1][0]+'</h2><p class="hint">Operation: '+META[n-1][1]+' &middot; '+META[n-1][2]+'. Work down the page in order, the same as the slides. Everything saves on this device.</p>'; pg.appendChild(c); buildLv(n,pg); }
     if(n===8){ var w=document.createElement("section"); w.className="card win"; w.id="win8"; w.hidden=true; w.innerHTML='<h2>MIRAGE SHUT DOWN</h2><p>Code word cracked. Tell your counselor, then head to <b>Send &amp; save</b> to print your certificate and email your log.</p><div class="actions"><button class="primary" id="goCert" type="button">Get my certificate</button></div>'; pg.appendChild(w); }
     host.appendChild(pg); if(n>=3) lvRefresh(n);
@@ -1454,7 +1453,8 @@ function goPage(k,force){
   var m=/^L(\d)\.(\w+)$/.exec(k||"");
   if(!m){ show(k,false,force); return; }
   var n=+m[1], i=(PANEKEYS[n]||[]).indexOf(m[2]);
-  show("L"+n,false,force); if(i>=0) setPane(n,i,force);
+  if(i<0){ show("send",false,force); return; } // a discussion page has no Scout tab: Scouts see My requirements
+  show("L"+n,false,force); setPane(n,i,force);
 }
 function boardSrc(){ return "/ai/scoreboard/?embed=1"+(state.squadSlot>0?"&lodge="+state.squadSlot:""); }
 function applyFlow(j){

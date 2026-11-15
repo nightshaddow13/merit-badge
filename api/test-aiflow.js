@@ -1,7 +1,7 @@
 "use strict";
 const assert = require("assert");
 const fs = require("fs");
-const { createAiflow, PAGES, MAX_MESSAGE } = require("./src/lib/aiflow");
+const { createAiflow, PAGES, DISCUSSION, MAX_MESSAGE } = require("./src/lib/aiflow");
 
 function mem() {
   const m = new Map();
@@ -51,8 +51,12 @@ function mem() {
   const fromLog = ["L1", "V1"];
   Object.keys(panes).sort((a, b) => a - b).forEach((n) => panes[n].forEach((k) => fromLog.push("L" + n + "." + k)));
   fromLog.push("send");
-  assert.deepStrictEqual(fromLog, PAGES, "Field Log tab order matches PAGES");
+  assert.deepStrictEqual(fromLog, PAGES.filter((k) => !DISCUSSION.includes(k)), "Field Log tab order matches PAGES (less the discussion pages)");
+  DISCUSSION.forEach((k) => assert.ok(PAGES.includes(k) && !fromLog.includes(k), k + " is a page with no Scout tab"));
   // the PANEKEYS for levels 3-8 are the first section key of each in-page tab in PANES, plus the unlock tab
+  const lvDef = log.slice(log.indexOf("var LV={"), log.indexOf("function lvNew"));
+  // a section the Field Log still has a writing field for must either have a tab or be marked gone (spoken only); no saved key is deleted
+  for (const k of DISCUSSION.filter((x) => x !== "L2.ex")) assert.ok(new RegExp('k:"' + k.split(".")[1] + '"').test(lvDef), k + " keeps its saved-data definition");
   const paneDef = log.match(/var PANES=\{([\s\S]*?)\};\nvar paneSel/)[1];
   for (const n of [3, 4, 5, 6, 7, 8]) {
     const line = paneDef.split("\n").find((l) => l.trim().startsWith(n + ":["));
@@ -64,5 +68,6 @@ function mem() {
   const run = fs.readFileSync(__dirname + "/../ai/scoreboard/run.html", "utf8");
   const runKeys = [...run.match(/var PAGES=\[([\s\S]*?)\n \];/)[1].matchAll(/\["(\w+(?:\.\w+)?)","/g)].map((m) => m[1]);
   assert.deepStrictEqual(runKeys, PAGES, "Run the class lists every page in order");
+  DISCUSSION.forEach((k) => assert.ok(new RegExp('\\["' + k + '","[^"]*","[^"]*Scouts see My requirements').test(run), k + " is labelled on the run page"));
   console.log("aiflow tests passed");
 })().catch((e) => { console.error(e); process.exit(1); });
