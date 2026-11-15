@@ -23,6 +23,7 @@ const who = (request) => {
 // GET  /api/wardenlog/restore?id=    anyone with the recovery code: that Warden's own backup
 // GET  /api/wardenlog/logs           staff: every log with its summary, sign-offs and waivers
 // GET  /api/wardenlog/log?id=        staff: one full log
+// GET  /api/wardenlog/answers?section=  staff: what every Warden wrote in one section (instructor live view)
 // POST /api/wardenlog/signoff        staff: { id, req, signed }
 // POST /api/wardenlog/grant          staff: { id, req, granted } approve or revoke a waiver
 // POST /api/wardenlog/edit           staff: { id, name?, lodge?, memberId?, data? } fix identity or written answers
@@ -45,9 +46,9 @@ app.http("wardenlog", {
         const id = new URL(request.url).searchParams.get("id") || "";
         if (action === "status") r = await wl.status(id);
         else if (action === "restore") r = await wl.restore(id);
-        else if (action === "logs" || action === "log") {
+        else if (action === "logs" || action === "log" || action === "answers") {
           if (!staff(request)) return deny;
-          r = action === "logs" ? await wl.list() : await wl.get(id);
+          r = action === "logs" ? await wl.list() : action === "answers" ? await wl.answers(new URL(request.url).searchParams.get("section") || "") : await wl.get(id);
         } else return { status: 404, headers: HEADERS, jsonBody: { error: "Not found." } };
       } else {
         const text = await request.text();

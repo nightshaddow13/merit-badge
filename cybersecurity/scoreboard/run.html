@@ -36,6 +36,13 @@
     <p class="muted small">Tip: the left and right arrow keys move to the previous or next page when you are not typing in the message box. Scouts cannot change tabs while you lead.</p>
   </section>
 
+  <section class="gm" id="here" aria-labelledby="hHere" hidden>
+    <h2 id="hHere">On this page</h2>
+    <p class="muted small" id="hereSub"></p>
+    <div id="gameBox"></div>
+    <div id="hereBody"></div>
+  </section>
+
   <section class="gm" aria-labelledby="hHold">
     <h2 id="hHold">Get everyone's attention</h2>
     <div class="acts">
@@ -64,6 +71,11 @@
 .pagelist button small{font-weight:400;color:var(--mut)}
 .pagelist button[aria-pressed=true]{border-color:var(--ink);background:var(--hi);color:#14201B}.pagelist button[aria-pressed=true] small{color:#14201B}
 .chips{display:inline-flex;flex-wrap:wrap;gap:8px}.chips button{font:inherit;font-size:15px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--white);color:var(--ink);cursor:pointer;min-height:40px}
+.gk{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line)}.gk b{min-width:150px}
+.row2 input,.row2 select{width:100%;max-width:640px;min-height:44px;font:inherit;padding:6px 10px;border:2px solid var(--ink);border-radius:8px;background:var(--white);color:var(--ink)}
+.gm .gm{border-width:1px;margin:12px 0}.gm .gm h3{margin:0 0 6px}
+.ans{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:10px 0}.ans article{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--white)}.ans h4{margin:0 0 4px;font-size:17px}.ans p{margin:2px 0;overflow-wrap:anywhere}.ans .none{color:var(--mut);font-style:italic}.ans ul{margin:4px 0 0;padding-left:20px}
+.sg{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}.sg b{min-width:170px}.sg .btn{min-height:40px;padding:4px 14px}
 @media (min-width:1000px){main .wrap{max-width:min(1100px,calc(100vw - 48px))}}
 </style>
 <script>
@@ -101,6 +113,89 @@
  QUICK.forEach(function(t){var b=E("button",null,t);b.type="button";b.onclick=function(){$("holdMsg").value=t;dirty=true;count()};$("chips").appendChild(b)});
  document.addEventListener("keydown",function(e){var t=e.target&&e.target.tagName;if(t==="TEXTAREA"||t==="INPUT"||t==="SELECT"||e.altKey||e.ctrlKey||e.metaKey)return;if(!S)return;if(e.key==="ArrowRight"){e.preventDefault();step(1)}else if(e.key==="ArrowLeft"){e.preventDefault();step(-1)}});
  function load(){return api("/api/cyberflow").then(function(j){if(!S||j.rev!==S.rev)paint(j)}).catch(function(e){say(e.message)})}
+
+ /* ---- On this page: game controls + what the Wardens wrote ---- */
+ var names=[],G=null,LG=[],AN={},hereKey="",ORD=["1st","2nd","3rd","4th","5th","6th"],LABELS=["Too guessable","Very guessable","Somewhat guessable","Safely unguessable","Very unguessable"];
+ var HINT={req:"Class overview. Scouts are looking at their own requirement list.",career:"Scouts are on the career worksheet (requirement 9, done before class).",surface:"Scouts are listing their attack surface. Run a game from here when you are ready.",breach:"Discussion page: nothing is typed. Sign off requirement 4e as Wardens explain their incident.",seal:"Hash Lab: nothing is typed. Sign off requirement 6c as Wardens show the hashing tool.",objects:"Discussion page: nothing is typed. Sign off requirement 7 as Wardens explain their objects."};
+ var SIGN={breach:["4e","Read about a recent incident and explained how it happened and what it cost."],seal:["6c","Used a hashing tool to show integrity checking."],objects:["7","Explained how connected objects can be attacked and how to protect them."]};
+ function lname(n){return names[n-1]||"Lodge "+n}
+ function who(l){return (l.name||"Unnamed Warden")+(l.lodge?" · "+l.lodge:"")}
+ function g(id){return $(id)}
+ function gapi(path,body){return api(path,body).catch(function(e){throw new Error(/401|403|Sign in/.test(e.message)?"Sign in as a counselor or scorekeeper.":e.message)})}
+ function gctl(body,done){return gapi("/api/cybergame/control",body).then(function(j){say(done||"");G=j;paintGame();return j}).catch(function(e){say(e.message)})}
+ function btn(t,fn,ghost){var b=E("button","btn"+(ghost?" ghost":""),t);b.type="button";b.onclick=fn;return b}
+ function paintGame(){
+  var box=g("gameBox"); if(!S||S.mode!=="page"||S.page!=="surface"){box.textContent="";box.dataset.sig="";return}
+  var a=G&&G.active,sig=JSON.stringify([a,G&&G.forge&&G.forge.ranked,G&&G.twokey&&G.twokey.entries,names.length]);
+  if(box.dataset.sig===sig)return; if(document.activeElement&&box.contains(document.activeElement)&&box.dataset.built==="1"&&!a===!JSON.parse(box.dataset.a||"false"))return;
+  box.dataset.sig=sig;box.dataset.built="1";box.dataset.a=JSON.stringify(!!a);box.textContent="";
+  var f=E("div","gm"),t=E("div","gm");
+  f.appendChild(E("h3",null,"Passphrase Forge"));
+  if(a==="forge"){
+   var r=G.forge&&G.forge.ranked||[];f.appendChild(E("p","muted",r.length+" lodge"+(r.length===1?"":"s")+" submitted so far. The ranking is on the scoreboard."));
+   r.forEach(function(e){var x=E("div","gk");x.appendChild(E("b",null,ORD[e.place-1]+" · "+lname(e.lodge)));x.appendChild(E("span",null,e.preview+" · "+LABELS[e.score]+" · "+e.length+" characters"));f.appendChild(x)});
+   var ac=E("div","acts");ac.appendChild(btn("End game and award points",function(){if(!confirm("End the game and put 1st +2 and 2nd +1 on the scoreboard?"))return;gctl({action:"end",award:true},"Game ended. Points added to the scoreboard.").then(function(j){if(j&&j.awarded&&j.awarded.length)say("Game ended. Added: "+j.awarded.map(function(q){return lname(q.lodge)+" +"+q.points}).join(", ")+".")})}));ac.appendChild(btn("End game without points",function(){if(!confirm("End the game without adding any points?"))return;gctl({action:"end"},"Game ended. No points added.")},1));f.appendChild(ac);
+  }else{
+   f.appendChild(E("p","muted","Each lodge submits only its passphrase strength. 1st gets +2 and 2nd gets +1."));
+   var m=E("div","row2"),ml=E("label",null,"Round type");ml.htmlFor="rfMode";var ms=E("select");ms.id="rfMode";[["standard","Standard: strongest wins"],["break","Break the weak one: biggest improvement wins"]].forEach(function(o){var op=E("option",null,o[1]);op.value=o[0];ms.appendChild(op)});m.appendChild(ml);m.appendChild(ms);f.appendChild(m);
+   var bm=E("div","row2"),bl=E("label",null,"Banned words (optional, comma separated)");bl.htmlFor="rfBan";var bi=E("input");bi.id="rfBan";bi.type="text";bi.maxLength=300;bi.autocomplete="off";bm.appendChild(bl);bm.appendChild(bi);f.appendChild(bm);
+   var st=btn("Start Passphrase Forge",function(){gctl({action:"start",game:"forge",mode:ms.value,banned:bi.value.split(",").map(function(x){return x.trim()}).filter(Boolean)},"Passphrase Forge started. It is on the scoreboard now.")});st.disabled=!!a;f.appendChild(E("div","acts")).appendChild(st);
+  }
+  t.appendChild(E("h3",null,"Two-Key Rite"));
+  if(a==="twokey"){
+   ((G.twokey&&G.twokey.entries)||[]).forEach(function(e){if(!names[e.lodge-1]&&!e.codes&&!e.place)return;var x=E("div","gk");x.appendChild(E("b",null,lname(e.lodge)));x.appendChild(E("span",null,e.place?"Finished "+ORD[e.place-1]+" (+"+e.points+")":e.codes+" of "+G.twokey.needed+" codes"));t.appendChild(x)});
+   t.appendChild(E("div","acts")).appendChild(btn("End game",function(){if(!confirm("End the Two-Key Rite? Points already earned stay on the scoreboard."))return;gctl({action:"end"},"Game ended. The scoreboard is back.")}));
+  }else{
+   t.appendChild(E("p","muted","Each lodge types two codes from its authenticator. 1st +3, 2nd +2, everyone after +1. Starting keeps the current scorecard."));
+   var ts=btn("Start Two-Key Rite",function(){gctl({action:"start",game:"twokey"},"Two-Key Rite started. It is on the scoreboard now.")});ts.disabled=!!a;t.appendChild(E("div","acts")).appendChild(ts);
+  }
+  var gs=E("p","muted small");gs.textContent=a?"A game is running, so the other one cannot start until it ends.":"Starting a game puts it on the public scoreboard and shows a Join banner in every Warden Log.";
+  box.appendChild(f);box.appendChild(t);box.appendChild(gs);
+ }
+ function card(l,lines){var a=E("article");a.appendChild(E("h4",null,who(l)));if(!lines.length)a.appendChild(E("p","none","Nothing yet."));lines.forEach(function(x){if(x[0]==="li"){var u=E("ul");x[1].forEach(function(i){u.appendChild(E("li",null,i))});a.appendChild(u)}else{var p=E("p");if(x[0])p.appendChild(E("b",null,x[0]+" "));p.appendChild(document.createTextNode(x[1]));a.appendChild(p)}});return a}
+ function paintHere(){
+  var sec=g("here");
+  if(!S||S.mode!=="page"){sec.hidden=true;return}
+  sec.hidden=false;var k=S.page,body=g("hereBody");g("hereSub").textContent=HINT[k]||"";
+  paintGame();
+  body.textContent="";
+  var n=LG.length;
+  if(k==="req"){
+   var wv=[],sg=0,drow=0;LG.forEach(function(l){sg+=Object.keys(l.signed||{}).length;Object.keys(l.waive||{}).forEach(function(r){if(l.waive[r].status==="pending")wv.push(who(l)+" asks to waive "+r+(l.waive[r].reason?" ("+l.waive[r].reason+")":""))})});
+   body.appendChild(E("p",null,n+" Warden Log"+(n===1?"":"s")+" started. "+sg+" requirement sign-off"+(sg===1?"":"s")+" recorded so far."));
+   if(wv.length){body.appendChild(E("p",null,"Waiver requests:"));var u=E("ul");wv.forEach(function(x){u.appendChild(E("li",null,x))});body.appendChild(u);var a=E("a",null,"Review in the Warden Log dashboard");a.href="/cybersecurity/scoreboard/logs.html";a.target="_blank";a.rel="noopener";body.appendChild(a)}else body.appendChild(E("p","muted","No waiver requests right now."));
+   return}
+  var d=AN[k]||[];
+  if(k==="career"||k==="surface"){
+   var done=LG.filter(function(l){return l.summary&&l.summary[k]===2}).length;
+   body.appendChild(E("p",null,done+" of "+n+" Wardens have finished this page."));
+   var box=E("div","ans");d.forEach(function(r){
+    var x=r.data,lines=[];
+    if(k==="career"){var cs=(x.careers||[]).filter(Boolean);if(cs.length)lines.push(["Careers",cs.join(", ")]);if(x.chosen)lines.push(["Chosen",x.chosen]);if(x.learned)lines.push(["Learned",x.learned])}
+    else{var it=(x.items||[]).filter(Boolean);if(it.length)lines.push(["li",it]);if(x.riskText||x.risk)lines.push(["Riskiest",x.riskText||x.risk]);if(x.protect)lines.push(["Protect",x.protect])}
+    box.appendChild(card(r,lines))});
+   if(!d.length)body.appendChild(E("p","muted","No Warden Logs yet."));body.appendChild(box);return}
+  var q=SIGN[k];
+  if(q){
+   var c=LG.filter(function(l){return l.signed&&l.signed[q[0]]}).length;
+   body.appendChild(E("p",null,"Requirement "+q[0]+": "+q[1]+" Signed off "+c+" of "+n+"."));
+   LG.slice().sort(function(a,b){return (a.name||"").localeCompare(b.name||"")}).forEach(function(l){
+    var on=!!(l.signed&&l.signed[q[0]]),row=E("div","sg");row.appendChild(E("b",null,who(l)));row.appendChild(E("span","pill "+(on?"ok":""),on?"Signed off":"Not yet"));
+    var b=btn(on?"Undo":"Sign off "+q[0],function(){b.disabled=true;gapi("/api/wardenlog/signoff",{id:l.id,req:q[0],signed:!on}).then(function(j){l.signed=j.signed;paintHere()}).catch(function(e){say(e.message);b.disabled=false})},on);row.appendChild(b);body.appendChild(row)});
+   if(!n)body.appendChild(E("p","muted","No Warden Logs yet."));
+  }
+ }
+ function loadHere(){
+  if(!S||S.mode!=="page"||document.hidden){paintHere();return Promise.resolve()}
+  var k=S.page,ps=[gapi("/api/wardenlog/logs").then(function(j){LG=j.logs||[]})];
+  if(k==="career"||k==="surface")ps.push(gapi("/api/wardenlog/answers?section="+k).then(function(j){AN[k]=j.answers||[]}));
+  if(k==="surface")ps.push(gapi("/api/cybergame").then(function(j){G=j}));
+  return Promise.all(ps).then(function(){say("")}).catch(function(e){say(e.message)}).then(paintHere);
+ }
+ function hereChanged(){var key=S&&S.mode==="page"?S.page:"";if(key!==hereKey){hereKey=key;g("gameBox").dataset.sig="";g("gameBox").dataset.built="";paintHere();loadHere()}}
+ var _paint=paint;paint=function(j){_paint(j);hereChanged()};
+ setInterval(loadHere,8000);document.addEventListener("visibilitychange",function(){if(!document.hidden)loadHere()});
+ fetch("/api/scores/cybersecurity",{cache:"no-store"}).then(function(r){return r.json()}).then(function(d){names=(d.lodges||[]).map(String)}).catch(function(){});
  load();setInterval(load,4000);
 })();
 </script>
