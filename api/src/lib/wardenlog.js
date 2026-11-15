@@ -42,7 +42,7 @@ function cleanSummary(s) {
   return out;
 }
 
-function createWardenLog(stores) {
+function createWardenLog(stores, roster) {
   const logs = stores.logs, ovr = stores.ovr;
   const row = async (id) => {
     const r = (await ovr.get("o-" + id)) || {};
@@ -57,12 +57,14 @@ function createWardenLog(stores) {
     if (!body.state || typeof body.state !== "object" || Array.isArray(body.state)) return { status: 400, body: { error: "Missing log." } };
     if (JSON.stringify(body.state).length > MAX_STATE) return { status: 413, body: { error: "That log is too large." } };
     const state = clean(body.state, 0);
+    const who = roster ? await roster.find(body.id) : null;
+    if (roster && !who) return { status: 403, body: { error: "Log in with your password to save your log.", login: true } };
     const key = "log-" + body.id;
     const old = await logs.get(key);
     if (!old && (await logs.list()).length >= MAX_LOGS) return { status: 409, body: { error: "The class backup is full. Ask your counselor." } };
     // A counselor edit is newer than anything this device has seen: do not overwrite it; the device pulls it first.
     if (old && old.meta.editedAt && body.seenEdit !== old.meta.editedAt) return { status: 409, body: { error: "Your counselor updated your log.", edited: true, editedAt: old.meta.editedAt } };
-    const meta = { id: body.id, name: txt(body.name, 40), lodge: txt(body.lodge, 40), memberId: typeof body.memberId === "string" ? body.memberId.replace(/\D/g, "").slice(0, 12) : "", updated: new Date().toISOString(), summary: cleanSummary(body.summary) };
+    const meta = { id: body.id, name: who ? who.name : txt(body.name, 40), lodge: who ? who.team : txt(body.lodge, 40), memberId: who ? who.scoutId : typeof body.memberId === "string" ? body.memberId.replace(/\D/g, "").slice(0, 12) : "", updated: new Date().toISOString(), summary: cleanSummary(body.summary) };
     if (old && old.meta.editedAt) { meta.editedAt = old.meta.editedAt; meta.editedBy = old.meta.editedBy; }
     await logs.put(key, { meta, state });
     return { status: 200, body: { saved: true, updated: meta.updated } };
@@ -82,6 +84,7 @@ function createWardenLog(stores) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return { status: 400, body: { error: "Send a JSON object." } };
     if (badId(body.id)) return { status: 400, body: { error: "Missing recovery code." } };
     if (!REQS.includes(body.req)) return { status: 400, body: { error: "Unknown requirement." } };
+    if (roster && !(await roster.find(body.id))) return { status: 403, body: { error: "Log in with your password first.", login: true } };
     if (!(await logs.get("log-" + body.id))) return { status: 409, body: { error: "Your log has not been backed up yet. Wait a few seconds and try again." } };
     const r = await row(body.id), cur = r.waive[body.req];
     if (!cur || cur.status !== "granted") r.waive[body.req] = { status: "pending", reason: txt(body.reason, 100), requestedAt: new Date().toISOString() };
@@ -92,16 +95,19 @@ function createWardenLog(stores) {
   // Public (recovery code): the Warden's own backup.
   async function restore(id) {
     if (badId(id)) return { status: 400, body: { error: "Missing recovery code." } };
+    if (roster && !(await roster.find(id))) return { status: 404, body: { error: "No backup found." } };
     const rec = await logs.get("log-" + id);
     if (!rec || !rec.state) return { status: 404, body: { error: "No backup found." } };
     return { status: 200, body: { state: rec.state, name: rec.meta.name || "", lodge: rec.meta.lodge || "", memberId: rec.meta.memberId || "", editedAt: rec.meta.editedAt || "" } };
   }
 
   // ---- staff only (the caller checks the role) ----
+  const withWho = (m, dir) => { if (!dir) return m; const d = dir.get(m.id); return d ? Object.assign({}, m, { name: d.name, lodge: d.team, memberId: d.scoutId, legacy: false }) : Object.assign({}, m, { legacy: true }); };
   async function list() {
     const ovrs = new Map((await ovr.list()).map((r) => [r.rowKey.slice(2), r.data]));
+    const dir = roster ? await roster.directory() : null;
     const out = (await logs.list()).map((r) => {
-      const m = r.data.meta, o = ovrs.get(m.id) || {};
+      const m = withWho(r.data.meta, dir), o = ovrs.get(m.id) || {};
       return Object.assign({}, m, { signed: o.signed || {}, waive: o.waive || {} });
     });
     out.sort((a, b) => (a.updated < b.updated ? 1 : -1));
@@ -123,7 +129,7 @@ function createWardenLog(stores) {
     const rec = await logs.get("log-" + id);
     if (!rec) return { status: 404, body: { error: "No such log." } };
     const r = await row(id);
-    return { status: 200, body: { meta: rec.meta, state: rec.state, signed: r.signed, waive: r.waive } };
+    return { status: 200, body: { meta: withWho(rec.meta, roster ? await roster.directory() : null), state: rec.state, signed: r.signed, waive: r.waive } };
   }
   // body: { id, req, signed: boolean }; `by` is the staff member's sign-in name
   async function signoff(body, by) {

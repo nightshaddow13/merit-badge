@@ -3,6 +3,7 @@
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
 const { createAiraLog } = require("../lib/airalog");
+const { rosterFor } = require("../lib/rosterfor");
 const { hasRole, emptyData } = require("../lib/scores");
 const { BOARDS } = require("../lib/boards");
 const { tableStore, scoreboardAdapter } = require("../lib/tablestore");
@@ -24,6 +25,7 @@ app.http("airalog", {
     const client = TableClient.fromConnectionString(conn, TABLE);
     const log = createAiraLog(tableStore(client, "airalog"));
     const sb = scoreboardAdapter(client, BOARDS.ai, emptyData, "ai");
+    const rs = rosterFor(client, "ai");
     const action = request.params.action || "";
     const keeper = hasRole(request.headers.get("x-ms-client-principal"), "scorekeeper");
 
@@ -32,7 +34,7 @@ app.http("airalog", {
       if (request.method === "GET") {
         if (action !== "roster") return { status: 404, headers: HEADERS, jsonBody: { error: "Not found." } };
         if (!keeper) return { status: 403, headers: HEADERS, jsonBody: { error: "Only scorekeepers can see the roster." } };
-        result = await log.roster();
+        result = await log.roster(rs);
       } else {
         let body = {};
         if (action !== "reset") {
@@ -40,10 +42,10 @@ app.http("airalog", {
           if (text.length > 1024) return { status: 413, headers: HEADERS, jsonBody: { error: "Too large." } };
           try { body = JSON.parse(text); } catch (e) { return { status: 400, headers: HEADERS, jsonBody: { error: "Send valid JSON." } }; }
         }
-        if (action === "") result = await log.submit(body, sb);
+        if (action === "") result = await log.submit(body, sb, rs);
         else if (action === "remove" || action === "reset") {
           if (!keeper) return { status: 403, headers: HEADERS, jsonBody: { error: "Only scorekeepers can do that." } };
-          result = action === "remove" ? await log.remove(body, sb) : await log.reset(sb);
+          result = action === "remove" ? await log.remove(body, sb, rs) : await log.reset(sb, rs);
         } else return { status: 404, headers: HEADERS, jsonBody: { error: "Not found." } };
       }
       return { status: result.status, headers: HEADERS, jsonBody: result.body };

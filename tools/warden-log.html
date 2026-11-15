@@ -124,6 +124,7 @@ body.led .nextrow{display:none}
 </style>
 <script src="/assets/schedule.js"></script>
 <script src="/assets/gate.js" data-badge="cy"></script>
+<script src="/assets/studentlogin.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -131,17 +132,18 @@ body.led .nextrow{display:none}
 
 <section class="card" id="who">
   <h2>Who is sealing this log?</h2>
+  <p class="hint" id="whoLine"></p>
   <div class="grid2">
-    <div><label for="nm">Warden name <span class="opt">(first name and last initial)</span></label><input type="text" id="nm" maxlength="40" autocomplete="off" placeholder="Sam K"></div>
+    <div><label for="nm">Warden name</label><input type="text" id="nm" maxlength="40" autocomplete="off" placeholder="Sam K"></div>
     <div><label for="lg">Lodge</label><select id="lg"><option value="">Not sure yet</option></select></div>
   </div>
-  <label for="mid">Scouting America member ID <span class="opt">(optional)</span></label><input type="text" id="mid" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Numbers only. Helps your counselor with advancement.">
+  <label for="mid">Scouting America member ID <span class="opt">(your instructor can add it)</span></label><input type="text" id="mid" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Numbers only. Helps your counselor with advancement.">
   <div class="safe"><b>Seal your findings, keep your secrets.</b> Never write a password, a private detail, an email address or a phone number here. Types only: write &ldquo;phone&rdquo;, not your PIN. Your counselor signs off each requirement once you are done. You do not sign it yourself.</div>
   <div class="safe" id="recBox"><b>Your recovery code:</b> <code class="rc" id="rc"></code><br>Write it down or take a screenshot. It brings your log back on another device or if this browser is cleared. Keep it private: it is the only key to your backup.</div>
   <details class="rec" id="recDet"><summary>Lost your progress? Recover it</summary>
     <div class="row"><input type="text" id="recIn" autocomplete="off" spellcheck="false" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx-xxxx" aria-label="Recovery code"><button class="btn ghost" id="recGo" type="button">Recover my log</button></div>
   </details>
-  <div class="row"><button class="btn ghost" id="exp" type="button">Save progress (.json)</button><label class="btn ghost" style="margin:0;cursor:pointer" for="imp">Load progress (.json)</label><input type="file" id="imp" accept=".json,application/json" hidden><button class="btn ghost" id="prn" type="button">Print my log</button></div>
+  <div class="row"><button class="btn ghost" id="exp" type="button">Save progress (.json)</button><label class="btn ghost" style="margin:0;cursor:pointer" for="imp">Load progress (.json)</label><input type="file" id="imp" accept=".json,application/json" hidden><button class="btn ghost" id="prn" type="button">Print my log</button><button class="btn ghost" id="signout" type="button">Not me / sign out</button></div>
   <div class="msg" id="recMsg" role="status"></div>
 </section>
 
@@ -181,7 +183,7 @@ body.led .nextrow{display:none}
 <script>
 (function(){
 "use strict";
-var KEY="warden_log_v1", API="/api/wardenlog";
+var KEY="warden_log_v1", API="/api/wardenlog", STU=null;
 var $=function(i){return document.getElementById(i)};
 var ID_RE=/^[a-f0-9]{16,32}$/;
 var SPEC=[
@@ -287,7 +289,7 @@ function backup(){
   if(!navigator.onLine){setStatus("Saved on this device. Backup waits for Wi-Fi.");return Promise.resolve()}
   sending=true; var rev=state.rev;
   return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.id,name:state.name,lodge:state.lodge,memberId:state.memberId,seenEdit:state.seenEdit,summary:summary(),state:state.data})})
-   .then(function(r){ if(r.status===409) return r.json().then(function(j){ if(j&&j.edited){ sending=false; return pullEdit(j.editedAt); } throw new Error("409"); }); if(!r.ok) throw new Error(String(r.status)); if(rev===state.rev) dirty=false; setStatus("Saved and backed up"); })
+   .then(function(r){ if(r.status===403){ sending=false; StudentLogin.relogin("cy"); return; } if(r.status===409) return r.json().then(function(j){ if(j&&j.edited){ sending=false; return pullEdit(j.editedAt); } throw new Error("409"); }); if(!r.ok) throw new Error(String(r.status)); if(rev===state.rev) dirty=false; setStatus("Saved and backed up"); })
    .catch(function(){setStatus("Saved on this device. Backup will retry.");setTimeout(scheduleBackup,15000)})
    .then(function(){sending=false});
 }
@@ -300,7 +302,7 @@ function pullEdit(at){
   }).catch(function(){});
 }
 function pollStatus(){
-  if(!navigator.onLine) return;
+  if(!navigator.onLine||!state.id) return;
   fetch(API+"/status?id="+state.id,{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
     if(!j) return; if(j.editedAt&&j.editedAt!==state.seenEdit&&!dirty) pullEdit(j.editedAt); var a=JSON.stringify([signed,waive]); signed=j.signed||{}; waive=j.waive||{};
     if(JSON.stringify([signed,waive])!==a) refresh();
@@ -628,9 +630,23 @@ function printLog(){
   window.print();
 }
 
-load(); setupHeader(); setupTools(); setupGames(); jumps(); build(); pollStatus(); setupFlow();
-$("recGo").onclick=recover; $("exp").onclick=exportJson; $("imp").onchange=function(){importJson(this.files[0]);this.value=""}; $("prn").onclick=printLog; $("prn2").onclick=printLog;
-if(dirty||state.rev>0) {dirty=true;scheduleBackup()}
+function main(stu){
+  STU=stu; KEY="warden_log_v1_"+stu.id;
+  load();
+  // The roster is the source of truth for who this is: name, team and Scouting ID come from the instructor.
+  state.id=stu.id; state.name=stu.name; state.lodge=stu.team||""; state.memberId=String(stu.scoutId||"").replace(/\D/g,"").slice(0,12); persist();
+  setupHeader();
+  $("nm").readOnly=true; $("mid").readOnly=true; $("lg").disabled=true;
+  $("whoLine").textContent="Signed in as "+stu.name+(stu.team?" of "+stu.team:". Your instructor has not put you on a team yet.");
+  $("recBox").hidden=true; $("recDet").hidden=true;
+  $("signout").onclick=function(){ if(dirty&&!confirm("Some work has not been backed up yet. Sign out anyway? It stays on this device and uploads when you sign back in.")) return; StudentLogin.signOut("cy"); };
+  // Fresh device (or cleared browser): bring back the saved log from the server.
+  if(!state.rev){ fetch(API+"/restore?id="+state.id,{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){ if(j&&j.state&&!state.rev){ applyState({name:stu.name,lodge:stu.team||"",memberId:state.memberId,data:j.state,seenEdit:j.editedAt||"",clean:true},state.id); } }).catch(function(){}); }
+  setupTools(); setupGames(); jumps(); build(); pollStatus(); setupFlow();
+  $("exp").onclick=exportJson; $("imp").onchange=function(){importJson(this.files[0]);this.value=""}; $("prn").onclick=printLog; $("prn2").onclick=printLog;
+  if(dirty||state.rev>0) {dirty=true;scheduleBackup()}
+}
+StudentLogin.start("cy", main);
 })();
 </script>
 </body>

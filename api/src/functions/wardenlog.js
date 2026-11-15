@@ -3,6 +3,7 @@
 const { app } = require("@azure/functions");
 const { TableClient } = require("@azure/data-tables");
 const { createWardenLog } = require("../lib/wardenlog");
+const { rosterFor } = require("../lib/rosterfor");
 const { hasRole } = require("../lib/scores");
 const { tableStore, bigStore } = require("../lib/tablestore");
 
@@ -37,7 +38,7 @@ app.http("wardenlog", {
     const conn = process.env.STORAGE_CONNECTION_STRING;
     if (!conn) return { status: 503, headers: HEADERS, jsonBody: { error: "Storage is not set up yet." } };
     const client = TableClient.fromConnectionString(conn, TABLE);
-    const wl = createWardenLog({ logs: bigStore(client, "wardenlog"), ovr: tableStore(client, "wardenlog-ovr") });
+    const wl = createWardenLog({ logs: bigStore(client, "wardenlog"), ovr: tableStore(client, "wardenlog-ovr") }, rosterFor(client, "cy"));
     const action = request.params.action || "";
     const deny = { status: 403, headers: HEADERS, jsonBody: { error: "Only counselors and scorekeepers can do that." } };
     try {

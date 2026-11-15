@@ -108,6 +108,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 </style>
 <script src="/assets/schedule.js"></script>
 <script src="/assets/gate.js" data-badge="ai"></script>
+<script src="/assets/studentlogin.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -121,15 +122,16 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 
   <section class="card" id="agent">
     <h2>Agent file</h2>
-    <p class="hint">Only your first name and last initial. Nothing here is typed into an AI chatbot.</p>
+    <p class="hint" id="whoLine">Nothing here is typed into an AI chatbot.</p>
+    <div class="row" style="margin-bottom:6px"><button class="secondary" id="signout" type="button">Not me / sign out</button></div>
     <div class="grid2">
-      <div><label for="name">Agent name (first name + last initial)</label><input type="text" id="name" autocomplete="off" maxlength="40"></div>
-      <div><label for="mid">Scouting America member ID (optional)</label><input type="text" id="mid" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Digits only"></div>
+      <div><label for="name">Agent name</label><input type="text" id="name" autocomplete="off" maxlength="40"></div>
+      <div><label for="mid">Scouting America member ID (your instructor can add it)</label><input type="text" id="mid" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Digits only"></div>
       <div><label for="squad">Squad</label><select id="squad"><option value="">Loading squads&hellip;</option></select></div>
     </div>
     <p class="hint" id="squadNote" role="status"></p>
     <p class="hint" id="ptsNote" role="status"></p>
-    <details class="rec"><summary>Lost your progress? Recover it</summary>
+    <details class="rec" id="recDet" hidden><summary>Lost your progress? Recover it</summary>
       <p class="hint">Your recovery code: <b id="recCode" style="font-family:Consolas,monospace;letter-spacing:.05em"></b>. Write it down or take a screenshot. If you close the page by mistake or switch devices, type it here to get your log back.</p>
       <div class="row"><input type="text" id="recIn" autocomplete="off" spellcheck="false" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx-xxxx"><button class="secondary" id="recGo" type="button">Recover my field log</button></div>
       <div class="msg" id="recMsg" role="status"></div>
@@ -238,7 +240,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 (function(){
 "use strict";
 var COUNSELOR_EMAIL = "xgoss@live.com";
-var STORE_KEY = "aira_field_log_v1";
+var STORE_KEY = "aira_field_log_v1", STU = null;
 
 // Add later levels here as new sections (same shape as Level 1).
 var LEVELS = [{
@@ -343,6 +345,7 @@ function newId(){ var a=new Uint8Array(12); try{ crypto.getRandomValues(a); }cat
 function ensureId(){ if(!/^[a-f0-9]{16,32}$/.test(state.scoutId||"")) state.scoutId=newId(); }
 function renderSquads(){
   var sel=$("squad"), note=$("squadNote"); if(!sel) return;
+  if(STU){ sel.textContent=""; var o1=document.createElement("option"); o1.value=state.squadSlot?String(state.squadSlot):""; o1.textContent=state.squad||"Not on a team yet"; sel.appendChild(o1); sel.value=o1.value; sel.disabled=true; note.textContent=state.squadSlot?"":"Your instructor has not put you on a team yet. Your points count once you are on one."; return; }
   var named=squads.map(function(n,i){ return {slot:i+1,name:n}; }).filter(function(x){ return x.name; });
   sel.innerHTML="";
   var o0=document.createElement("option"); o0.value=""; sel.appendChild(o0);
@@ -407,7 +410,7 @@ function backupLog(){
   if(sig===lastLogSig) return Promise.resolve(true);
   logBusy=true;
   return fetch("/api/fieldlog",{method:"POST",headers:{"Content-Type":"application/json"},body:sig})
-    .then(function(r){ if(!r.ok) throw new Error(); lastLogSig=sig; return true; })
+    .then(function(r){ if(r.status===403){ StudentLogin.relogin("ai"); throw new Error(); } if(!r.ok) throw new Error(); lastLogSig=sig; return true; })
     .catch(function(){ logTimer=setTimeout(function(){ logTimer=0; backupLog(); },30000); return false; })
     .then(function(ok){ logBusy=false; return ok; });
 }
@@ -443,7 +446,7 @@ function syncPoints(){
   if(syncing) return scheduleSync();
   var nm=(state.name||"").trim().replace(/\s+/g," ");
   if(!state.squadSlot || !squads[state.squadSlot-1]){ ptsMsg(""); return; }
-  if(!NAME_OK.test(nm)){ ptsMsg("Enter your first name and last initial (like Sam K) to add your points to your squad."); return; }
+  if(!STU&&!NAME_OK.test(nm)){ ptsMsg("Enter your first name and last initial (like Sam K) to add your points to your squad."); return; }
   ensureId();
   var p=pointsNow(), body={id:state.scoutId,slot:state.squadSlot,name:nm,vault:p.vault,terms:p.terms,levels:p.levels}, sig=JSON.stringify(body);
   if(sig===lastSent){ return; }
@@ -1423,7 +1426,16 @@ $("goVault").addEventListener("click",function(){ show("V1"); });
 $("bNext").addEventListener("click",bonusNext); $("bTimer").addEventListener("click",bonusTimer);
 (function(){ var h=$("tools"); TOOLS.forEach(function(t){ if(!t.url) return; var a=document.createElement("a"); a.href=t.url; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=t.label+" \u2197"; if(t.alt) a.className="alt"; h.appendChild(a); });
   if(!h.children.length) $("toolsCard").hidden=true; })();
-load(); ensureId(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); state.hvm=fixHvm(state.hvm); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page); loadSquads();
+function main(stu){
+STU=stu; STORE_KEY="aira_field_log_v1_"+stu.id;
+load();
+// The roster decides who this is: name, team and Scouting ID come from the instructor, and the student's id keys their log everywhere.
+state.scoutId=stu.id; state.name=stu.name; state.squadSlot=stu.slot===null?0:stu.slot+1; state.squad=stu.team||""; state.memberId=String(stu.scoutId||"").replace(/\D/g,"").slice(0,12);
+$("name").readOnly=true; $("mid").readOnly=true; $("signout").onclick=function(){ StudentLogin.signOut("ai"); };
+$("whoLine").textContent="Signed in as "+stu.name+(stu.team?" of "+stu.team:"")+". Nothing here is typed into an AI chatbot.";
+ensureId(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); state.hvm=fixHvm(state.hvm); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page); loadSquads();
+}
+StudentLogin.start("ai", main);
 })();
 </script>
 </body>

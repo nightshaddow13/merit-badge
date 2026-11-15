@@ -31,7 +31,7 @@ function cleanSummary(s) {
   return out;
 }
 
-function createFieldLog(stores) {
+function createFieldLog(stores, roster) {
   const logs = stores.logs, ovr = stores.ovr;
 
   async function ovrRow(id) { const r = (await ovr.get("o-" + id)) || {}; r.levels = r.levels || {}; r.signed = r.signed || {}; return r; }
@@ -43,10 +43,13 @@ function createFieldLog(stores) {
     if (!body.state || typeof body.state !== "object" || Array.isArray(body.state)) return { status: 400, body: { error: "Missing field log." } };
     const json = JSON.stringify(body.state);
     if (json.length > MAX_STATE) return { status: 413, body: { error: "That field log is too large." } };
+    // With a roster, only a student who logged in with their password can save, and the name and team come from the roster.
+    const who = roster ? await roster.find(body.id) : null;
+    if (roster && !who) return { status: 403, body: { error: "Log in with your password to save your field log.", login: true } };
     const key = "log-" + body.id;
     const old = await logs.get(key);
     if (!old && (await logs.list()).length >= MAX_LOGS) return { status: 409, body: { error: "The class backup is full. Ask your counselor." } };
-    const meta = { id: body.id, name: txt(body.name, 40), squad: txt(body.squad, 40), updated: new Date().toISOString(), summary: cleanSummary(body.summary) };
+    const meta = { id: body.id, name: who ? who.name : txt(body.name, 40), squad: who ? who.team : txt(body.squad, 40), scoutId: who ? who.scoutId : "", updated: new Date().toISOString(), summary: cleanSummary(body.summary) };
     await logs.put(key, { meta, state: body.state });
     return { status: 200, body: { saved: true, updated: meta.updated } };
   }
@@ -64,6 +67,7 @@ function createFieldLog(stores) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return { status: 400, body: { error: "Send a JSON object." } };
     if (typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };
     if (!isInt(body.level, 1, 8)) return { status: 400, body: { error: "level must be 1 to 8." } };
+    if (roster && !(await roster.find(body.id))) return { status: 403, body: { error: "Log in with your password first.", login: true } };
     if (!(await logs.get("log-" + body.id))) return { status: 409, body: { error: "Your field log has not been backed up yet. Wait a few seconds and try again." } };
     const missing = (Array.isArray(body.missing) ? body.missing : []).slice(0, 8).map((m) => txt(m, 100)).filter(Boolean);
     const row = await ovrRow(body.id);
@@ -76,16 +80,20 @@ function createFieldLog(stores) {
   // Public (the id is the Scout's private recovery code). Returns the Scout's own backup.
   async function restore(id) {
     if (typeof id !== "string" || !ID_RE.test(id)) return { status: 400, body: { error: "Missing recovery code." } };
+    if (roster && !(await roster.find(id))) return { status: 404, body: { error: "No backup found." } };
     const rec = await logs.get("log-" + id);
     if (!rec || !rec.state) return { status: 404, body: { error: "No backup found." } };
     return { status: 200, body: { state: rec.state } };
   }
 
   // ---- staff only (the caller checks the role) ----
+  // With a roster, the student's current name and team replace what was saved; logs from before the roster are marked legacy (read-only).
+  const withWho = (m, dir) => { if (!dir) return m; const d = dir.get(m.id); return d ? Object.assign({}, m, { name: d.name, squad: d.team, scoutId: d.scoutId, legacy: false }) : Object.assign({}, m, { legacy: true }); };
   async function list() {
     const ovrs = new Map((await ovr.list()).map((r) => [r.rowKey.slice(2), r.data]));
+    const dir = roster ? await roster.directory() : null;
     const out = (await logs.list()).map((r) => {
-      const m = r.data.meta, o = (ovrs.get(m.id) || { levels: {} }).levels;
+      const m = withWho(r.data.meta, dir), o = (ovrs.get(m.id) || { levels: {} }).levels;
       return Object.assign({}, m, { overrides: o, signed: (ovrs.get(m.id) || {}).signed || {} });
     });
     out.sort((a, b) => (a.updated < b.updated ? 1 : -1));
@@ -96,7 +104,7 @@ function createFieldLog(stores) {
     const rec = await logs.get("log-" + id);
     if (!rec) return { status: 404, body: { error: "No such field log." } };
     const row = await ovrRow(id);
-    return { status: 200, body: { meta: rec.meta, state: rec.state, overrides: row.levels, signed: row.signed } };
+    return { status: 200, body: { meta: withWho(rec.meta, roster ? await roster.directory() : null), state: rec.state, overrides: row.levels, signed: row.signed } };
   }
   async function grant(body) {
     if (!body || typeof body.id !== "string" || !ID_RE.test(body.id)) return { status: 400, body: { error: "Missing agent id." } };
