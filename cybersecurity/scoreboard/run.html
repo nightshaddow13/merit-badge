@@ -80,7 +80,7 @@
 </style>
 <script>
 (function(){
- var PAGES=[["req","My requirements","What is left to sign off"],["career","1 \u00b7 Paths of the Order","Career worksheet (req 9)"],["surface","2 \u00b7 My Attack Surface","List and class games (req 4f)"],["seal","3 \u00b7 Press the Seal","Hash Lab (req 6c)"],["breach","Breach News (discussion)","Req 4e. Scouts see My requirements"],["objects","Enchanted Objects (discussion)","Req 7. Scouts see My requirements"],["board","Scoreboard tab","Their Tools tab: the live scoreboard"]];
+ var PAGES=[["req","My requirements","What is left to sign off"],["career","1 \u00b7 Paths of the Order","Career worksheet (req 9)"],["surface","2 \u00b7 My Attack Surface","List (req 4f)"],["forge","3 \u00b7 Passphrase Forge","Class game"],["rite","4 \u00b7 Two-Key Rite","Class game"],["seal","5 \u00b7 Press the Seal","Hash Lab (req 6c)"],["breach","Breach News (discussion)","Req 4e. Scouts see My requirements"],["objects","Enchanted Objects (discussion)","Req 7. Scouts see My requirements"],["board","Scoreboard tab","Their Tools tab: the live scoreboard"]];
  var QUICK=["Eyes up front. Your instructor is talking.","Hands off the keyboards for a moment.","Back in five minutes.","Time to move: wait for the next instruction."];
  var msg=document.getElementById("msg"),S=null,busy=false;
  function $(i){return document.getElementById(i)}
@@ -116,7 +116,7 @@
 
  /* ---- On this page: game controls + what the Wardens wrote ---- */
  var names=[],G=null,LG=[],AN={},hereKey="",ORD=["1st","2nd","3rd","4th","5th","6th"],LABELS=["Too guessable","Very guessable","Somewhat guessable","Safely unguessable","Very unguessable"];
- var HINT={req:"Class overview. Scouts are looking at their own requirement list.",career:"Scouts are on the career worksheet (requirement 9, done before class).",surface:"Scouts are listing their attack surface. Run a game from here when you are ready.",breach:"Discussion page: nothing is typed. Sign off requirement 4e as Wardens explain their incident.",seal:"Hash Lab: nothing is typed. Sign off requirement 6c as Wardens show the hashing tool.",objects:"Discussion page: nothing is typed. Sign off requirement 7 as Wardens explain their objects.",board:"Scouts are on their Scoreboard tab (tools). Use Show the scoreboard instead to cover the whole screen."};
+ var HINT={req:"Class overview. Scouts are looking at their own requirement list.",career:"Scouts are on the career worksheet (requirement 9, done before class).",surface:"Scouts are listing their attack surface (requirement 4f).",breach:"Discussion page: nothing is typed. Sign off requirement 4e as Wardens explain their incident.",forge:"Passphrase Forge tab. Scouts can practice scoring a made-up passphrase. Start the game from here when you are ready.",rite:"Two-Key Rite tab. Start the game from here when Wardens have their authenticators ready.",seal:"Hash Lab: nothing is typed. Sign off requirement 6c as Wardens show the hashing tool.",objects:"Discussion page: nothing is typed. Sign off requirement 7 as Wardens explain their objects.",board:"Scouts are on their Scoreboard tab (tools). Use Show the scoreboard instead to cover the whole screen."};
  var REQP={career:["9","Career research"],surface:["4f","Attack surface list"]};
  var SIGN={breach:["4e","Read about a recent incident and explained how it happened and what it cost."],seal:["6c","Used a hashing tool to show integrity checking."],objects:["7","Explained how connected objects can be attacked and how to protect them."]};
  function lname(n){return names[n-1]||"Lodge "+n}
@@ -126,8 +126,8 @@
  function gctl(body,done){return gapi("/api/cybergame/control",body).then(function(j){say(done||"");G=j;paintGame();return j}).catch(function(e){say(e.message)})}
  function btn(t,fn,ghost){var b=E("button","btn"+(ghost?" ghost":""),t);b.type="button";b.onclick=fn;return b}
  function paintGame(){
-  var box=g("gameBox"); if(!S||S.mode!=="page"||S.page!=="surface"){box.textContent="";box.dataset.sig="";return}
-  var a=G&&G.active,sig=JSON.stringify([a,G&&G.forge&&G.forge.ranked,G&&G.twokey&&G.twokey.entries,names.length]);
+  var box=g("gameBox"); if(!S||S.mode!=="page"||(S.page!=="forge"&&S.page!=="rite")){box.textContent="";box.dataset.sig="";return}
+  var a=G&&G.active,sig=JSON.stringify([S.page,a,G&&G.forge&&G.forge.ranked,G&&G.twokey&&G.twokey.entries,names.length]);
   if(box.dataset.sig===sig)return; if(document.activeElement&&box.contains(document.activeElement)&&box.dataset.built==="1"&&!a===!JSON.parse(box.dataset.a||"false"))return;
   box.dataset.sig=sig;box.dataset.built="1";box.dataset.a=JSON.stringify(!!a);box.textContent="";
   var f=E("div","gm"),t=E("div","gm");
@@ -151,7 +151,7 @@
    var ts=btn("Start Two-Key Rite",function(){gctl({action:"start",game:"twokey"},"Two-Key Rite started. It is on the scoreboard now.")});ts.disabled=!!a;t.appendChild(E("div","acts")).appendChild(ts);
   }
   var gs=E("p","muted small");gs.textContent=a?"A game is running, so the other one cannot start until it ends.":"Starting a game puts it on the public scoreboard and shows a Join banner in every Warden Log.";
-  box.appendChild(f);box.appendChild(t);box.appendChild(gs);
+  box.appendChild(S.page==="forge"?f:t);box.appendChild(gs);
  }
  function waiveBtn(l,r,after){
   var wv=l.waive&&l.waive[r],st=wv&&wv.status,b=btn(st==="granted"?"Revoke waiver":st==="pending"?"Approve waiver":"Waive "+r,function(){
@@ -197,7 +197,7 @@
   if(!S||S.mode!=="page"||document.hidden){paintHere();return Promise.resolve()}
   var k=S.page,ps=[gapi("/api/wardenlog/logs").then(function(j){LG=j.logs||[]})];
   if(k==="career"||k==="surface")ps.push(gapi("/api/wardenlog/answers?section="+k).then(function(j){AN[k]=j.answers||[]}));
-  if(k==="surface")ps.push(gapi("/api/cybergame").then(function(j){G=j}));
+  if(k==="forge"||k==="rite")ps.push(gapi("/api/cybergame").then(function(j){G=j}));
   return Promise.all(ps).then(function(){say("")}).catch(function(e){say(e.message)}).then(paintHere);
  }
  function hereChanged(){var key=S&&S.mode==="page"?S.page:"";if(key!==hereKey){hereKey=key;g("gameBox").dataset.sig="";g("gameBox").dataset.built="";paintHere();loadHere()}}
