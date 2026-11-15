@@ -151,6 +151,17 @@ Enter the same recovery code on the second device (Agent file > "Lost your progr
 A Scout can only enter the access code for Level N once the scoreboard's "Levels completed" (set on `/ai/scoreboard/edit.html`) is at least N; until then the code box is disabled with a "locked" note, and pressing Unlock re-checks `GET /api/scores/ai`. If the scoreboard can't be reached the code is not accepted. This is a classroom gate: the code check itself still runs in the browser, so a determined Scout can bypass it with developer tools. After the final code (`won`), the Send & save page (and the "MIRAGE SHUT DOWN" card) offers a landscape PDF Certificate of Completion with the Scout's name, squad, date and optional member ID: print it, download it, or email it to themselves. It states that it is not an official Scouting America award.
 
 
+## Run the class (Cybersecurity, instructor-led)
+
+`/cybersecurity/scoreboard/run.html` (counselor or scorekeeper role, linked from the Cybersecurity instructor tools) lets the instructor lead every Scout's Warden Log from one screen. It writes one small record (`cyberflow` partition in the `cup` table, no new Azure setup) through `POST /api/cyberflow/control`; Warden Logs poll `GET /api/cyberflow` every 3 seconds.
+
+- **Move to a page**: pick any Warden Log page (or Previous / Next, or the arrow keys). Every Scout's screen goes to it, the tabs and Next buttons are locked, and a "Your instructor is leading the class" bar shows. Locks from unfinished worksheets are ignored while the instructor leads.
+- **Hold screens**: a themed "Eyes up front" holding page covers the whole Warden Log, with an optional custom message (up to 200 characters, shown as plain text; quick-message buttons included). Typed work is never touched.
+- **Show the scoreboard**: the live scoreboard covers every Warden Log.
+- **Let Scouts roam freely**: back to the normal behaviour; each Scout returns to the tab they were on.
+
+Holding keeps the page the instructor was on, so choosing it again resumes. Run `node api/test-cyberflow.js` for the library tests. Only the Warden Log follows the instructor; the A.I.R.A. Field Log does not yet.
+
 ## Warden Log (Cybersecurity worksheets)
 
 `/tools/warden-log.html` is the online version of the 6-page per-Warden print pack (the PDF stays as the paper backup). A Warden enters a name and picks a lodge (names come from `GET /api/scores/cybersecurity`), then works through five sections. Only two ask for writing, because the official requirements only ask for that: the career worksheet (req 9a, can be started at home) and My Attack Surface (4f, a list). Breach News Report (4e), Press the Seal (6c, with the Hash Lab) and Enchanted Objects (7) are discuss-or-demonstrate requirements, so those tabs have instructions and no text boxes; the counselor signs them off in class from the dashboard, and they never lock the next tab. The old Spot the Forgery and Class reflection sections were removed. Answers saved by earlier versions are kept (the API and counselor dashboard still read them). It autosaves to `localStorage` (`warden_log_v1`), backs up to the API keyed by a random private device id (the recovery code), can export/import `.json`, and has a print view. Text that looks like an email, phone number or password triggers a warning (never a block).

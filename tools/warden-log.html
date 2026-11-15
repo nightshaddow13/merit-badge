@@ -106,6 +106,21 @@ code.rc{font:16px Consolas,monospace;letter-spacing:.05em;word-break:break-all}
   #printView dd{margin:0 0 0 12pt;white-space:pre-wrap}
   #printView section{break-inside:avoid}
 }
+
+/* instructor-led class flow */
+.holdov,.boardov{position:fixed;inset:0;z-index:80}
+.holdov[hidden],.boardov[hidden]{display:none}
+.holdov{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:6vh 6vw;background:radial-gradient(ellipse at 50% 38%,#3a2a68 0%,var(--bg) 62%);color:var(--ink)}
+.holdov svg{width:clamp(72px,16vh,150px);height:auto;filter:drop-shadow(0 6px 18px rgba(244,182,63,.35))}
+.holdov h2{margin:0;font-size:clamp(34px,8vh,88px);line-height:1;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)}
+.holdov .holdmsg{margin:0;max-width:26em;font-size:clamp(20px,4.2vh,44px);line-height:1.25;overflow-wrap:anywhere}
+.holdov .holdsub{margin:6px 0 0;color:var(--mut);font-size:clamp(14px,2.2vh,20px)}
+.boardov{display:flex;flex-direction:column;background:var(--bg)}
+.boardov iframe{flex:1;width:100%;border:0;background:#fff}
+body.led .tabs{pointer-events:none;opacity:.55}
+body.led .nextrow{display:none}
+@media (prefers-reduced-motion:no-preference){.holdov svg{animation:holdpulse 3.2s ease-in-out infinite}}
+@keyframes holdpulse{50%{transform:translateY(-6px)}}
 </style>
 <script src="/assets/schedule.js"></script>
 <script src="/assets/gate.js" data-badge="cy"></script>
@@ -136,6 +151,7 @@ code.rc{font:16px Consolas,monospace;letter-spacing:.05em;word-break:break-all}
   <div class="tabs" id="tabs" role="tablist" aria-label="Worksheets"></div>
 </div>
 
+<div id="ledBar" class="gamebar" hidden role="status" aria-live="polite">Your instructor is leading the class. Your screen follows theirs.</div>
 <div id="gameBar" class="gamebar" hidden role="status" aria-live="polite"><span id="gameTxt"></span> <button class="btn" id="gameJoin" type="button">Join the game</button></div>
 <div id="gameOv" class="gameov" hidden role="dialog" aria-modal="true" aria-label="Live game"><div class="gameov-bar"><b id="gameOvT">Live game</b><button class="btn ghost" id="gameOvX" type="button">Close</button></div><iframe id="gameFrame" title="Live game"></iframe></div>
 <div id="reqPanel" role="tabpanel" hidden>
@@ -151,6 +167,14 @@ code.rc{font:16px Consolas,monospace;letter-spacing:.05em;word-break:break-all}
 <div id="secs"></div>
 <div id="printView" aria-hidden="true"></div>
 </div>
+
+<div id="holdOv" class="holdov" hidden role="dialog" aria-modal="true" aria-labelledby="holdT" aria-describedby="holdMsg">
+  <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M20 28v-8a12 12 0 0 1 24 0v8" fill="none" stroke="#F4B63F" stroke-width="5" stroke-linecap="round"/><rect x="12" y="28" width="40" height="30" rx="6" fill="#F4B63F"/><circle cx="32" cy="40" r="4.5" fill="#17112B"/><rect x="30" y="42" width="4" height="9" rx="2" fill="#17112B"/></svg>
+  <h2 id="holdT">Eyes up front</h2>
+  <p class="holdmsg" id="holdMsg">Pay attention to your instructor.</p>
+  <p class="holdsub">Your work is saved. This screen changes when your instructor is ready.</p>
+</div>
+<div id="boardOv" class="boardov" hidden role="dialog" aria-modal="true" aria-label="Scoreboard"><iframe id="boardOvFrame" title="Scoreboard"></iframe></div>
 
 <script src="/assets/requirements.js"></script>
 <script src="/assets/warden-rules.js"></script>
@@ -221,6 +245,7 @@ function blank(){
    reflect:{learned:"",lodge:"",next:""}}};
 }
 var state=blank(), signed={}, waive={};
+var flow={mode:"free",page:"req",message:"",rev:-1}, freeTab="";
 // merge any saved/imported object onto the blank shape so missing or odd values can never break a render
 function merge(dst,src){
   if(typeof dst==="string") return typeof src==="string"?src.slice(0,1000):dst;
@@ -453,9 +478,10 @@ function lockedBy(k){
   var i=SPEC.findIndex(function(sp){return sp.k===k}); if(i<0) return null;
   for(var j=0;j<i;j++){ if(!SPEC[j].optional&&!SPEC[j].nowrite&&secState(SPEC[j])<2) return SPEC[j]; } return null;
 }
-function setTab(k,scroll){
+function setTab(k,scroll,force){
+  if(flow.mode==="page"){ k=flow.page; force=true; }   // the instructor is leading: stay where they are, whatever is locked
   if(!TABS.some(function(t){return t.k===k})) k="req";
-  var lk=lockedBy(k);
+  var lk=force?null:lockedBy(k);
   if(lk){ setStatus("Locked: finish "+lk.n+". "+lk.title.split(":")[0].replace(/^My /,"")+" first, or ask your counselor to waive it."); k=lk.k; }
   curTab=k;
   TABS.forEach(function(t){ var b=$("t-"+t.k); if(b){ b.setAttribute("aria-selected",t.k===k?"true":"false"); b.tabIndex=t.k===k?0:-1; } });
@@ -518,6 +544,27 @@ function pollGame(){
 function openGame(){ if(!liveGame) return; $("gameOvT").textContent=GAME_NAMES[liveGame]; $("gameFrame").setAttribute("src",toolUrl(GAME_URL[liveGame])); $("gameOv").hidden=false; }
 function closeGame(){ $("gameOv").hidden=true; $("gameFrame").removeAttribute("src"); }
 function setupGames(){ $("gameJoin").onclick=openGame; $("gameOvX").onclick=closeGame; pollGame(); setInterval(pollGame,6000); }
+// ---- instructor-led class flow: the instructor's Run the class page says which screen every Warden Log shows ----
+function applyFlow(j){
+  var was=flow.mode; flow={mode:j.mode,page:j.page,message:j.message||"",rev:j.rev};
+  var wrap=document.querySelector(".wrap"), hold=flow.mode==="hold", board=flow.mode==="board";
+  document.body.classList.toggle("led",flow.mode!=="free");
+  $("ledBar").hidden=flow.mode!=="page";
+  $("holdOv").hidden=!hold; $("boardOv").hidden=!board;
+  if(wrap){ if(hold||board) wrap.setAttribute("inert",""); else wrap.removeAttribute("inert"); }
+  if(hold) $("holdMsg").textContent=flow.message||"Pay attention to your instructor.";
+  if(board){ var fr=$("boardOvFrame"); fr.setAttribute("src","/cybersecurity/scoreboard/?embed=1"+(lodgeSlot()?"&lodge="+lodgeSlot():"")); } else $("boardOvFrame").removeAttribute("src");
+  if(flow.mode!=="free"&&was==="free") freeTab=curTab;
+  if(flow.mode==="page") setTab(flow.page,true,true);
+  else if(flow.mode==="free"&&was!=="free"){ var back=freeTab; freeTab=""; if(back) setTab(back,false); }
+  if(flow.mode!=="free") setStatus("Your instructor is leading the class");
+}
+function pollFlow(){
+  fetch("/api/cyberflow",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
+    if(j&&typeof j.rev==="number"&&j.rev!==flow.rev) applyFlow(j);
+  }).catch(function(){});
+}
+function setupFlow(){ pollFlow(); setInterval(pollFlow,3000); document.addEventListener("visibilitychange",function(){ if(!document.hidden) pollFlow(); }); }
 // ---- header fields, lodges ----
 function setupHeader(){
   $("nm").value=state.name;
@@ -581,7 +628,7 @@ function printLog(){
   window.print();
 }
 
-load(); setupHeader(); setupTools(); setupGames(); jumps(); build(); pollStatus();
+load(); setupHeader(); setupTools(); setupGames(); jumps(); build(); pollStatus(); setupFlow();
 $("recGo").onclick=recover; $("exp").onclick=exportJson; $("imp").onchange=function(){importJson(this.files[0]);this.value=""}; $("prn").onclick=printLog; $("prn2").onclick=printLog;
 if(dirty||state.rev>0) {dirty=true;scheduleBackup()}
 })();
