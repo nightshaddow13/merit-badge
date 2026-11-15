@@ -387,6 +387,16 @@
       ]
     },
     {
+      "route": "/api/wardenlog/answers",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/api/wardenlog/log",
       "methods": [
         "GET"
