@@ -57,7 +57,7 @@ function mem() {
   const lvDef = log.slice(log.indexOf("var LV={"), log.indexOf("function lvNew"));
   // a section the Field Log still has a writing field for must either have a tab or be marked gone (spoken only); no saved key is deleted
   for (const k of DISCUSSION.filter((x) => x !== "L2.ex")) assert.ok(new RegExp('k:"' + k.split(".")[1] + '"').test(lvDef), k + " keeps its saved-data definition");
-  const paneDef = log.match(/var PANES=\{([\s\S]*?)\};\nvar paneSel/)[1];
+  const paneDef = log.slice(log.indexOf("var PANES={"), log.indexOf("// Stable keys for the in-page tabs"));
   for (const n of [3, 4, 5, 6, 7, 8]) {
     const line = paneDef.split("\n").find((l) => l.trim().startsWith(n + ":["));
     const firsts = [...line.matchAll(/\["[^"\\]*(?:\\.[^"\\]*)*",\["(\w+)"/g)].map((m) => m[1]);
