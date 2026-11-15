@@ -14,7 +14,7 @@
 const KEY = "flow";
 const MODES = ["free", "page", "hold", "board"];
 // Field Log pages, in class order. "L3.hist" is the "hist" in-page tab on Level 3; "L3" alone would be a whole level.
-// "L1" and "V1" are Level 1's Terms and Vocab Vault pages, "send" is Send & save. "unlock" is the access-code tab at the end of a level.
+// Discussion pages (see DISCUSSION below) are listed here too so they can be led. "L1" and "V1" are Level 1's Terms and Vocab Vault pages, "send" is Send & save. "unlock" is the access-code tab at the end of a level.
 // There is no scoreboard tab in the AI Field Log; the "board" mode covers the whole screen instead.
 const PAGES = [
   "L1", "V1",
@@ -27,6 +27,9 @@ const PAGES = [
   "L8.who", "L8.unlock",
   "send",
 ];
+// Pages the Field Log has no tab for (nothing for a Scout to enter). The instructor can still lead and sign off here;
+// Scouts see "My requirements" (the "send" page) while the instructor is on one.
+const DISCUSSION = ["L2.ex", "L3.home", "L3.boss", "L4.big", "L5.what", "L5.act", "L6.meth", "L6.why", "L7.share", "L8.who"];
 const MAX_MESSAGE = 200;
 
 function cleanMessage(v) {
@@ -73,4 +76,4 @@ function createAiflow(store) {
   return { state, control };
 }
 
-module.exports = { createAiflow, PAGES, MODES, MAX_MESSAGE };
+module.exports = { createAiflow, PAGES, DISCUSSION, MODES, MAX_MESSAGE };
