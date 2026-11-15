@@ -68,5 +68,18 @@ const body = (n, o) => Object.assign({ id: hex(n), name: "Sam K", squad: "Owls",
   assert.ok((await g.list()).body.logs.find((l) => l.id === hex(1)).signed[3]);
   assert.ok((await g.get(hex(1))).body.signed[3]);
   assert.strictEqual((await g.signoff({ id: hex(1), req: 3, signed: false }, "x")).body.signed[3], undefined);
-  console.log("fieldlog tests passed");
+    // staff answers for one section across every Scout
+  {
+    const g = createFieldLog({ logs: mem(), ovr: mem() });
+    await g.save(body(1, { name: "Sam K", state: { lv: { 6: { pr: [{ p: "one" }, { p: "" }, { p: "" }] } } } }));
+    await g.save(body(2, { name: "Ana B", state: { answers: {} } }));
+    const a = await g.answers("L6.pr");
+    assert.strictEqual(a.status, 200);
+    assert.deepStrictEqual(a.body.answers.map((x) => x.name).sort(), ["Ana B", "Sam K"]);
+    assert.deepStrictEqual(a.body.answers.find((x) => x.name === "Sam K").data[0], { p: "one" });
+    assert.deepStrictEqual(a.body.answers.find((x) => x.name === "Ana B").data, {}, "no answers yet is empty, not an error");
+    for (const bad of ["", "nope", "__proto__", "constructor", "L6", "L6.__proto__", "L9.pr", undefined, null, 5]) assert.strictEqual((await g.answers(bad)).status, 400, String(bad));
+    assert.strictEqual((await g.answers("L2")).status, 200);
+  }
+console.log("fieldlog tests passed");
 })().catch((e) => { console.error(e); process.exit(1); });

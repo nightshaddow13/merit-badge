@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
+<script src="/assets/requirements.js"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -34,6 +35,13 @@
     </div>
     <div id="pages" role="group" aria-label="Pages"></div>
     <p class="muted small">Tip: the left and right arrow keys move to the previous or next page when you are not typing in the message box. Scouts cannot change pages while you lead.</p>
+  </section>
+
+  <section class="gm" id="here" aria-labelledby="hHere" hidden>
+    <h2 id="hHere">On this page</h2>
+    <p class="muted small" id="hereSub"></p>
+    <div id="gameBox"></div>
+    <div id="hereBody"></div>
   </section>
 
   <section class="gm" aria-labelledby="hHold">
@@ -65,6 +73,13 @@
 .pagelist button small{font-weight:400;color:var(--mut)}
 .pagelist button[aria-pressed=true]{border-color:var(--ink);background:var(--hi);color:#14201B}.pagelist button[aria-pressed=true] small{color:#14201B}
 .chips{display:inline-flex;flex-wrap:wrap;gap:8px}.chips button{font:inherit;font-size:15px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--white);color:var(--ink);cursor:pointer;min-height:40px}
+.gk{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;padding:6px 0;border-top:1px solid var(--line)}.gk b{min-width:150px}
+.row2 select{width:100%;max-width:640px;min-height:44px;font:inherit;padding:6px 10px;border:2px solid var(--ink);border-radius:8px;background:var(--white);color:var(--ink)}
+.gm .gm{border-width:1px;margin:12px 0}.gm .gm h3{margin:0 0 6px}
+.ans{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin:10px 0}.ans article{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--white)}.ans h4{margin:0 0 4px;font-size:17px}.ans p{margin:2px 0;overflow-wrap:anywhere}.ans .none{color:var(--mut);font-style:italic}.ans ul{margin:4px 0 0;padding-left:20px}
+.sg{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}.sg b{min-width:170px}.sg .btn{min-height:40px;padding:4px 14px}
+.tally{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 10px}.tally span{padding:3px 10px;border-radius:99px;border:1px solid var(--line);font-size:14px}
+.ent pre{white-space:pre-wrap;font:inherit;margin:2px 0 8px;overflow-wrap:anywhere}
 @media (min-width:1000px){main .wrap{max-width:min(1100px,calc(100vw - 48px))}}
 </style>
 <script>
@@ -142,6 +157,126 @@
  QUICK.forEach(function(t){var b=E("button",null,t);b.type="button";b.onclick=function(){$("holdMsg").value=t;dirty=true;count()};$("chips").appendChild(b)});
  document.addEventListener("keydown",function(e){var t=e.target&&e.target.tagName;if(t==="TEXTAREA"||t==="INPUT"||t==="SELECT"||e.altKey||e.ctrlKey||e.metaKey)return;if(!S)return;if(e.key==="ArrowRight"){e.preventDefault();step(1)}else if(e.key==="ArrowLeft"){e.preventDefault();step(-1)}});
  function load(){return api("/api/aiflow").then(function(j){if(!S||j.rev!==S.rev)paint(j)}).catch(function(e){say(e.message)})}
+
+ /* ---- On this page: game controls, what the Scouts wrote, sign-off and waivers ---- */
+ var LG=[],AN={},GW=null,GD=null,hereKey="";
+ var LVLN={"1":"Level 1","2":"Level 2","3":"Level 3","4":"Level 4","5":"Level 5","6":"Level 6","7":"Level 7","8":"Level 8"};
+ var HINT={
+  "L1":"Scouts are matching the 16 terms. Nothing is typed.","V1":"Vocab Vault quiz and the Level 1 access code.",
+  "L2.ex":"Discussion page: nothing is typed. Sign off as Scouts name their examples.","L2.aion":"AI or Not? Scouts play it in their logs. Nothing to start from here.","L2.tl":"Scouts drag the milestones into order.",
+  "L3.hvm":"Class race: Scouts run it in their logs. Reset scores on the Field Log dashboard if needed.","L3.home":"Discussion page: nothing is typed.","L3.hist":"Scouts write five automation milestones.","L3.boss":"Scouts design a workflow. You score it in class.",
+  "L4.wwyd":"What Would You Do? Start the game from here when Scouts are ready.","L4.lawnote":"Scouts write three guidelines for using AI (requirement 4c).","L4.big":"Discussion page: nothing is typed.",
+  "L5.sf":"Optional practice with an outside tool.","L5.what":"Discussion page: nothing is typed.","L5.act":"Discussion page: nothing is typed.",
+  "L6.hnote":"Hallucination Hunt: an activity with ChatGPT. Nothing is typed.","L6.nnote":"Human Neural Network: a class activity with a mystery card. The answer key is on the Field Log dashboard.","L6.dnote":"Prompt Duel. Start it from here when squads are ready.","L6.meth":"Discussion page: nothing is typed.","L6.why":"Discussion page: nothing is typed.","L6.pr":"Scouts write three prompts for a school task.",
+  "L7.plan":"Scouts plan an AI project.","L7.tm":"Scouts build a model in Teachable Machine.","L7.share":"Discussion page: nothing is typed.",
+  "L8.who":"Scouts may write notes from the interview.","send":"Class overview. Scouts are looking at their requirement list."};
+ var ANSEC={"L2.tl":["L2"],"L3.hist":["L3.hist"],"L4.lawnote":["L4.law"],"L6.pr":["L6.pr"],"L7.plan":["L7.plan"],"L8.who":["L8.who"]};
+ var SCN=["School admissions","AI healthcare assistant","AI in law enforcement","AI essay grading","Environmental monitoring","Social media moderation","Self-driving car safety","Loan approvals","Job application screening","Personal privacy"];
+ var STANCES=["Use it, with a human reviewing every decision","Use it, but only to help a person decide","Do not use AI for this"];
+ var DLABEL={off:"No duel running",write:"Collecting entries",vote:"Voting is open",results:"Results shown"};
+ function g(id){return $(id)}
+ function lvl(k){return k==="send"?0:k==="L1"||k==="V1"?1:+k.charAt(1)}
+ function gapi(path,body){return api(path,body).catch(function(e){throw new Error(/401|403|Sign in/.test(e.message)?"Sign in as a counselor or scorekeeper.":e.message)})}
+ function btn(t,fn,ghost){var b=E("button","btn"+(ghost?" ghost":""),t);b.type="button";b.onclick=fn;return b}
+ function who(l){return (l.name||"Unnamed Scout")+(l.squad?" · "+l.squad:"")}
+ function reqName(n){var r=window.MB_REQS&&window.MB_REQS.ai.filter(function(x){return +x.code===n})[0];return r?"Requirement "+n+": "+r.title:"Requirement "+n}
+ function ovr(l,n){return l.overrides&&l.overrides[n]}
+ function waive(l,n,after){
+  var o=ovr(l,n),st=o&&o.status,on=st!=="granted";
+  var b=btn(st==="granted"?"Revoke waiver":st==="pending"?"Approve waiver":"Waive level "+n,function(){
+   b.disabled=true;
+   gapi("/api/fieldlog/grant",{id:l.id,level:n,granted:on}).then(function(x){l.overrides=x.overrides;return on?gapi("/api/fieldlog/signoff",{id:l.id,req:n,signed:true}).then(function(y){l.signed=y.signed}):null}).then(function(){paintHere();if(after)after()}).catch(function(e){say(e.message);b.disabled=false})},st==="granted");
+  return b}
+ function decline(l,n){var b=btn("Decline",function(){b.disabled=true;gapi("/api/fieldlog/grant",{id:l.id,level:n,granted:false}).then(function(x){l.overrides=x.overrides;paintHere()}).catch(function(e){say(e.message);b.disabled=false})},1);return b}
+ function lines(data){
+  var out=[];
+  function add(label,v){
+   if(Array.isArray(v)){var items=v.map(function(x){return x&&typeof x==="object"?Object.keys(x).map(function(k){return String(x[k]||"").trim()}).filter(Boolean).join(" · "):String(x==null?"":x).trim()}).filter(Boolean);if(items.length)out.push(["li",items,label])}
+   else if(v&&typeof v==="object"){Object.keys(v).forEach(function(k){add(k,v[k])})}
+   else{var t=String(v==null?"":v).trim();if(t&&v!==false)out.push([label,t])}}
+  if(data&&data.tlOrder!==undefined){out.push(["Timeline",data.tlDone?"Done":"Not done yet"]);return out}
+  if(Array.isArray(data))add("",data);else Object.keys(data||{}).forEach(function(k){add(k,data[k])});
+  return out}
+ function card(l,data){
+  var a=E("article");a.appendChild(E("h4",null,who(l)));var ls=lines(data);
+  if(!ls.length)a.appendChild(E("p","none","Nothing yet."));
+  ls.forEach(function(x){if(x[0]==="li"){var u=E("ul");x[1].forEach(function(i){u.appendChild(E("li",null,i))});a.appendChild(u)}else{var p=E("p");if(x[0])p.appendChild(E("b",null,x[0]+": "));p.appendChild(document.createTextNode(x[1]));a.appendChild(p)}});
+  return a}
+ function finished(l,n){var c=l.summary&&l.summary.levels&&l.summary.levels[n];return (l.summary&&l.summary.unlocked>n)||!!(c&&c[1]>0&&c[0]>=c[1])}
+ function roster(body,n){
+  var c=LG.filter(function(l){return l.signed&&l.signed[n]}).length;
+  body.appendChild(E("h3",null,reqName(n)));
+  body.appendChild(E("p",null,"Signed off "+c+" of "+LG.length+". Finished the level's items: "+LG.filter(function(l){return finished(l,n)}).length+"."));
+  LG.slice().sort(function(a,b){return (a.name||"").localeCompare(b.name||"")}).forEach(function(l){
+   var on=!!(l.signed&&l.signed[n]),o=ovr(l,n),row=E("div","sg");row.appendChild(E("b",null,who(l)));
+   row.appendChild(E("span","pill "+(on?"ok":""),on?"Signed off":finished(l,n)?"Ready":"Not yet"));
+   var b=btn(on?"Undo":"Sign off "+n,function(){b.disabled=true;gapi("/api/fieldlog/signoff",{id:l.id,req:n,signed:!on}).then(function(j){l.signed=j.signed;paintHere()}).catch(function(e){say(e.message);b.disabled=false})},on);row.appendChild(b);
+   if(o)row.appendChild(E("span","pill "+(o.status==="granted"?"ok":"warn"),o.status==="granted"?"Waived":"Waive requested"));
+   if(!on||o)row.appendChild(waive(l,n));if(o&&o.status==="pending")row.appendChild(decline(l,n));
+   body.appendChild(row)});
+  if(!LG.length)body.appendChild(E("p","muted","No Field Logs yet."))}
+ function paintOverview(body){
+  var wv=[],sg=0;LG.forEach(function(l){sg+=Object.keys(l.signed||{}).length;Object.keys(l.overrides||{}).forEach(function(n){if(l.overrides[n].status==="pending")wv.push([l,+n])})});
+  body.appendChild(E("p",null,LG.length+" Field Log"+(LG.length===1?"":"s")+" started. "+sg+" requirement sign-off"+(sg===1?"":"s")+" recorded so far."));
+  if(wv.length){body.appendChild(E("h3",null,"Waiver requests"));wv.forEach(function(x){var row=E("div","sg");row.appendChild(E("b",null,who(x[0])+" · Level "+x[1]));var m=(x[0].overrides[x[1]].missing||[]).join("; ");row.appendChild(E("span",null,m?"Stuck on: "+m:"No details given"));row.appendChild(waive(x[0],x[1]));row.appendChild(decline(x[0],x[1]));body.appendChild(row)})}
+  else body.appendChild(E("p","muted","No waiver requests right now."));
+  var a=E("a",null,"Waive or sign off any level in the Field Log dashboard");a.href="/ai/scoreboard/logs.html";a.target="_blank";a.rel="noopener";body.appendChild(a)}
+ /* games */
+ function cmd(path,action,done){return gapi(path,{action:action}).then(function(){say(done||"");return loadHere()}).catch(function(e){say(e.message)})}
+ function paintWwyd(box){
+  var j=GW; if(!j)return; var gm=j.game,sec=E("div","gm");sec.appendChild(E("h3",null,"What Would You Do?"));
+  sec.appendChild(E("p","pill "+(gm.active?(gm.revealed?"ok":"warn"):""),gm.active?"Round "+(gm.round+1)+" of "+gm.total+(gm.revealed?" · revealed":" · collecting answers"):"No game running"));
+  var ac=E("div","acts"),last=gm.active&&gm.round+1>=gm.total;
+  ac.appendChild(btn(gm.active?"Restart (clears answers)":"Start game",function(){if(gm.active&&!confirm("Restart and clear every answer?"))return;cmd("/api/wwyd/control","start","What Would You Do? started. It is on the scoreboard now.")}));
+  if(gm.active){ac.appendChild(btn(gm.revealed?"Hide answers":"Reveal answers",function(){cmd("/api/wwyd/control",gm.revealed?"hide":"reveal","")}));if(!last){var nx=btn("Next scenario",function(){cmd("/api/wwyd/control","next","")});nx.disabled=!gm.revealed;ac.appendChild(nx)}ac.appendChild(btn("End game",function(){if(!confirm("End the game?"))return;cmd("/api/wwyd/control","end","Game ended. The scoreboard is back.")},1))}
+  sec.appendChild(ac);
+  if(gm.active)sec.appendChild(E("p","muted",(SCN[gm.scn]||"Scenario")+" · "+gm.answered+" locked in"));
+  sec.appendChild(E("p",null,j.count+" answer"+(j.count===1?"":"s")+" from "+j.scouts+" Scout"+(j.scouts===1?"":"s")+" this game."));
+  (j.scenarios||[]).forEach(function(s){var d=E("div","gk");d.appendChild(E("b",null,SCN[s.scn]||"Scenario "+(s.scn+1)));var t=E("div","tally");STANCES.forEach(function(x,i){t.appendChild(E("span",null,s.answers.filter(function(a){return a.stance===i}).length+" · "+x))});d.appendChild(t);sec.appendChild(d)});
+  box.appendChild(sec)}
+ function paintDuel(box){
+  var j=GD; if(!j)return; var sec=E("div","gm");sec.appendChild(E("h3",null,"Prompt Duel"));
+  sec.appendChild(E("p","pill "+(j.phase==="off"?"":j.phase==="vote"?"ok":"warn"),DLABEL[j.phase]||j.phase));
+  var ac=E("div","acts");
+  ac.appendChild(btn(j.phase==="off"?"Start duel":"Restart (clears entries and votes)",function(){if(j.phase!=="off"&&!confirm("Restart and clear every entry and vote?"))return;cmd("/api/duel/control","start","Prompt Duel started. It is on the scoreboard now.")}));
+  if(j.phase==="write")ac.appendChild(btn("Reveal & open voting",function(){cmd("/api/duel/control","reveal","")}));
+  if(j.phase==="vote")ac.appendChild(btn("Show results",function(){cmd("/api/duel/control","results","")}));
+  if(j.phase!=="off")ac.appendChild(btn("End duel",function(){if(!confirm("End the duel?"))return;cmd("/api/duel/control","end","Duel ended. The scoreboard is back.")},1));
+  sec.appendChild(ac);
+  if(j.phase!=="off"){sec.appendChild(E("p","muted",j.entries.length+" entr"+(j.entries.length===1?"y":"ies")+" in"+(j.phase!=="write"?" · "+j.votes+" vote"+(j.votes===1?"":"s")+" cast":"")));
+   j.entries.forEach(function(e){var order=j.phase==="write"?null:j.order,i=order?order.indexOf(e.squad):-1;var d=E("div","gk");d.appendChild(E("b",null,(i>=0?"#"+(i+1)+" · ":"")+e.squad+(i>=0?" · "+j.tally[i]+" vote"+(j.tally[i]===1?"":"s"):"")));d.appendChild(E("span",null,"sent by "+e.by));sec.appendChild(d)})}
+  box.appendChild(sec)}
+ function paintGame(){
+  var box=g("gameBox");
+  if(!S||S.mode!=="page"||(S.page!=="L4.wwyd"&&S.page!=="L6.dnote")){box.textContent="";box.dataset.sig="";box.dataset.pg="";return}
+  var sig=JSON.stringify([S.page,GW,GD]);
+  if(box.dataset.sig===sig)return; if(box.dataset.pg===S.page&&document.activeElement&&box.contains(document.activeElement))return; // never rebuild under a focused button on the same page
+  box.dataset.pg=S.page;box.dataset.sig=sig;box.textContent="";
+  if(S.page==="L4.wwyd")paintWwyd(box);else paintDuel(box);
+  var a=(S.page==="L4.wwyd"?GW&&GW.game.active:GD&&GD.phase!=="off");
+  box.appendChild(E("p","muted small",a?"A game is running: it is on the public scoreboard and every Field Log shows a Join option until you end it.":"Starting a game puts it on the public scoreboard."))}
+ function paintHere(){
+  var sec=g("here");
+  if(!S||S.mode!=="page"){sec.hidden=true;return}
+  sec.hidden=false;var k=S.page,body=g("hereBody");g("hereSub").textContent=HINT[k]||"";
+  paintGame();body.textContent="";
+  if(k==="send"){paintOverview(body);return}
+  var secs=ANSEC[k];
+  if(secs){secs.forEach(function(sc){
+   var d=AN[sc]||[];body.appendChild(E("h3",null,"What Scouts wrote"));
+   var box=E("div","ans");d.forEach(function(r){var full=LG.filter(function(z){return z.id===r.id})[0]||{id:r.id,name:r.name,squad:r.team};box.appendChild(card(full,r.data))});
+   if(!d.length)body.appendChild(E("p","muted","No Field Logs yet."));body.appendChild(box)})}
+  roster(body,lvl(k))}
+ function loadHere(){
+  if(!S||S.mode!=="page"||document.hidden){paintHere();return Promise.resolve()}
+  var k=S.page,ps=[gapi("/api/fieldlog/logs").then(function(j){LG=j.logs||[]})];
+  (ANSEC[k]||[]).forEach(function(sc){ps.push(gapi("/api/fieldlog/answers?section="+encodeURIComponent(sc)).then(function(j){AN[sc]=j.answers||[]}))});
+  if(k==="L4.wwyd")ps.push(gapi("/api/wwyd/all").then(function(j){GW=j}));
+  if(k==="L6.dnote")ps.push(gapi("/api/duel/all").then(function(j){GD=j}));
+  return Promise.all(ps).then(function(){say("")}).catch(function(e){say(e.message)}).then(paintHere)}
+ function hereChanged(){var key=S&&S.mode==="page"?S.page:"";if(key!==hereKey){hereKey=key;g("gameBox").dataset.sig="";paintHere();loadHere()}}
+ var _paint=paint;paint=function(j){_paint(j);hereChanged()};
+ setInterval(loadHere,8000);document.addEventListener("visibilitychange",function(){if(!document.hidden)loadHere()});
  load();setInterval(load,4000);
 })();
 </script>

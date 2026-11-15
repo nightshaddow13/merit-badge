@@ -103,6 +103,16 @@
       ]
     },
     {
+      "route": "/api/fieldlog/answers",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/api/fieldlog/grant",
       "methods": [
         "POST"

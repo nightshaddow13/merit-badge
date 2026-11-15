@@ -12,6 +12,8 @@
 const ID_RE = /^[a-f0-9]{16,32}$/;
 const MAX_STATE = 150000; // characters of JSON
 const MAX_LOGS = 80;
+// Field Log sections whose written answers staff can read across the class: "L<level>.<section>" in state.lv, or "L2" for the Level 2 worksheet.
+const SECTIONS = ["L2", "L3.home", "L3.work", "L3.school", "L3.hist", "L3.boss", "L4.big", "L4.law", "L4.charter", "L4.tur", "L5.what", "L5.act", "L6.hunt", "L6.meth", "L6.why", "L6.pr", "L7.plan", "L7.share", "L8.who"];
 const isInt = (n, lo, hi) => typeof n === "number" && Number.isInteger(n) && n >= lo && n <= hi;
 const txt = (v, max) => (typeof v === "string" ? v.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, max) : "");
 
@@ -99,6 +101,20 @@ function createFieldLog(stores, roster) {
     out.sort((a, b) => (a.updated < b.updated ? 1 : -1));
     return { status: 200, body: { logs: out } };
   }
+  // Staff: what every Scout wrote in one section, for the instructor's live view. Returns [{ id, name, team, data }].
+  async function answers(section) {
+    if (typeof section !== "string" || !SECTIONS.includes(section)) return { status: 400, body: { error: "Unknown section." } };
+    const dir = roster ? await roster.directory() : null, out = [];
+    for (const r of await logs.list()) {
+      const m = withWho(r.data.meta, dir), rec = await logs.get(r.rowKey);
+      const st = rec && rec.state && typeof rec.state === "object" ? rec.state : {};
+      let d;
+      if (section === "L2") d = st.l2;
+      else { const [lv, k] = section.slice(1).split("."); d = st.lv && typeof st.lv === "object" && Object.prototype.hasOwnProperty.call(st.lv, lv) && st.lv[lv] && Object.prototype.hasOwnProperty.call(st.lv[lv], k) ? st.lv[lv][k] : null; }
+      out.push({ id: m.id, name: m.name || "", team: m.squad || "", data: d && typeof d === "object" ? d : {} });
+    }
+    return { status: 200, body: { section, answers: out } };
+  }
   async function get(id) {
     if (typeof id !== "string" || !ID_RE.test(id)) return { status: 400, body: { error: "Missing agent id." } };
     const rec = await logs.get("log-" + id);
@@ -133,7 +149,7 @@ function createFieldLog(stores, roster) {
     return { status: 200, body: { removed: true } };
   }
 
-  return { save, restore, overrideStatus, requestOverride, list, get, grant, signoff, remove };
+  return { save, restore, overrideStatus, requestOverride, list, answers, get, grant, signoff, remove };
 }
 
-module.exports = { createFieldLog, MAX_STATE, MAX_LOGS };
+module.exports = { createFieldLog, MAX_STATE, MAX_LOGS, SECTIONS };
