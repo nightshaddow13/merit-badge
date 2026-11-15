@@ -100,6 +100,22 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 .hvq{border:1px dashed var(--line);border-radius:10px;padding:10px;margin:8px 0}.hvres{margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
 .hvyou td{background:rgba(212,168,67,.2);font-weight:700}.hvt{width:100%;border-collapse:collapse;font-size:15px}.hvt th,.hvt td{border-bottom:1px solid var(--line);padding:6px;text-align:left}
 .stephead{margin:18px 2px 4px;padding:8px 12px;border-left:4px solid var(--accent,#2f7d5b);background:rgba(47,125,91,.10);border-radius:6px;font-size:14px}.stephead b{display:block;font-size:15px}.stephead span{opacity:.85}
+/* instructor-led class flow */
+.holdov,.boardov{position:fixed;inset:0;z-index:80}
+.holdov[hidden],.boardov[hidden]{display:none}
+.holdov{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:6vh 6vw;background:radial-gradient(ellipse at 50% 38%,#2c6b55 0%,var(--bg) 62%);color:var(--ink)}
+.holdov svg{width:clamp(72px,16vh,150px);height:auto;filter:drop-shadow(0 6px 18px rgba(242,169,0,.35))}
+.holdov h2{margin:0;font-size:clamp(34px,8vh,88px);line-height:1;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)}
+.holdov .holdmsg{margin:0;max-width:26em;font-size:clamp(20px,4.2vh,44px);line-height:1.25;overflow-wrap:anywhere}
+.holdov .holdsub{margin:6px 0 0;color:var(--mut);font-size:clamp(14px,2.2vh,20px)}
+.boardov{display:flex;flex-direction:column;background:var(--bg)}
+.boardov iframe{flex:1;width:100%;border:0;background:#fff}
+.ledbar{position:fixed;left:0;right:0;bottom:0;z-index:70;background:var(--gold);color:var(--bg);font-weight:700;font-size:14px;text-align:center;padding:8px 12px}
+.ledbar[hidden]{display:none}
+body.led .nav,body.led .subnav,body.led .nextrow{display:none}
+body.leadpage{padding-bottom:44px}
+@media (prefers-reduced-motion:no-preference){.holdov svg{animation:holdpulse 3.2s ease-in-out infinite}}
+@keyframes holdpulse{50%{transform:translateY(-6px)}}
 #topbar{display:none!important}
 </style>
 <script src="/assets/schedule.js"></script>
@@ -203,6 +219,14 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 
   <footer>A.I.R.A. Field Log &middot; Scouting America Artificial Intelligence merit badge class</footer>
 </div>
+<div id="ledBar" class="ledbar" hidden role="status" aria-live="polite">Your instructor is leading the class. Your screen follows theirs.</div>
+<div id="holdOv" class="holdov" hidden role="dialog" aria-modal="true" aria-labelledby="holdT" aria-describedby="holdMsg">
+  <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M20 28v-8a12 12 0 0 1 24 0v8" fill="none" stroke="#F2A900" stroke-width="5" stroke-linecap="round"/><rect x="12" y="28" width="40" height="30" rx="6" fill="#F2A900"/><circle cx="32" cy="40" r="4.5" fill="#16352B"/><rect x="30" y="42" width="4" height="9" rx="2" fill="#16352B"/></svg>
+  <h2 id="holdT">Eyes up front</h2>
+  <p class="holdmsg" id="holdMsg">Pay attention to your instructor.</p>
+  <p class="holdsub">Your work is saved. This screen changes when your instructor is ready.</p>
+</div>
+<div id="boardOv" class="boardov" hidden role="dialog" aria-modal="true" aria-label="Scoreboard"><iframe id="boardOvFrame" title="Scoreboard"></iframe></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
@@ -437,11 +461,14 @@ var PANES={
  6:[["Hallucination Hunt",["hnote","hunt"]],["Human Neural Network",["nnote","hnn"]],["Prompt Duel",["dnote","duel"]],["6b Five ways",["meth"]],["6c Why it matters",["why"]],["6d Your prompts",["pr"]]],
  7:[["7a Plan it",["plan"]],["Build it",["tm"]],["7a Share it",["share"]]],
  8:[["8b Interview",["who"]]]};
+// Stable keys for the in-page tabs of each level, in tab order (the last one is the access-code tab).
+// The instructor's Run the class page (ai/scoreboard/run.html) and api/src/lib/aiflow.js use "L3.hist"-style keys built from these.
+var PANEKEYS={2:["ex","aion","tl","unlock"],3:["hvm","home","hist","boss","unlock"],4:["wwyd","lawnote","big","unlock"],5:["sf","what","act","unlock"],6:["hnote","nnote","dnote","meth","why","pr","unlock"],7:["plan","tm","share","unlock"],8:["who","unlock"]};
 var paneSel={}, paneLbl={};
 function lvPage(i){ return "L"+i; }
 function parentLevel(p){ return p==="V1"?"L1":p==="G4"?"L4":p; }
 var wwydSec=null;
-function setPane(n,i){ paneSel[n]=i; applyPanes(n); renderSub(); window.scrollTo({top:0,behavior:"smooth"}); }
+function setPane(n,i,force){ if(flow.mode==="page"&&!force) return; paneSel[n]=i; applyPanes(n); renderSub(); window.scrollTo({top:0,behavior:"smooth"}); }
 function applyPanes(n){ var pg=$("p-L"+n); if(!pg) return; var cur=paneSel[n]||0;
   [].forEach.call(pg.querySelectorAll("[data-pane]"),function(e){ e.hidden=(parseInt(e.dataset.pane,10)!==cur); }); }
 function setupPanes(n,pg){
@@ -461,6 +488,7 @@ function setupPanes(n,pg){
     kids.forEach(function(e){ if(e.classList.contains("codebox")) e.dataset.pane=last; });
   } else return;
   paneLbl[n]=labels;
+  if(PANEKEYS[n]&&PANEKEYS[n].length!==labels.length&&window.console) console.warn("PANEKEYS for level "+n+" does not match its tabs");
   // a "Next" link at the bottom of every tab but the last
   for(var i=0;i<labels.length-1;i++){ (function(i){
     var r=el("div","nextrow"); r.dataset.pane=i; var b=el("button","primary","Next: "+labels[i+1]+" \u2192"); b.addEventListener("click",function(){ setPane(n,i+1); }); r.appendChild(b);
@@ -470,11 +498,12 @@ function setupPanes(n,pg){
   if(paneSel[n]==null||paneSel[n]>=labels.length) paneSel[n]=0;
   applyPanes(n);
 }
-function show(p,keepScroll){
+function show(p,keepScroll,force){
+  if(flow.mode==="page"&&!force) return; // the instructor is leading: only the instructor moves the page
   var ids=["L1","V1","L2","L3","L4","L5","L6","L7","L8","send"];
   if(p==="G2") p="L2"; if(p==="G4") p="L4";
   if(ids.indexOf(p)<0) p="L1";
-  var n=parseInt(p.slice(1),10); if(p!=="send" && n>state.unlocked) p=lvPage(state.unlocked);
+  var n=parseInt(p.slice(1),10); if(p!=="send" && n>state.unlocked && !force) p=lvPage(state.unlocked);
   if(state.page==="L1"&&p!=="L1") topHide=true; // tuck the agent info away once page 1 is done
   state.page=p; save();
   ids.forEach(function(id){ var el=$("p-"+id); if(el){ el.hidden=(id!==p); if(id===p){ el.style.animation="none"; void el.offsetWidth; el.style.animation=""; } } });
@@ -1299,6 +1328,40 @@ $("goVault").addEventListener("click",function(){ show("V1"); });
 $("bNext").addEventListener("click",bonusNext); $("bTimer").addEventListener("click",bonusTimer);
 (function(){ var h=$("tools"); TOOLS.forEach(function(t){ if(!t.url) return; var a=document.createElement("a"); a.href=t.url; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent=t.label+" \u2197"; if(t.alt) a.className="alt"; h.appendChild(a); });
   if(!h.children.length) $("toolsCard").hidden=true; })();
+// ---- instructor-led class flow: the instructor's Run the class page says which screen every Field Log shows ----
+// free: normal. page: the instructor's page, navigation hidden. hold: holding screen. board: the scoreboard over everything.
+// Nothing here touches what a Scout has typed; it only changes which screen is showing.
+var flow={mode:"free",page:"",message:"",rev:-1}, freeKey="";
+function curKey(){
+  var p=curPage(); if(p==="L1"||p==="V1"||p==="send") return p;
+  var n=parentLevel(p).slice(1), ks=PANEKEYS[n]; return "L"+n+"."+((ks&&ks[paneSel[n]||0])||"unlock");
+}
+function goPage(k,force){
+  var m=/^L(\d)\.(\w+)$/.exec(k||"");
+  if(!m){ show(k,false,force); return; }
+  var n=+m[1], i=(PANEKEYS[n]||[]).indexOf(m[2]);
+  show("L"+n,false,force); if(i>=0) setPane(n,i,force);
+}
+function boardSrc(){ return "/ai/scoreboard/?embed=1"+(state.squadSlot>0?"&lodge="+state.squadSlot:""); }
+function applyFlow(j){
+  var was=flow.mode; flow={mode:j.mode,page:j.page,message:j.message||"",rev:j.rev};
+  var wrap=document.querySelector(".wrap"), hold=flow.mode==="hold", board=flow.mode==="board", led=flow.mode!=="free";
+  if(led&&was==="free") freeKey=curKey();
+  document.body.classList.toggle("led",led); document.body.classList.toggle("leadpage",flow.mode==="page");
+  $("ledBar").hidden=flow.mode!=="page";
+  $("holdOv").hidden=!hold; $("boardOv").hidden=!board;
+  if(wrap){ if(hold||board) wrap.setAttribute("inert",""); else wrap.removeAttribute("inert"); }
+  if(hold) $("holdMsg").textContent=flow.message||"Pay attention to your instructor.";
+  var fr=$("boardOvFrame"); if(board){ if(!fr.getAttribute("src")) fr.setAttribute("src",boardSrc()); } else fr.removeAttribute("src");
+  if(flow.mode==="page") goPage(flow.page,true);
+  else if(flow.mode==="free"&&was!=="free"){ var back=freeKey; freeKey=""; if(back) goPage(back,true); }
+}
+function pollFlow(){
+  fetch("/api/aiflow",{cache:"no-store"}).then(function(r){ return r.ok?r.json():null; }).then(function(j){
+    if(j&&typeof j.rev==="number"&&j.rev!==flow.rev) applyFlow(j);
+  }).catch(function(){});
+}
+function setupFlow(){ pollFlow(); setInterval(pollFlow,3000); document.addEventListener("visibilitychange",function(){ if(!document.hidden) pollFlow(); }); }
 function main(stu){
 STU=stu; STORE_KEY="aira_field_log_v1_"+stu.id;
 load();
@@ -1306,7 +1369,7 @@ load();
 state.scoutId=stu.id; state.name=stu.name; state.squadSlot=stu.slot===null?0:stu.slot+1; state.squad=stu.team||""; state.memberId=String(stu.scoutId||"").replace(/\D/g,"").slice(0,12);
 $("signout").onclick=function(){ StudentLogin.signOut("ai"); };
 $("whoLine").textContent="Signed in as "+stu.name+(stu.team?" of "+stu.team:"");
-ensureId(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); state.hvm=fixHvm(state.hvm); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page); loadSquads();
+ensureId(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); state.hvm=fixHvm(state.hvm); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page); loadSquads(); setupFlow();
 // Fresh device (or cleared browser): bring back the saved log from the server.
 if(!state.rev) setTimeout(pullNewer,300);
 }
