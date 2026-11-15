@@ -21,7 +21,7 @@ Total size is about 15 MB, well under the Free plan's 250 MB limit.
 | Path | What it is |
 | --- | --- |
 | `index.html`, `cybersecurity/`, `ai/` | Scout-facing pages |
-| `counselor/` | **Locked** to the `counselor` role: print packs, answer keys, trackers, class audio, class tools |
+| `counselor/` | **Locked** to the `counselor` role: print packs, answer keys, trackers, class tools |
 | `tools/` | Interactive tools: A.I.R.A. Field Log, Warden Log, Two-Key Rite display |
 | `files/` | Public downloads only (career worksheet, Scout Passport) |
 | `staticwebapp.config.json` | Azure routing and headers |
@@ -29,7 +29,7 @@ Total size is about 15 MB, well under the Free plan's 250 MB limit.
 
 ## Counselor lock-down
 
-Everything under `counselor/` (the page, answer keys, print packs, trackers, class audio and the Two-Key Rite code display) requires the `counselor` role. Put any new adults-only file under `counselor/` and it is protected automatically. Files anywhere else are public.
+Everything under `counselor/` (the page, answer keys, print packs, trackers and the Two-Key Rite code display) requires the `counselor` role. Put any new adults-only file under `counselor/` and it is protected automatically. Files anywhere else are public.
 
 Roles (Static Web App > Settings > Role management > Invite; several roles can be entered separated by commas):
 
