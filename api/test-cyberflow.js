@@ -46,9 +46,9 @@ function mem() {
   PAGES.forEach((p) => assert.ok(log.includes('k:"' + p + '"'), "Warden Log has a " + p + " tab"));
   // tab order: Warden Log SPEC order == API order == Run the class buttons
   const specKeys = [...log.slice(log.indexOf("var SPEC=["), log.indexOf("function has(")).matchAll(/^ \{k:"(\w+)",n:/gm)].map((m) => m[1]);
-  assert.deepStrictEqual([...specKeys, "board"], PAGES, "Warden Log tab order matches PAGES");
+  assert.deepStrictEqual(specKeys, PAGES, "Warden Log tab order matches PAGES");
   const run = require("fs").readFileSync(__dirname + "/../cybersecurity/scoreboard/run.html", "utf8");
   const runKeys = [...run.match(/var PAGES=\[(.*)\];/)[1].matchAll(/\["(\w+)","/g)].map((m) => m[1]);
-  assert.deepStrictEqual(runKeys, PAGES.filter((p) => p !== "board"), "Run the class lists every page in order (the Scoreboard button is its own mode, not a page)");
+  assert.deepStrictEqual(runKeys, PAGES, "Run the class lists every page in order (the Scoreboard button is its own mode, not a page)");
   console.log("cyberflow tests passed");
 })().catch((e) => { console.error(e); process.exit(1); });
