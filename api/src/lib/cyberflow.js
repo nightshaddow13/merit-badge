@@ -14,7 +14,7 @@
 const KEY = "flow";
 const MODES = ["free", "page", "hold", "board"];
 // Warden Log tab keys, in class order.
-const PAGES = ["req", "career", "surface", "forge", "rite", "seal", "breach", "objects", "board"];
+const PAGES = ["career", "surface", "forge", "rite", "seal", "breach", "objects", "board"];
 const MAX_MESSAGE = 200;
 
 function cleanMessage(v) {
@@ -24,7 +24,9 @@ function cleanMessage(v) {
 
 function createCyberflow(store) {
   async function record() {
-    return Object.assign({ mode: "free", page: "req", message: "", rev: 0, updated: null }, await store.get(KEY));
+    const r = Object.assign({ mode: "free", page: PAGES[0], message: "", rev: 0, updated: null }, await store.get(KEY));
+    if (!PAGES.includes(r.page)) r.page = PAGES[0]; // an older saved flow may still point at the removed "req" page
+    return r;
   }
 
   // Public. Scouts' screens poll this.
