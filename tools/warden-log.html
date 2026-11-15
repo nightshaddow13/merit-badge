@@ -220,17 +220,17 @@ var SPEC=[
    {t:"tool",k:"rite"}
   ],
   },
- {k:"breach",n:3,title:"Breach News Report",req:"4e",reqLabel:"Req 4e",nowrite:true,
-  inst:"Nothing to write here. Read an article or news report about a recent cybersecurity incident (or watch a movie or read a book where cybersecurity plays a role). Be ready to tell your counselor how it happened and what the consequences were. Your counselor signs this off in class.",
-  blocks:[],
-  },
- {k:"seal",n:4,title:"Press the Seal",req:"6c",reqLabel:"Req 6c",nowrite:true,
+ {k:"seal",n:3,title:"Press the Seal",req:"6c",reqLabel:"Req 6c",nowrite:true,
   inst:"Nothing to write here. Use the Hash Lab to seal a message, change one character and watch the hash change. Then show your counselor and explain what this tells you about checking that a file has not been changed. Your counselor signs this off in class.",
   blocks:[
    {t:"tool",k:"hash"}
   ],
   },
- {k:"objects",n:5,title:"Enchanted Objects",req:"7",reqLabel:"Req 7",nowrite:true,
+ {k:"breach",n:4,title:"Breach News Report",req:"4e",reqLabel:"Req 4e",nowrite:true,notab:true,
+  inst:"Nothing to write here. Read an article or news report about a recent cybersecurity incident (or watch a movie or read a book where cybersecurity plays a role). Be ready to tell your counselor how it happened and what the consequences were. Your counselor signs this off in class.",
+  blocks:[],
+  },
+ {k:"objects",n:5,title:"Enchanted Objects",req:"7",reqLabel:"Req 7",nowrite:true,notab:true,
   inst:"Nothing to write here. Be ready to describe four electronic devices you meet that could connect to the internet: why connecting them is useful, what the risks are and how they could be protected. For example, a smart doorbell lets you see visitors from anywhere, but a hacked camera could share your video, so use a strong password, multi-factor authentication and updates. Your counselor signs this off in class.",
   blocks:[],
   }
@@ -440,9 +440,9 @@ function build(){
     });
     body.appendChild(signBox(sp));
     var nr=el("div",{"class":"nextrow"}), ord=WORKSHEETS.map(function(t){return t.k}), at=ord.indexOf(sp.k);
-    var pb=el("button",{type:"button","class":"btn ghost"},"\u2190 "+WORKSHEETS[at-1].label); pb.onclick=function(){setTab(ord[at-1],true)}; nr.appendChild(pb);
+    if(at>=0){ var pb=el("button",{type:"button","class":"btn ghost"},"\u2190 "+WORKSHEETS[at-1].label); pb.onclick=function(){setTab(ord[at-1],true)}; nr.appendChild(pb);
     if(at<ord.length-1){ var nb=el("button",{type:"button","class":"btn"},"Next: "+WORKSHEETS[at+1].label+" \u2192"); nb.onclick=function(){setTab(ord[at+1],true)}; nr.appendChild(nb); }
-    body.appendChild(nr);
+    } body.appendChild(nr);
     det.appendChild(body);host.appendChild(det);
   });
   refresh(); setTab(curTab||startTab(),false);
@@ -468,7 +468,7 @@ function refresh(){
   $("pt").textContent=done+" of "+writing+" worksheets done (the rest are signed off in class)";
   $("pb").style.width=Math.round(done/writing*100)+"%";
 }
-var TABS=[{k:"req",label:"My requirements"}].concat(SPEC.map(function(sp){return {k:sp.k,label:sp.n+". "+sp.title.split(":")[0].replace(/^My /,"")}})).concat([{k:"board",label:"Scoreboard"}]);
+var TABS=[{k:"req",label:"My requirements"}].concat(SPEC.filter(function(sp){return !sp.notab}).map(function(sp){return {k:sp.k,label:sp.n+". "+sp.title.split(":")[0].replace(/^My /,"")}})).concat([{k:"board",label:"Scoreboard"}]);
 var WORKSHEETS=TABS.filter(function(t){return t.k!=="board"});
 var curTab="";
 function startTab(){
