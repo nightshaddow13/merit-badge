@@ -23,6 +23,7 @@ const staff = (request) => {
 // POST /api/fieldlog/override        anyone: ask staff to waive a level page
 // GET  /api/fieldlog/restore?id=    anyone with the recovery code: get that Scout's own backup
 // GET  /api/fieldlog/logs            staff: list every backed-up log with its summary
+// GET  /api/fieldlog/answers?section=  staff: what every Scout wrote in one section
 // GET  /api/fieldlog/log?id=         staff: one full log
 // POST /api/fieldlog/grant           staff: { id, level, granted } waive or restore a page's requirements
 // POST /api/fieldlog/signoff         staff: { id, req (1-8), signed } sign off or undo an A.I.R.A. requirement
@@ -44,9 +45,9 @@ app.http("fieldlog", {
         const id = new URL(request.url).searchParams.get("id") || "";
         if (action === "override") r = await fl.overrideStatus(id);
         else if (action === "restore") r = await fl.restore(id);
-        else if (action === "logs" || action === "log") {
+        else if (action === "logs" || action === "log" || action === "answers") {
           if (!staff(request)) return deny;
-          r = action === "logs" ? await fl.list() : await fl.get(id);
+          r = action === "logs" ? await fl.list() : action === "answers" ? await fl.answers(new URL(request.url).searchParams.get("section") || "") : await fl.get(id);
         } else return { status: 404, headers: HEADERS, jsonBody: { error: "Not found." } };
       } else {
         const text = await request.text();
