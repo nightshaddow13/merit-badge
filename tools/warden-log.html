@@ -214,29 +214,38 @@ var SPEC=[
  {k:"surface",n:2,title:"My Attack Surface",req:"4f",reqLabel:"Req 4f",
   inst:"Create a list of everything that is part of your cyber attack surface: all the ways someone could try to get at your information or devices, such as online accounts, apps, devices and your home network. Write types only, such as “phone”, “game console” or “email”. Never write passwords or private details.",
   blocks:[
-   {t:"rows",k:"items",n:5,grow:12,label:"Device, account or app type",max:60,add:"Add another"},
-   {t:"label",text:"Class games: protect your gates"},
-   {t:"tool",k:"forge"},
+   {t:"rows",k:"items",n:5,grow:12,label:"Device, account or app type",max:60,add:"Add another"}
+  ],
+  },
+ {k:"forge",n:3,title:"Passphrase Forge",reqLabel:"Class game",nowrite:true,nosign:true,game:true,
+  inst:"Nothing to write here. This is a lodge game. When your instructor starts it, the Join banner appears and your lodge is selected for you. Until then you can practice scoring a made-up passphrase. Never type a real password.",
+  blocks:[
+   {t:"tool",k:"forge"}
+  ],
+  },
+ {k:"rite",n:4,title:"Two-Key Rite",reqLabel:"Class game",nowrite:true,nosign:true,game:true,
+  inst:"Nothing to write here. This is a lodge game about multi-factor authentication. When your instructor starts it, type the 6-digit codes from your lodge's authenticator. Your lodge is selected for you.",
+  blocks:[
    {t:"tool",k:"rite"}
   ],
   },
- {k:"seal",n:3,title:"Press the Seal",req:"6c",reqLabel:"Req 6c",nowrite:true,
+ {k:"seal",n:5,title:"Press the Seal",req:"6c",reqLabel:"Req 6c",nowrite:true,
   inst:"Nothing to write here. Use the Hash Lab to seal a message, change one character and watch the hash change. Then show your counselor and explain what this tells you about checking that a file has not been changed. Your counselor signs this off in class.",
   blocks:[
    {t:"tool",k:"hash"}
   ],
   },
- {k:"breach",n:4,title:"Breach News Report",req:"4e",reqLabel:"Req 4e",nowrite:true,notab:true,
+ {k:"breach",n:6,title:"Breach News Report",req:"4e",reqLabel:"Req 4e",nowrite:true,notab:true,
   inst:"Nothing to write here. Read an article or news report about a recent cybersecurity incident (or watch a movie or read a book where cybersecurity plays a role). Be ready to tell your counselor how it happened and what the consequences were. Your counselor signs this off in class.",
   blocks:[],
   },
- {k:"objects",n:5,title:"Enchanted Objects",req:"7",reqLabel:"Req 7",nowrite:true,notab:true,
+ {k:"objects",n:7,title:"Enchanted Objects",req:"7",reqLabel:"Req 7",nowrite:true,notab:true,
   inst:"Nothing to write here. Be ready to describe four electronic devices you meet that could connect to the internet: why connecting them is useful, what the risks are and how they could be protected. For example, a smart doorbell lets you see visitors from anywhere, but a hacked camera could share your video, so use a strong password, multi-factor authentication and updates. Your counselor signs this off in class.",
   blocks:[],
   }
 ];
 function has(v){return window.WARDEN_RULES.has(v)}
-SPEC.forEach(function(sp){sp.need=window.WARDEN_RULES.rules[sp.k].need;sp.any=window.WARDEN_RULES.rules[sp.k].any});
+SPEC.forEach(function(sp){var ru=window.WARDEN_RULES.rules[sp.k]||{need:function(){return false},any:function(){return false}};sp.need=ru.need;sp.any=ru.any});
 function blank(){
   return {v:1,id:"",rev:0,name:"",lodge:"",memberId:"",seenEdit:"",data:{
    career:{careers:["","",""],chosen:"",daily:"",why:"",education:"",certs:"",experience:"",expenses:"",prospects:"",salary:"",advancement:"",sources:"",learned:""},
@@ -274,7 +283,7 @@ function secState(sp){
   if(waive[sp.req]==="granted"&&!sp.nosign) return 2;
   var d=state.data[sp.k]; return sp.need(d)?2:(sp.any(d)?1:0);
 }
-function summary(){var o={};SPEC.forEach(function(sp){o[sp.k]=secState(sp)});return o}
+function summary(){var o={};SPEC.forEach(function(sp){if(!sp.game)o[sp.k]=secState(sp)});return o}
 
 // ---- save + backup ----
 var saveT=0, bkT=0, sending=false;
@@ -452,7 +461,8 @@ function refresh(){
   SPEC.forEach(function(sp){
     var st=secState(sp), det=document.querySelector('[data-sec="'+sp.k+'"]'); if(!det) return;
     det.dataset.st=st; var chip=det.querySelector(".chip");
-    if(sp.nowrite){ var sg=signed[sp.req]; chip.textContent=sg?"Signed off":"In class"; chip.className="chip"+(sg?" d":""); }
+    if(sp.game){ chip.textContent="Class game"; chip.className="chip"; }
+    else if(sp.nowrite){ var sg=signed[sp.req]; chip.textContent=sg?"Signed off":"In class"; chip.className="chip"+(sg?" d":""); }
     else{
       chip.textContent=st===2?(waive[sp.req]==="granted"&&!sp.nosign?"Waived":"Done"):st===1?"In progress":"Not started";
       chip.className="chip"+(st===2?" d":st===1?" p":"");
@@ -460,7 +470,7 @@ function refresh(){
     }
     paintSign(sp,det.querySelector(".sign"));
     var tb=document.getElementById("t-"+sp.k);
-    if(tb){ var lb=lockedBy(sp.k); tb.className=(sp.nowrite?(signed[sp.req]?"d":""):(st===2?"d":st===1?"p":""))+(lb?" lk":""); tb.setAttribute("aria-disabled",lb?"true":"false");
+    if(tb){ var lb=lockedBy(sp.k); tb.className=(sp.game?"":sp.nowrite?(signed[sp.req]?"d":""):(st===2?"d":st===1?"p":""))+(lb?" lk":""); tb.setAttribute("aria-disabled",lb?"true":"false");
       tb.title=lb?"Locked until "+lb.n+". "+lb.title.split(":")[0].replace(/^My /,"")+" is done or waived":""; }
   });
   renderReqs();
@@ -615,6 +625,7 @@ function printLog(){
   var pv=$("printView");pv.textContent="";
   pv.appendChild(el("h1",null,"Warden Log: "+(state.name||"")));pv.appendChild(el("p",null,"Lodge: "+(state.lodge||"not sure yet")+(state.memberId?"   |   Member ID: "+state.memberId:"")+"   |   Printed "+new Date().toLocaleDateString()));
   SPEC.forEach(function(sp){
+    if(sp.game) return;
     var s=el("section");s.appendChild(el("h2",null,sp.n+". "+sp.title+(sp.req?" ("+sp.reqLabel+")":"")));
     var dl=el("dl"),d=state.data[sp.k];
     function add(q,a){dl.appendChild(el("dt",null,q));dl.appendChild(el("dd",null,a&&String(a).trim()?a:"—"))}

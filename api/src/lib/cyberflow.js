@@ -14,7 +14,7 @@
 const KEY = "flow";
 const MODES = ["free", "page", "hold", "board"];
 // Warden Log tab keys, in class order.
-const PAGES = ["req", "career", "surface", "breach", "seal", "objects", "board"];
+const PAGES = ["req", "career", "surface", "breach", "forge", "rite", "seal", "objects", "board"];
 const MAX_MESSAGE = 200;
 
 function cleanMessage(v) {
