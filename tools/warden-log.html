@@ -131,20 +131,21 @@ body.led .nextrow{display:none}
 <header class="top"><span class="badge">WARDEN LOG</span><div><h1>Warden Log</h1><p class="sub">Order of the Silver Padlock &middot; <a href="/cybersecurity/">Cybersecurity</a> &middot; <a href="/">Home</a></p></div></header>
 
 <section class="card" id="who">
-  <h2>Who is sealing this log?</h2>
-  <p class="hint" id="whoLine"></p>
+  <div class="row" style="align-items:center;justify-content:space-between"><p class="hint" id="whoLine" style="margin:0"></p><button class="btn ghost" id="signout" type="button">Switch user</button></div>
+  <div class="safe"><b>Seal your findings, keep your secrets.</b> Never write a password, a private detail, an email address or a phone number here. Types only: write &ldquo;phone&rdquo;, not your PIN. Your counselor signs off each requirement once you are done. You do not sign it yourself.</div>
+  <div hidden id="idFields">
   <div class="grid2">
     <div><label for="nm">Warden name</label><input type="text" id="nm" maxlength="40" autocomplete="off" placeholder="Sam K"></div>
     <div><label for="lg">Lodge</label><select id="lg"><option value="">Not sure yet</option></select></div>
   </div>
   <label for="mid">Scouting America member ID <span class="opt">(your instructor can add it)</span></label><input type="text" id="mid" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Numbers only. Helps your counselor with advancement.">
-  <div class="safe"><b>Seal your findings, keep your secrets.</b> Never write a password, a private detail, an email address or a phone number here. Types only: write &ldquo;phone&rdquo;, not your PIN. Your counselor signs off each requirement once you are done. You do not sign it yourself.</div>
   <div class="safe" id="recBox"><b>Your recovery code:</b> <code class="rc" id="rc"></code><br>Write it down or take a screenshot. It brings your log back on another device or if this browser is cleared. Keep it private: it is the only key to your backup.</div>
   <details class="rec" id="recDet"><summary>Lost your progress? Recover it</summary>
     <div class="row"><input type="text" id="recIn" autocomplete="off" spellcheck="false" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx-xxxx" aria-label="Recovery code"><button class="btn ghost" id="recGo" type="button">Recover my log</button></div>
   </details>
-  <div class="row"><button class="btn ghost" id="exp" type="button">Save progress (.json)</button><label class="btn ghost" style="margin:0;cursor:pointer" for="imp">Load progress (.json)</label><input type="file" id="imp" accept=".json,application/json" hidden><button class="btn ghost" id="prn" type="button">Print my log</button><button class="btn ghost" id="signout" type="button">Not me / sign out</button></div>
+  <div class="row"><button class="btn ghost" id="exp" type="button">Save progress (.json)</button><label class="btn ghost" style="margin:0;cursor:pointer" for="imp">Load progress (.json)</label><input type="file" id="imp" accept=".json,application/json" hidden><button class="btn ghost" id="prn" type="button">Print my log</button></div>
   <div class="msg" id="recMsg" role="status"></div>
+  </div>
 </section>
 
 <div class="progress" aria-live="polite">
