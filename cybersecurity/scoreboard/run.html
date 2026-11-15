@@ -80,7 +80,7 @@
 </style>
 <script>
 (function(){
- var PAGES=[["req","My requirements","What is left to sign off"],["career","1 \u00b7 Paths of the Order","Career worksheet (req 9)"],["surface","2 \u00b7 My Attack Surface","List and class games (req 4f)"],["breach","3 \u00b7 Breach News Report","Discuss (req 4e)"],["seal","4 \u00b7 Press the Seal","Hash Lab (req 6c)"],["objects","5 \u00b7 Enchanted Objects","Discuss (req 7)"]];
+ var PAGES=[["req","My requirements","What is left to sign off"],["career","1 \u00b7 Paths of the Order","Career worksheet (req 9)"],["surface","2 \u00b7 My Attack Surface","List and class games (req 4f)"],["breach","3 \u00b7 Breach News Report","Discuss (req 4e)"],["seal","4 \u00b7 Press the Seal","Hash Lab (req 6c)"],["objects","5 \u00b7 Enchanted Objects","Discuss (req 7)"],["board","Scoreboard tab","Their Tools tab: the live scoreboard"]];
  var QUICK=["Eyes up front. Your instructor is talking.","Hands off the keyboards for a moment.","Back in five minutes.","Time to move: wait for the next instruction."];
  var msg=document.getElementById("msg"),S=null,busy=false;
  function $(i){return document.getElementById(i)}
@@ -116,7 +116,8 @@
 
  /* ---- On this page: game controls + what the Wardens wrote ---- */
  var names=[],G=null,LG=[],AN={},hereKey="",ORD=["1st","2nd","3rd","4th","5th","6th"],LABELS=["Too guessable","Very guessable","Somewhat guessable","Safely unguessable","Very unguessable"];
- var HINT={req:"Class overview. Scouts are looking at their own requirement list.",career:"Scouts are on the career worksheet (requirement 9, done before class).",surface:"Scouts are listing their attack surface. Run a game from here when you are ready.",breach:"Discussion page: nothing is typed. Sign off requirement 4e as Wardens explain their incident.",seal:"Hash Lab: nothing is typed. Sign off requirement 6c as Wardens show the hashing tool.",objects:"Discussion page: nothing is typed. Sign off requirement 7 as Wardens explain their objects."};
+ var HINT={req:"Class overview. Scouts are looking at their own requirement list.",career:"Scouts are on the career worksheet (requirement 9, done before class).",surface:"Scouts are listing their attack surface. Run a game from here when you are ready.",breach:"Discussion page: nothing is typed. Sign off requirement 4e as Wardens explain their incident.",seal:"Hash Lab: nothing is typed. Sign off requirement 6c as Wardens show the hashing tool.",objects:"Discussion page: nothing is typed. Sign off requirement 7 as Wardens explain their objects.",board:"Scouts are on their Scoreboard tab (tools). Use Show the scoreboard instead to cover the whole screen."};
+ var REQP={career:["9","Career research"],surface:["4f","Attack surface list"]};
  var SIGN={breach:["4e","Read about a recent incident and explained how it happened and what it cost."],seal:["6c","Used a hashing tool to show integrity checking."],objects:["7","Explained how connected objects can be attacked and how to protect them."]};
  function lname(n){return names[n-1]||"Lodge "+n}
  function who(l){return (l.name||"Unnamed Warden")+(l.lodge?" · "+l.lodge:"")}
@@ -152,7 +153,14 @@
   var gs=E("p","muted small");gs.textContent=a?"A game is running, so the other one cannot start until it ends.":"Starting a game puts it on the public scoreboard and shows a Join banner in every Warden Log.";
   box.appendChild(f);box.appendChild(t);box.appendChild(gs);
  }
- function card(l,lines){var a=E("article");a.appendChild(E("h4",null,who(l)));if(!lines.length)a.appendChild(E("p","none","Nothing yet."));lines.forEach(function(x){if(x[0]==="li"){var u=E("ul");x[1].forEach(function(i){u.appendChild(E("li",null,i))});a.appendChild(u)}else{var p=E("p");if(x[0])p.appendChild(E("b",null,x[0]+" "));p.appendChild(document.createTextNode(x[1]));a.appendChild(p)}});return a}
+ function waiveBtn(l,r,after){
+  var wv=l.waive&&l.waive[r],st=wv&&wv.status,b=btn(st==="granted"?"Revoke waiver":st==="pending"?"Approve waiver":"Waive "+r,function(){
+   b.disabled=true;var on=st!=="granted";
+   gapi("/api/wardenlog/grant",{id:l.id,req:r,granted:on}).then(function(x){l.waive=x.waive;return on?gapi("/api/wardenlog/signoff",{id:l.id,req:r,signed:true}).then(function(y){l.signed=y.signed}):null}).then(function(){paintHere();if(after)after()}).catch(function(e){say(e.message);b.disabled=false})},st==="granted");
+  return b}
+ function declineBtn(l,r){var b=btn("Decline",function(){b.disabled=true;gapi("/api/wardenlog/grant",{id:l.id,req:r,granted:false}).then(function(x){l.waive=x.waive;paintHere()}).catch(function(e){say(e.message);b.disabled=false})},1);return b}
+ function waiveRow(l,r){var wv=l.waive&&l.waive[r],row=E("div","acts");if(wv)row.appendChild(E("span","pill "+(wv.status==="granted"?"ok":"warn"),wv.status==="granted"?"Waived":"Waive requested"+(wv.reason?": "+wv.reason:"")));row.appendChild(waiveBtn(l,r));if(wv&&wv.status==="pending")row.appendChild(declineBtn(l,r));return row}
+ function card(l,lines,r){var a=E("article");a.appendChild(E("h4",null,who(l)));if(!lines.length)a.appendChild(E("p","none","Nothing yet."));lines.forEach(function(x){if(x[0]==="li"){var u=E("ul");x[1].forEach(function(i){u.appendChild(E("li",null,i))});a.appendChild(u)}else{var p=E("p");if(x[0])p.appendChild(E("b",null,x[0]+" "));p.appendChild(document.createTextNode(x[1]));a.appendChild(p)}});if(r)a.appendChild(waiveRow(l,r));return a}
  function paintHere(){
   var sec=g("here");
   if(!S||S.mode!=="page"){sec.hidden=true;return}
@@ -161,9 +169,9 @@
   body.textContent="";
   var n=LG.length;
   if(k==="req"){
-   var wv=[],sg=0,drow=0;LG.forEach(function(l){sg+=Object.keys(l.signed||{}).length;Object.keys(l.waive||{}).forEach(function(r){if(l.waive[r].status==="pending")wv.push(who(l)+" asks to waive "+r+(l.waive[r].reason?" ("+l.waive[r].reason+")":""))})});
+   var wv=[],sg=0;LG.forEach(function(l){sg+=Object.keys(l.signed||{}).length;Object.keys(l.waive||{}).forEach(function(r){if(l.waive[r].status==="pending")wv.push([l,r])})});
    body.appendChild(E("p",null,n+" Warden Log"+(n===1?"":"s")+" started. "+sg+" requirement sign-off"+(sg===1?"":"s")+" recorded so far."));
-   if(wv.length){body.appendChild(E("p",null,"Waiver requests:"));var u=E("ul");wv.forEach(function(x){u.appendChild(E("li",null,x))});body.appendChild(u);var a=E("a",null,"Review in the Warden Log dashboard");a.href="/cybersecurity/scoreboard/logs.html";a.target="_blank";a.rel="noopener";body.appendChild(a)}else body.appendChild(E("p","muted","No waiver requests right now."));
+   if(wv.length){body.appendChild(E("p",null,"Waiver requests:"));wv.forEach(function(x){var row=E("div","sg");row.appendChild(E("b",null,who(x[0])+" \u00b7 "+x[1]));row.appendChild(E("span",null,x[0].waive[x[1]].reason||"No reason given"));row.appendChild(waiveBtn(x[0],x[1]));row.appendChild(declineBtn(x[0],x[1]));body.appendChild(row)})}else body.appendChild(E("p","muted","No waiver requests right now."));var a=E("a",null,"Waive any requirement for a Warden in the Warden Log dashboard");a.href="/cybersecurity/scoreboard/logs.html";a.target="_blank";a.rel="noopener";body.appendChild(a);
    return}
   var d=AN[k]||[];
   if(k==="career"||k==="surface"){
@@ -173,7 +181,7 @@
     var x=r.data,lines=[];
     if(k==="career"){var cs=(x.careers||[]).filter(Boolean);if(cs.length)lines.push(["Careers",cs.join(", ")]);if(x.chosen)lines.push(["Chosen",x.chosen]);if(x.learned)lines.push(["Learned",x.learned])}
     else{var it=(x.items||[]).filter(Boolean);if(it.length)lines.push(["li",it]);if(x.riskText||x.risk)lines.push(["Riskiest",x.riskText||x.risk]);if(x.protect)lines.push(["Protect",x.protect])}
-    box.appendChild(card(r,lines))});
+    var full=LG.filter(function(z){return z.id===r.id})[0];box.appendChild(card(full||r,lines,full?REQP[k][0]:null))});
    if(!d.length)body.appendChild(E("p","muted","No Warden Logs yet."));body.appendChild(box);return}
   var q=SIGN[k];
   if(q){
@@ -181,7 +189,7 @@
    body.appendChild(E("p",null,"Requirement "+q[0]+": "+q[1]+" Signed off "+c+" of "+n+"."));
    LG.slice().sort(function(a,b){return (a.name||"").localeCompare(b.name||"")}).forEach(function(l){
     var on=!!(l.signed&&l.signed[q[0]]),row=E("div","sg");row.appendChild(E("b",null,who(l)));row.appendChild(E("span","pill "+(on?"ok":""),on?"Signed off":"Not yet"));
-    var b=btn(on?"Undo":"Sign off "+q[0],function(){b.disabled=true;gapi("/api/wardenlog/signoff",{id:l.id,req:q[0],signed:!on}).then(function(j){l.signed=j.signed;paintHere()}).catch(function(e){say(e.message);b.disabled=false})},on);row.appendChild(b);body.appendChild(row)});
+    var b=btn(on?"Undo":"Sign off "+q[0],function(){b.disabled=true;gapi("/api/wardenlog/signoff",{id:l.id,req:q[0],signed:!on}).then(function(j){l.signed=j.signed;paintHere()}).catch(function(e){say(e.message);b.disabled=false})},on);row.appendChild(b);var wv2=l.waive&&l.waive[q[0]];if(wv2)row.appendChild(E("span","pill "+(wv2.status==="granted"?"ok":"warn"),wv2.status==="granted"?"Waived":"Waive requested"));if(!on||wv2)row.appendChild(waiveBtn(l,q[0]));if(wv2&&wv2.status==="pending")row.appendChild(declineBtn(l,q[0]));body.appendChild(row)});
    if(!n)body.appendChild(E("p","muted","No Warden Logs yet."));
   }
  }
