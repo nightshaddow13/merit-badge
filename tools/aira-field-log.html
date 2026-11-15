@@ -51,6 +51,7 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 .nav button{flex:none;background:var(--panel);color:var(--ink);border:1px solid var(--line);padding:8px 12px;border-radius:999px;font-size:14px}
 .nav button.cur{background:var(--gold);color:var(--bg);border-color:var(--gold)}
 .nav button:disabled{opacity:.45}
+.lockbox{margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:8px;background:var(--panel2)}.lockbox .msg{margin:0}
 .subnav{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px;border-bottom:2px solid var(--line)}.subnav button{background:none;color:var(--ink);border:0;border-bottom:3px solid transparent;padding:8px 14px;font-size:14px;margin-bottom:-2px;opacity:.7}.subnav button.cur{border-bottom-color:var(--gold);opacity:1;font-weight:700}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0;font-size:14px;color:var(--mut)}.topbar button{padding:6px 12px;font-size:13px}
 .topbar[hidden],.nextrow[hidden]{display:none}
@@ -150,6 +151,7 @@ body.leadpage{padding-bottom:44px}
 
   <nav class="nav" id="nav" aria-label="Levels"></nav>
   <nav class="subnav" id="subnav" aria-label="Level sections" hidden></nav>
+  <div id="lockBox" class="lockbox" hidden><p id="lockNote" class="msg err" role="status"></p></div>
 
   <div class="page" id="p-L1">
   <div class="progress" aria-live="polite">
@@ -367,11 +369,11 @@ function backupLog(){
 function ovrStatus(){
   return fetch("/api/fieldlog/override?id="+encodeURIComponent(state.scoutId),{cache:"no-store"}).then(function(r){ return r.ok?r.json():{granted:[],pending:[]}; }).catch(function(){ return {granted:[],pending:[]}; });
 }
-function pollOverride(n,m,btn){
+function pollOverride(n,m,btn,doneText){
   clearInterval(ovrTimer);
-  ovrTimer=setInterval(function(){ ovrStatus().then(function(j){ if(j.granted.indexOf(n)>=0){ clearInterval(ovrTimer); m.textContent="Your counselor waived this page. Press Unlock again."; m.className="msg ok"; if(btn) btn.remove(); } }); },15000);
+  ovrTimer=setInterval(function(){ ovrStatus().then(function(j){ if(j.granted.indexOf(n)>=0){ clearInterval(ovrTimer); granted=j.granted; renderSub(); m.textContent=doneText||"Your counselor waived this page. Press Unlock again."; m.className="msg ok"; if(btn) btn.remove(); } }); },15000);
 }
-function askOverride(n,m,miss,box){
+function askOverride(n,m,miss,box,doneText){
   var old=box.querySelector(".ovrask"); if(old) old.remove();
   var b=document.createElement("button"); b.type="button"; b.className="secondary ovrask"; b.style.marginTop="8px"; b.textContent="Ask my counselor to waive this page";
   b.addEventListener("click",function(){
@@ -379,8 +381,8 @@ function askOverride(n,m,miss,box){
     b.disabled=true; m.textContent="Sending your request\u2026"; m.className="msg";
     backupLog().then(function(){ return fetch("/api/fieldlog/override",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.scoutId,level:n,missing:miss})}); })
       .then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error||"Could not send."); return j; }); })
-      .then(function(j){ if(j.granted.indexOf(n)>=0){ m.textContent="Your counselor already waived this page. Press Unlock again."; m.className="msg ok"; b.remove(); }
-        else { m.textContent="Request sent. Your counselor will see it on his dashboard. This page checks for his answer every 15 seconds. You can keep working."; m.className="msg ok"; b.textContent="Request sent"; pollOverride(n,m,b); } })
+      .then(function(j){ if(j.granted.indexOf(n)>=0){ granted=j.granted; renderSub(); m.textContent=doneText||"Your counselor already waived this page. Press Unlock again."; m.className="msg ok"; b.remove(); }
+        else { m.textContent="Request sent. Your counselor will see it on his dashboard. This page checks for his answer every 15 seconds. You can keep working."; m.className="msg ok"; b.textContent="Request sent"; pollOverride(n,m,b,doneText); } })
       .catch(function(e){ m.textContent=e.message; m.className="msg err"; b.disabled=false; });
   });
   box.appendChild(b);
@@ -465,11 +467,27 @@ var PANES={
 // Sections with nothing for a Scout to enter (discussion, spoken, or done on paper) have no tab. The counselor still signs them off in class, and any answers saved earlier are kept.
 // The instructor's Run the class page (ai/scoreboard/run.html) and api/src/lib/aiflow.js use "L3.hist"-style keys built from these.
 var PANEKEYS={2:["aion","tl","unlock"],3:["hvm","hist","unlock"],4:["wwyd","lawnote","unlock"],5:["sf","unlock"],6:["hnote","nnote","dnote","pr","unlock"],7:["plan","tm","unlock"],8:["unlock"]};
+// Tabs open in order inside a level: a tab stays locked until the earlier tab that needs writing is done or the counselor waives the level.
+// [tab key, section key] of the one writing tab on each level. Games, discussion and optional tabs never lock anything.
+var WRITE={3:["hist","hist"],4:["lawnote","law"],6:["pr","pr"],7:["plan","plan"]}, granted=[];
+function writeDone(n){ var w=WRITE[n]; if(!w) return true; var sc=LV[n].secs.filter(function(x){ return x.k===w[1]; })[0]; if(!sc) return true; var c=lvSecCount(n,sc); return c[0]>=c[1]; }
+// index of the earlier unfinished writing tab that locks tab i of level n, or -1
+function paneLock(n,i){ var w=WRITE[n], ks=PANEKEYS[n]; if(!w||!ks||granted.indexOf(n)>=0) return -1; var j=ks.indexOf(w[0]); return (j>=0&&j<i&&!writeDone(n))?j:-1; }
+function lockText(n,j){ return "Locked: finish "+paneLbl[n][j]+" first, or ask your counselor to waive it."; }
+function lockMsg(n,j){
+  var box=$("lockBox"), note=$("lockNote"); if(!box) return;
+  var old=box.querySelector(".ovrask"); if(old) old.remove();
+  if(n==null){ box.hidden=true; note.textContent=""; return; }
+  box.hidden=false; note.textContent=lockText(n,j); note.className="msg err"; askOverride(n,note,[paneLbl[n][j]],box,"Your counselor waived this level. Your tabs are open.");
+}
+function refreshGranted(){ if(!state.scoutId||document.hidden||!navigator.onLine) return; ovrStatus().then(function(j){ var g=(j&&j.granted)||[]; if(JSON.stringify(g)!==JSON.stringify(granted)){ granted=g; renderSub(); if(granted.indexOf(parseInt(curPage().slice(1),10))>=0) lockMsg(null); } }); }
 var paneSel={}, paneLbl={};
 function lvPage(i){ return "L"+i; }
 function parentLevel(p){ return p==="V1"?"L1":p==="G4"?"L4":p; }
 var wwydSec=null;
-function setPane(n,i,force){ if(flow.mode==="page"&&!force) return; paneSel[n]=i; applyPanes(n); renderSub(); window.scrollTo({top:0,behavior:"smooth"}); }
+function setPane(n,i,force){ n=+n; if(flow.mode==="page"&&!force) return;
+  if(!force){ var lk=paneLock(n,i); if(lk>=0){ i=lk; lockMsg(n,lk); } else lockMsg(null); } // locked: send the Scout to the unfinished tab and offer to ask for a waiver
+  paneSel[n]=i; applyPanes(n); renderSub(); window.scrollTo({top:0,behavior:"smooth"}); }
 function applyPanes(n){ var pg=$("p-L"+n); if(!pg) return; var cur=paneSel[n]||0;
   [].forEach.call(pg.querySelectorAll("[data-pane]"),function(e){ e.hidden=(parseInt(e.dataset.pane,10)!==cur); }); }
 function setupPanes(n,pg){
@@ -500,6 +518,7 @@ function setupPanes(n,pg){
   applyPanes(n);
 }
 function show(p,keepScroll,force){
+  lockMsg(null);
   if(flow.mode==="page"&&!force) return; // the instructor is leading: only the instructor moves the page
   var ids=["L1","V1","L2","L3","L4","L5","L6","L7","L8","send"];
   if(p==="G2") p="L2"; if(p==="G4") p="L4";
@@ -513,9 +532,9 @@ function show(p,keepScroll,force){
 function renderSub(){
   var sn=$("subnav"), par=parentLevel(curPage()); sn.innerHTML=""; var items=null;
   if(SUBS[par]) items=SUBS[par].map(function(x){ return {label:x[1],on:curPage()===x[0],go:function(){ show(x[0]); }}; });
-  else if(paneLbl[par.slice(1)]) { var nn=par.slice(1); items=paneLbl[nn].map(function(l,i){ return {label:l,on:(paneSel[nn]||0)===i,go:function(){ setPane(nn,i); }}; }); }
+  else if(paneLbl[par.slice(1)]) { var nn=par.slice(1); items=paneLbl[nn].map(function(l,i){ var lk=paneLock(+nn,i); return {label:(lk>=0?"\ud83d\udd12 ":"")+l,tip:lk>=0?lockText(+nn,lk):"",on:(paneSel[nn]||0)===i,go:function(){ setPane(nn,i); }}; }); }
   sn.hidden=!items; if(!items) return;
-  items.forEach(function(x){ var b=document.createElement("button"); b.textContent=x.label; if(x.on) b.className="cur"; b.addEventListener("click",x.go); sn.appendChild(b); }); }
+  items.forEach(function(x){ var b=document.createElement("button"); b.textContent=x.label; if(x.on) b.className="cur"; if(x.tip){ b.title=x.tip; b.setAttribute("aria-label",x.tip); } b.addEventListener("click",x.go); sn.appendChild(b); }); }
 var topHide=true;
 function renderTop(){ var onL1=curPage()==="L1", hide=!onL1&&topHide;
   $("topinfo").hidden=hide; $("topbar").hidden=onL1;
@@ -776,6 +795,7 @@ function lvMissing(n){ var m=[];
   LV[n].secs.forEach(function(s){ var c=lvSecCount(n,s); if(c[0]<c[1]) m.push(s.h.replace(/ \u00b7.*$/,"")); });
   return m; }
 function lvRefresh(n){
+  if(PANEKEYS[n]&&curPage()==="L"+n&&paneLbl[n]) renderSub();
   var c=lvCount(n), pct=c[1]?Math.round(c[0]/c[1]*100):100;
   $("lvl-"+n).textContent=c[1]?"Level "+n+" · "+c[0]+" of "+c[1]+" items done":"Level "+n+" · nothing required to write here"; $("lvp-"+n).textContent=pct+"%"; $("lvb-"+n).style.width=pct+"%";
   LV[n].secs.forEach(function(s){ var e=$("lvc-"+n+"-"+s.k); if(!e) return; var cc=lvSecCount(n,s); e.textContent=s.opt?"optional, skip if you like":cc[0]+" of "+cc[1]; });
@@ -1371,7 +1391,7 @@ load();
 state.scoutId=stu.id; state.name=stu.name; state.squadSlot=stu.slot===null?0:stu.slot+1; state.squad=stu.team||""; state.memberId=String(stu.scoutId||"").replace(/\D/g,"").slice(0,12);
 $("signout").onclick=function(){ StudentLogin.signOut("ai"); };
 $("whoLine").textContent="Signed in as "+stu.name+(stu.team?" of "+stu.team:"");
-ensureId(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); state.hvm=fixHvm(state.hvm); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page); loadSquads(); setupFlow();
+ensureId(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); state.hvm=fixHvm(state.hvm); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page); loadSquads(); setupFlow(); refreshGranted(); setInterval(refreshGranted,30000);
 // Fresh device (or cleared browser): bring back the saved log from the server.
 if(!state.rev) setTimeout(pullNewer,300);
 }

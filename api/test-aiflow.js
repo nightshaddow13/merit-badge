@@ -64,6 +64,11 @@ function mem() {
     assert.deepStrictEqual(panes[n], [...firsts, "unlock"], "Level " + n + " tabs");
   }
   assert.strictEqual((log.match(/el\("div","stephead"\)/g) || []).length, panes[2].length, "Level 2 has one tab per Step");
+  // the one writing tab per level that locks later tabs must be a real tab
+  const wr = log.match(/var WRITE=(\{[^;]*\}), granted/);
+  assert.ok(wr, "Field Log declares WRITE");
+  const write = JSON.parse(wr[1].replace(/(\d+):/g, '"$1":'));
+  Object.keys(write).forEach((n) => { assert.ok(panes[n].includes(write[n][0]), "Level " + n + " writing tab exists"); assert.notStrictEqual(panes[n].indexOf(write[n][0]), panes[n].length - 1, "the unlock tab is never the writing tab"); });
   // Run the class lists every page in order
   const run = fs.readFileSync(__dirname + "/../ai/scoreboard/run.html", "utf8");
   const runKeys = [...run.match(/var PAGES=\[([\s\S]*?)\n \];/)[1].matchAll(/\["(\w+(?:\.\w+)?)","/g)].map((m) => m[1]);
