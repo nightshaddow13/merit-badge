@@ -48,7 +48,7 @@ input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visib
 .tabs button.lk::after{content:"\1F512"}
 .tabs button[aria-selected=true]{background:var(--gold);color:#17112B;border-color:var(--gold);font-weight:700}
 .sec{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.25),0 6px 16px rgba(0,0,0,.28)}
-.sec[hidden],#reqPanel[hidden]{display:none}
+.sec[hidden]{display:none}
 .sec[data-st="2"]{border-color:var(--ok)}
 .sh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;min-height:56px}
 .nextrow{display:flex;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap}
@@ -67,13 +67,6 @@ input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visib
 .chips button[aria-pressed=true]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
 .chips button small{display:block;color:var(--mut);font-size:12px}
 .warnmsg{color:var(--red);font-size:13px;margin:4px 0 0}
-.rq{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
-.rq:first-child{border-top:0}.rq .c{flex:none;min-width:38px;font-weight:800;color:var(--gold)}
-.rq .s{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--line);color:var(--mut);text-align:center;flex:none;max-width:48%}
-.rq .s.ok{border-color:var(--ok);color:var(--ok)}.rq .s.rdy{border-color:var(--gold);color:var(--gold)}
-.rq small{display:block;color:var(--mut)}
-.rgrp{margin:12px 0 2px;font-size:13px;font-weight:800;color:var(--gold);letter-spacing:.03em}
-.rec{margin:10px 0;padding:6px 12px;border:1px dashed var(--line);border-radius:8px}.rec summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700}
 .sign{margin-top:14px;padding:10px 12px;border-radius:8px;font-size:14px;border:1px solid var(--line);background:var(--panel2)}
 .sign.ok{border-color:var(--ok);color:var(--ok)}
 .sign.wait{color:var(--mut)}
@@ -94,7 +87,6 @@ table.t tr.ex input{background:transparent;border-style:dashed}
 .msg{font-size:14px;min-height:20px;margin-top:8px}
 .msg.ok{color:var(--ok)}.msg.err{color:var(--red)}
 #status{font-size:12px;color:var(--mut)}
-code.rc{font:16px Consolas,monospace;letter-spacing:.05em;word-break:break-all}
 #printView{display:none}
 @media print{
   body{background:#fff;color:#000}
@@ -133,19 +125,7 @@ body.led .nextrow{display:none}
 <section class="card" id="who">
   <div class="row" style="align-items:center;justify-content:space-between"><p class="hint" id="whoLine" style="margin:0"></p><button class="btn ghost" id="signout" type="button">Switch user</button></div>
   <div class="safe"><b>Seal your findings, keep your secrets.</b> Never write a password, a private detail, an email address or a phone number here. Types only: write &ldquo;phone&rdquo;, not your PIN. Your counselor signs off each requirement once you are done. You do not sign it yourself.</div>
-  <div hidden id="idFields">
-  <div class="grid2">
-    <div><label for="nm">Warden name</label><input type="text" id="nm" maxlength="40" autocomplete="off" placeholder="Sam K"></div>
-    <div><label for="lg">Lodge</label><select id="lg"><option value="">Not sure yet</option></select></div>
-  </div>
-  <label for="mid">Scouting America member ID <span class="opt">(your instructor can add it)</span></label><input type="text" id="mid" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Numbers only. Helps your counselor with advancement.">
-  <div class="safe" id="recBox"><b>Your recovery code:</b> <code class="rc" id="rc"></code><br>Write it down or take a screenshot. It brings your log back on another device or if this browser is cleared. Keep it private: it is the only key to your backup.</div>
-  <details class="rec" id="recDet"><summary>Lost your progress? Recover it</summary>
-    <div class="row"><input type="text" id="recIn" autocomplete="off" spellcheck="false" placeholder="xxxx-xxxx-xxxx-xxxx-xxxx-xxxx" aria-label="Recovery code"><button class="btn ghost" id="recGo" type="button">Recover my log</button></div>
-  </details>
-  <div class="row"><button class="btn ghost" id="exp" type="button">Save progress (.json)</button><label class="btn ghost" style="margin:0;cursor:pointer" for="imp">Load progress (.json)</label><input type="file" id="imp" accept=".json,application/json" hidden><button class="btn ghost" id="prn" type="button">Print my log</button></div>
-  <div class="msg" id="recMsg" role="status"></div>
-  </div>
+  <div class="row"><button class="btn ghost" id="prn" type="button">Print my log</button></div>
 </section>
 
 <div class="progress" aria-live="polite">
@@ -157,17 +137,8 @@ body.led .nextrow{display:none}
 <div id="ledBar" class="gamebar" hidden role="status" aria-live="polite">Your instructor is leading the class. Your screen follows theirs.</div>
 <div id="gameBar" class="gamebar" hidden role="status" aria-live="polite"><span id="gameTxt"></span> <button class="btn" id="gameJoin" type="button">Join the game</button></div>
 <div id="gameOv" class="gameov" hidden role="dialog" aria-modal="true" aria-label="Live game"><div class="gameov-bar"><b id="gameOvT">Live game</b><button class="btn ghost" id="gameOvX" type="button">Close</button></div><iframe id="gameFrame" title="Live game"></iframe></div>
-<div id="reqPanel" role="tabpanel" hidden>
-<section class="card" id="reqCard"><h2>My requirements</h2><p class="hint" id="reqSum"></p><div id="reqList"></div><p class="hint" style="margin-top:10px">A requirement turns green when your counselor signs it off. Worksheets here check themselves as &ldquo;Ready for counselor&rdquo; when you finish them; the rest happen in class. Wording is paraphrased: your counselor has the official text.</p></section>
-
-<section class="card"><h2>All done?</h2><p class="hint">When a section says <b>Done</b>, find your counselor. He signs it off here on his own screen. A paper backup of every page is also available.</p><div class="row"><button class="btn" id="prn2" type="button">Print my log</button></div></section>
-</div>
-<div id="toolsPanel" role="tabpanel" aria-labelledby="t-board" hidden>
-<section class="card"><h2>Scoreboard</h2><p class="hint">How every lodge is doing. It updates on its own, and live games show up here too.</p>
-<iframe id="boardFrame" title="Scoreboard" style="width:100%;height:78vh;min-height:520px;border:1px solid var(--line);border-radius:10px;background:#fff"></iframe>
-<div class="row"><a class="btn ghost" href="/cybersecurity/scoreboard/" target="_blank" rel="noopener">Open in a new tab</a></div></section>
-</div>
 <div id="secs"></div>
+<section class="card" id="doneCard"><h2>All done?</h2><p class="hint">When a section says <b>Done</b>, find your counselor. He signs it off here on his own screen. A paper backup of every page is also available.</p><div class="row"><button class="btn" id="prn2" type="button">Print my log</button></div></section>
 <div id="printView" aria-hidden="true"></div>
 </div>
 
@@ -179,7 +150,6 @@ body.led .nextrow{display:none}
 </div>
 <div id="boardOv" class="boardov" hidden role="dialog" aria-modal="true" aria-label="Scoreboard"><iframe id="boardOvFrame" title="Scoreboard"></iframe></div>
 
-<script src="/assets/requirements.js"></script>
 <script src="/assets/warden-rules.js"></script>
 <script>
 (function(){
@@ -257,7 +227,7 @@ function blank(){
    reflect:{learned:"",lodge:"",next:""}}};
 }
 var state=blank(), signed={}, waive={};
-var flow={mode:"free",page:"req",message:"",rev:-1}, freeTab="";
+var flow={mode:"free",page:"career",message:"",rev:-1}, freeTab="";
 // merge any saved/imported object onto the blank shape so missing or odd values can never break a render
 function merge(dst,src){
   if(typeof dst==="string") return typeof src==="string"?src.slice(0,1000):dst;
@@ -298,7 +268,7 @@ function backup(){
   if(!dirty) return Promise.resolve();
   if(!navigator.onLine){setStatus("Saved on this device. Backup waits for Wi-Fi.");return Promise.resolve()}
   sending=true; var rev=state.rev;
-  return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.id,name:state.name,lodge:state.lodge,memberId:state.memberId,seenEdit:state.seenEdit,summary:summary(),state:state.data})})
+  return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:state.id,seenEdit:state.seenEdit,summary:summary(),state:state.data})})
    .then(function(r){ if(r.status===403){ sending=false; StudentLogin.relogin("cy"); return; } if(r.status===409) return r.json().then(function(j){ if(j&&j.edited){ sending=false; return pullEdit(j.editedAt); } throw new Error("409"); }); if(!r.ok) throw new Error(String(r.status)); if(rev===state.rev) dirty=false; setStatus("Saved and backed up"); })
    .catch(function(){setStatus("Saved on this device. Backup will retry.");setTimeout(scheduleBackup,15000)})
    .then(function(){sending=false});
@@ -307,7 +277,7 @@ window.addEventListener("online",function(){if(dirty)backup();pollStatus()});
 // Your counselor can fix your log from his dashboard. Pull his version (his edit wins over anything not yet backed up).
 function pullEdit(at){
   return fetch(API+"/restore?id="+state.id,{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
-    if(!j) return; applyState({name:j.name||state.name,lodge:j.lodge||state.lodge,memberId:j.memberId||state.memberId,data:j.state,seenEdit:j.editedAt||at||"",clean:true},state.id);
+    if(!j) return; applyState({data:j.state,seenEdit:j.editedAt||at||"",clean:true},state.id);
     setStatus("Your counselor updated your log");
   }).catch(function(){});
 }
@@ -414,23 +384,6 @@ function paintSign(sp,box){
   };
   row.appendChild(bt);box.appendChild(row);
 }
-function renderReqs(){
-  var host=$("reqList"); if(!host||!window.MB_REQS) return; host.textContent="";
-  var secByKey={}; SPEC.forEach(function(sp){secByKey[sp.k]=sp});
-  var signedN=0, ready=0, last="";
-  window.MB_REQS.cy.forEach(function(r){
-    if(r.group!==last){ last=r.group; host.appendChild(el("div",{"class":"rgrp"},r.group.toUpperCase())); }
-    var sg=signed[r.code], row=el("div",{"class":"rq"}), txt=el("div"), chip=el("span",{"class":"s"});
-    txt.appendChild(document.createTextNode(r.text)); txt.appendChild(el("small",null,r.auto?"Worksheet: "+secByKey[r.auto].title:r.when));
-    if(sg){ chip.className="s ok"; chip.textContent="Signed off by "+sg.by; signedN++; }
-    else if(r.auto&&secState(secByKey[r.auto])===2){ chip.className="s rdy"; chip.textContent="Ready for counselor"; ready++; }
-    else if(r.auto&&secState(secByKey[r.auto])===1) chip.textContent="In progress";
-    else chip.textContent=r.auto?"Open the worksheet":(r.when==="Before class"?"Before class":"Do in class");
-    row.appendChild(el("span",{"class":"c"},r.code)); row.appendChild(txt); row.appendChild(chip);
-    host.appendChild(row);
-  });
-  $("reqSum").textContent=signedN+" of "+window.MB_REQS.cy.length+" signed off"+(ready?", "+ready+" ready for your counselor":"")+".";
-}
 function build(){
   var host=$("secs");host.textContent="";uid=0;
   SPEC.forEach(function(sp,idx){
@@ -449,7 +402,7 @@ function build(){
     });
     body.appendChild(signBox(sp));
     var nr=el("div",{"class":"nextrow"}), ord=WORKSHEETS.map(function(t){return t.k}), at=ord.indexOf(sp.k);
-    if(at>=0){ var pb=el("button",{type:"button","class":"btn ghost"},"\u2190 "+WORKSHEETS[at-1].label); pb.onclick=function(){setTab(ord[at-1],true)}; nr.appendChild(pb);
+    if(at>=0){ if(at>0){ var pb=el("button",{type:"button","class":"btn ghost"},"\u2190 "+WORKSHEETS[at-1].label); pb.onclick=function(){setTab(ord[at-1],true)}; nr.appendChild(pb); }
     if(at<ord.length-1){ var nb=el("button",{type:"button","class":"btn"},"Next: "+WORKSHEETS[at+1].label+" \u2192"); nb.onclick=function(){setTab(ord[at+1],true)}; nr.appendChild(nb); }
     } body.appendChild(nr);
     det.appendChild(body);host.appendChild(det);
@@ -473,18 +426,17 @@ function refresh(){
     if(tb){ var lb=lockedBy(sp.k); tb.className=(sp.game?"":sp.nowrite?(signed[sp.req]?"d":""):(st===2?"d":st===1?"p":""))+(lb?" lk":""); tb.setAttribute("aria-disabled",lb?"true":"false");
       tb.title=lb?"Locked until "+lb.n+". "+lb.title.split(":")[0].replace(/^My /,"")+" is done or waived":""; }
   });
-  renderReqs();
   var writing=SPEC.filter(function(sp){return !sp.nowrite}).length;
   $("pt").textContent=done+" of "+writing+" worksheets done (the rest are signed off in class)";
   $("pb").style.width=Math.round(done/writing*100)+"%";
 }
-var TABS=[{k:"req",label:"My requirements"}].concat(SPEC.filter(function(sp){return !sp.notab}).map(function(sp){return {k:sp.k,label:sp.n+". "+sp.title.split(":")[0].replace(/^My /,"")}})).concat([{k:"board",label:"Scoreboard"}]);
-var WORKSHEETS=TABS.filter(function(t){return t.k!=="board"});
+var TABS=[].concat(SPEC.filter(function(sp){return !sp.notab}).map(function(sp){return {k:sp.k,label:sp.n+". "+sp.title.split(":")[0].replace(/^My /,"")}}));
+var WORKSHEETS=TABS;
 var curTab="";
 function startTab(){
   var h=(location.hash||"").replace("#s-",""); if(TABS.some(function(t){return t.k===h})) return h;
   try{var v=localStorage.getItem("warden_tab"); if(v&&TABS.some(function(t){return t.k===v})) return v;}catch(e){}
-  var f=SPEC.findIndex(function(sp){return !sp.nowrite&&secState(sp)<2}); return f<0?"req":SPEC[f].k;
+  var f=SPEC.findIndex(function(sp){return !sp.nowrite&&secState(sp)<2}); return f<0?TABS[0].k:SPEC[f].k;
 }
 // Worksheets open in order: a tab stays locked until every earlier worksheet is done or waived by the counselor.
 function lockedBy(k){
@@ -493,12 +445,12 @@ function lockedBy(k){
 }
 function setTab(k,scroll,force){
   if(flow.mode==="page"){ k=flow.page; force=true; }   // the instructor is leading: stay where they are, whatever is locked
-  if(!TABS.some(function(t){return t.k===k})) k="req";
+  if(!TABS.some(function(t){return t.k===k})) k=TABS[0].k;
   var lk=force?null:lockedBy(k);
   if(lk){ setStatus("Locked: finish "+lk.n+". "+lk.title.split(":")[0].replace(/^My /,"")+" first, or ask your counselor to waive it."); k=lk.k; }
   curTab=k;
   TABS.forEach(function(t){ var b=$("t-"+t.k); if(b){ b.setAttribute("aria-selected",t.k===k?"true":"false"); b.tabIndex=t.k===k?0:-1; } });
-  $("reqPanel").hidden=k!=="req"; $("toolsPanel").hidden=k!=="board"; if(k==="board"){var bf=$("boardFrame"); if(!bf.getAttribute("src")) bf.setAttribute("src","/cybersecurity/scoreboard/?embed=1"+(lodgeSlot()?"&lodge="+lodgeSlot():""));} document.querySelectorAll("#secs .sec").forEach(function(d){ d.hidden=d.dataset.sec!==k; });
+ document.querySelectorAll("#secs .sec").forEach(function(d){ d.hidden=d.dataset.sec!==k; });
   try{localStorage.setItem("warden_tab",k)}catch(e){}
   var sel=$("t-"+k); if(sel&&sel.scrollIntoView) sel.scrollIntoView({inline:"center",block:"nearest"});
   if(scroll) window.scrollTo({top:0,behavior:"smooth"});
@@ -506,7 +458,7 @@ function setTab(k,scroll,force){
 function jumps(){
   var n=$("tabs");
   TABS.forEach(function(t,i){
-    var b=el("button",{type:"button",role:"tab",id:"t-"+t.k,"aria-selected":"false","aria-controls":t.k==="req"?"reqPanel":"s-"+t.k});
+    var b=el("button",{type:"button",role:"tab",id:"t-"+t.k,"aria-selected":"false","aria-controls":"s-"+t.k});
     b.appendChild(el("span",{"class":"dot"})); b.appendChild(document.createTextNode(t.label));
     b.onclick=function(){setTab(t.k,false)};
     b.onkeydown=function(e){ var d=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0; if(!d) return; e.preventDefault(); var nx=TABS[(i+d+TABS.length)%TABS.length]; setTab(nx.k,false); $("t-"+nx.k).focus(); };
@@ -540,7 +492,7 @@ function toolBlock(k,tab){
   return box;
 }
 function openTool(k){ var b=toolBlocks[k]; if(!b) return; b.open(true); b.box.scrollIntoView({behavior:"smooth",block:"start"}); }
-function reloadTools(){ Object.keys(toolBlocks).forEach(function(k){toolBlocks[k].reload()}); var bf=$("boardFrame"); if(bf&&bf.getAttribute("src")) bf.setAttribute("src","/cybersecurity/scoreboard/?embed=1"+(lodgeSlot()?"&lodge="+lodgeSlot():"")); }
+function reloadTools(){ Object.keys(toolBlocks).forEach(function(k){toolBlocks[k].reload()}); }
 function setupTools(){
   document.addEventListener("click",function(e){var b=e.target.closest&&e.target.closest("[data-tool]");if(b)openTool(b.dataset.tool)});
 }
@@ -580,46 +532,17 @@ function pollFlow(){
 function setupFlow(){ pollFlow(); setInterval(pollFlow,3000); document.addEventListener("visibilitychange",function(){ if(!document.hidden) pollFlow(); }); }
 // ---- header fields, lodges ----
 function setupHeader(){
-  $("nm").value=state.name;
-  $("nm").addEventListener("input",function(){state.name=$("nm").value;changed()});
-  $("mid").value=state.memberId; $("mid").addEventListener("input",function(){var v=$("mid").value.replace(/\D/g,"").slice(0,12);if(v!==$("mid").value)$("mid").value=v;state.memberId=v;changed()});
-  $("lg").addEventListener("change",function(){state.lodge=$("lg").value;changed();reloadTools();pollGame()});
-  $("rc").textContent=state.id.replace(/(.{4})/g,"$1-").replace(/-$/,"");
+  // Name, lodge and member ID come from the roster. Only the lodge list is read here, to match this Warden's lodge to a scoreboard slot.
   fetch("/api/scores/cybersecurity",{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){
-    slots=((j&&j.lodges)||[]).map(function(x){return String(x||"").trim()});
-    var names=slots.filter(Boolean), sel=$("lg");
-    names.forEach(function(nm){sel.appendChild(el("option",{value:nm},nm))});
-    if(state.lodge&&names.indexOf(state.lodge)<0) sel.appendChild(el("option",{value:state.lodge},state.lodge));
-    sel.value=state.lodge; reloadTools();
-  }).catch(function(){ if(state.lodge){var sel=$("lg");sel.appendChild(el("option",{value:state.lodge},state.lodge));sel.value=state.lodge} });
+    slots=((j&&j.lodges)||[]).map(function(x){return String(x||"").trim()}); reloadTools();
+  }).catch(function(){});
 }
 
-// ---- recover, export/import, print ----
-function slug(s){return (s||"warden").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"warden"}
+// ---- restore from the server, print ----
+// Name, lodge and member ID always stay what the roster says, whatever the saved copy holds.
 function applyState(obj,keepId){
-  var b=blank(); b.id=keepId||state.id; b.name=String(obj.name||"").slice(0,40); b.lodge=String(obj.lodge||"").slice(0,40); b.memberId=String(obj.memberId||state.memberId||"").replace(/\D/g,"").slice(0,12); b.data=merge(b.data,obj.data||obj.state); b.seenEdit=obj.seenEdit!==undefined?String(obj.seenEdit):state.seenEdit; b.rev=state.rev+1; state=b; persist(); dirty=!obj.clean;
-  $("nm").value=state.name; $("mid").value=state.memberId; var sel=$("lg"); if(state.lodge&&![].some.call(sel.options,function(o){return o.value===state.lodge})) sel.appendChild(el("option",{value:state.lodge},state.lodge)); sel.value=state.lodge;
-  $("rc").textContent=state.id.replace(/(.{4})/g,"$1-").replace(/-$/,""); build(); scheduleBackup(); pollStatus();
-}
-function recover(){
-  var raw=$("recIn").value.toLowerCase().replace(/[^a-f0-9]/g,""), m=$("recMsg");
-  if(!ID_RE.test(raw)){m.textContent="Type the whole recovery code (letters a-f and numbers).";m.className="msg err";return}
-  var hasWork=SPEC.some(function(sp){return sp.any(state.data[sp.k])});
-  if(hasWork&&!confirm("This replaces what is on this device with the backup. Continue?")) return;
-  m.textContent="Looking for your backup…";m.className="msg";
-  fetch(API+"/restore?id="+raw,{cache:"no-store"}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok)throw new Error(r.status===404?"No backup found for that code. Check it and try again, or ask your counselor.":(j.error||"Could not recover."));return j})})
-   .then(function(j){ applyState({name:j.name||state.name,lodge:j.lodge||state.lodge,memberId:j.memberId||state.memberId,data:j.state,seenEdit:j.editedAt||"",clean:true},raw); m.textContent="Recovered. Your work is back.";m.className="msg ok"})
-   .catch(function(e){m.textContent=e.message;m.className="msg err"});
-}
-function exportJson(){
-  var blob=new Blob([JSON.stringify({app:"warden-log",version:1,saved:new Date().toISOString(),name:state.name,lodge:state.lodge,memberId:state.memberId,data:state.data},null,2)],{type:"application/json"});
-  var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="Warden-Log-"+slug(state.name)+".json";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000);
-  $("recMsg").textContent="Saved "+a.download+".";$("recMsg").className="msg ok";
-}
-function importJson(f){
-  if(!f) return; var m=$("recMsg");
-  if(f.size>1000000){m.textContent="That file is too big to be a Warden Log.";m.className="msg err";return}
-  var r=new FileReader();r.onload=function(){try{var o=JSON.parse(r.result);if(!o||o.app!=="warden-log"||typeof o.data!=="object")throw 0;applyState(o);m.textContent="Loaded "+f.name+".";m.className="msg ok"}catch(e){m.textContent="That does not look like a Warden Log file.";m.className="msg err"}};r.readAsText(f);
+  var b=blank(); b.id=keepId||state.id; b.name=state.name; b.lodge=state.lodge; b.memberId=state.memberId; b.data=merge(b.data,obj.data||obj.state); b.seenEdit=obj.seenEdit!==undefined?String(obj.seenEdit):state.seenEdit; b.rev=state.rev+1; state=b; persist(); dirty=!obj.clean;
+  build(); scheduleBackup(); pollStatus();
 }
 function printLog(){
   var pv=$("printView");pv.textContent="";
@@ -648,14 +571,12 @@ function main(stu){
   // The roster is the source of truth for who this is: name, team and Scouting ID come from the instructor.
   state.id=stu.id; state.name=stu.name; state.lodge=stu.team||""; state.memberId=String(stu.scoutId||"").replace(/\D/g,"").slice(0,12); persist();
   setupHeader();
-  $("nm").readOnly=true; $("mid").readOnly=true; $("lg").disabled=true;
   $("whoLine").textContent="Signed in as "+stu.name+(stu.team?" of "+stu.team:". Your instructor has not put you on a team yet.");
-  $("recBox").hidden=true; $("recDet").hidden=true;
   $("signout").onclick=function(){ if(dirty&&!confirm("Some work has not been backed up yet. Sign out anyway? It stays on this device and uploads when you sign back in.")) return; StudentLogin.signOut("cy"); };
   // Fresh device (or cleared browser): bring back the saved log from the server.
-  if(!state.rev){ fetch(API+"/restore?id="+state.id,{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){ if(j&&j.state&&!state.rev){ applyState({name:stu.name,lodge:stu.team||"",memberId:state.memberId,data:j.state,seenEdit:j.editedAt||"",clean:true},state.id); } }).catch(function(){}); }
+  if(!state.rev){ fetch(API+"/restore?id="+state.id,{cache:"no-store"}).then(function(r){return r.ok?r.json():null}).then(function(j){ if(j&&j.state&&!state.rev){ applyState({data:j.state,seenEdit:j.editedAt||"",clean:true},state.id); } }).catch(function(){}); }
   setupTools(); setupGames(); jumps(); build(); pollStatus(); setupFlow();
-  $("exp").onclick=exportJson; $("imp").onchange=function(){importJson(this.files[0]);this.value=""}; $("prn").onclick=printLog; $("prn2").onclick=printLog;
+  $("prn").onclick=printLog; $("prn2").onclick=printLog;
   if(dirty||state.rev>0) {dirty=true;scheduleBackup()}
 }
 StudentLogin.start("cy", main);

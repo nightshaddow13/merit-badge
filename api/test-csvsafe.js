@@ -1,0 +1,11 @@
+"use strict";
+const assert = require("assert");
+const { cell, toCsv } = require("../assets/csvsafe");
+assert.strictEqual(cell("Sam K"), "Sam K");
+for (const evil of ["=1+1", "+1+1", "-1+1", "-cmd", "@SUM(A1)", "\t=1", "\r=1"]) assert.ok(cell(evil).replace(/^"/, "").startsWith("'"), "defused: " + JSON.stringify(evil));
+assert.strictEqual(cell("=HYPERLINK(\"x\",\"y\")"), "\"'=HYPERLINK(\"\"x\"\",\"\"y\"\")\"", "quotes doubled, formula defused");
+assert.strictEqual(cell("Lee, Jo"), "\"Lee, Jo\"");
+assert.strictEqual(cell(null), ""); assert.strictEqual(cell(1234567), "1234567");
+assert.strictEqual(cell("a-b"), "a-b", "a dash in the middle is fine");
+assert.strictEqual(toCsv([["Name", "Team"], ["Sam", "=x"]]), "Name,Team\r\nSam,'=x\r\n");
+console.log("csvsafe tests passed");
