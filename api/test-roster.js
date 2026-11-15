@@ -93,14 +93,16 @@ const mk = (id) => { const board = boardMem(id || "ai"); return { r: createRoste
   assert.deepStrictEqual(await fresh.r.find(s1.id), { id: s1.id, name: "Patricia Q", slot: 1, scoutId: "", team: "Bees" });
   assert.strictEqual(await fresh.r.find("nope"), null);
 
-  // remove a team: needs confirm, must be empty, clears that slot's points (including automatic rows) and the name
+  // remove a team: needs confirm, un-assigns its students, clears that slot's points (including automatic rows) and the name
   const f2 = mk("ai"); await f2.r.addTeam({ name: "A" }); await f2.r.addTeam({ name: "B" });
   const d = f2.board.peek(); d.scores = { "l1-boss": [10, 20, null, null, null, null], "vocab-vault-avg": [3, 4, null, null, null, null] }; await f2.board.save(d);
   const st = (await f2.r.addStudents({ names: ["Zed"], slot: 1 })).body.added[0];
   assert.strictEqual((await f2.r.removeTeam({ slot: 1 })).status, 400, "needs confirm");
-  assert.strictEqual((await f2.r.removeTeam({ slot: 1, confirm: true })).status, 409, "has students");
-  await f2.r.updateStudent({ id: st.id, slot: 0 });
-  assert.strictEqual((await f2.r.removeTeam({ slot: 1, confirm: true })).status, 200);
+  const rm = await f2.r.removeTeam({ slot: 1, confirm: true });
+  assert.deepStrictEqual(rm.body, { removed: true, unassigned: 1 }, "students on the removed team are un-assigned, not deleted");
+  assert.strictEqual((await f2.r.find(st.id)).slot, null);
+  assert.strictEqual((await f2.r.login({ password: st.password })).status, 200, "an un-assigned student can still sign in");
+  assert.strictEqual((await f2.r.list()).body.students.length, 1);
   assert.deepStrictEqual(f2.board.peek().lodges.slice(0, 2), ["A", ""]);
   assert.deepStrictEqual(f2.board.peek().scores["l1-boss"].slice(0, 2), [10, null], "removed team's points are cleared, others kept");
   assert.deepStrictEqual(f2.board.peek().scores["vocab-vault-avg"].slice(0, 2), [3, null]);

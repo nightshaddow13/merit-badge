@@ -94,11 +94,6 @@ footer{color:var(--mut);font-size:12px;text-align:center;padding:18px 0 30px}
 .mterm{font-weight:700}.mterm.sel{border-color:var(--accent,#2f7d5b);background:rgba(47,125,91,.22)}.mdef{font-size:14px}.mdef.bad{border-color:#e5484d;background:rgba(229,72,77,.2)}
 .mrow{margin:6px 0;font-size:14px}.mdone{margin-top:12px}.mdone summary{cursor:pointer;color:var(--ok);font-weight:700}
 @media(max-width:560px){.mgame{grid-template-columns:1fr}}
-.rq{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
-.rq:first-child{border-top:0}.rq .c{flex:none;min-width:48px;font-weight:800;color:var(--gold)}
-.rq .s{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--line);color:var(--mut);text-align:center;flex:none;max-width:48%}
-.rq .s.ok{border-color:var(--ok);color:var(--ok)}.rq .s.rdy{border-color:var(--gold);color:var(--gold)}
-.rq small{display:block;color:var(--mut)}
 .rec{margin:10px 0;padding:8px 12px;border:1px dashed var(--line);border-radius:8px}.rec summary{cursor:pointer;font-weight:700}
 .hvrule{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel2)}.hvrule b{display:block;color:var(--gold)}.hvrule span{font-size:14px}
 .hvtile{height:150px;border-radius:14px;display:grid;place-items:center;font:900 38px/1 Consolas,monospace;letter-spacing:.1em;margin:10px 0;border:3px solid rgba(255,255,255,.5)}
@@ -122,7 +117,6 @@ body.leadpage{padding-bottom:44px}
 @media (prefers-reduced-motion:no-preference){.holdov svg{animation:holdpulse 3.2s ease-in-out infinite}}
 @keyframes holdpulse{50%{transform:translateY(-6px)}}
 #topbar{display:none!important}
-#btnSave,#btnLoad{display:none!important}
 </style>
 <script src="/assets/schedule.js"></script>
 <script src="/assets/gate.js" data-badge="ai"></script>
@@ -139,13 +133,9 @@ body.leadpage{padding-bottom:44px}
   </header>
 
   <section class="card" id="agent">
-    <div class="row" style="align-items:center;justify-content:space-between"><p class="hint" id="whoLine" style="margin:0">Nothing here is typed into an AI chatbot.</p><button class="secondary" id="signout" type="button">Switch user</button></div>
+    <div class="row" style="align-items:center;justify-content:space-between"><p class="hint" id="whoLine" style="margin:0"></p><button class="secondary" id="signout" type="button">Switch user</button></div>
     <p class="hint" id="ptsNote" role="status"></p>
-    <div hidden>
-      <input type="text" id="name"><input type="text" id="mid"><select id="squad"></select><p id="squadNote"></p>
-      <details id="recDet"><summary></summary><b id="recCode"></b><input type="text" id="recIn"><button id="recGo" type="button"></button><div id="recMsg"></div></details>
-    </div>
-    <div class="safe"><b>Saved on this device, with a backup for your counselor.</b> Your answers stay in this browser and a copy is kept for your counselor so he can help if you get stuck. Counselor email: xgoss@live.com</div>
+    <div class="safe"><b>Saved on this device, with a backup for your counselor.</b> Nothing here is typed into an AI chatbot. Your answers stay in this browser and a copy is kept for your counselor so he can help if you get stuck. Counselor email: xgoss@live.com</div>
   </section>
 
   <section class="card" id="toolsCard">
@@ -212,12 +202,6 @@ body.leadpage{padding-bottom:44px}
     <div class="msg" id="certMsg"></div>
   </section>
 
-  <section class="card" id="reqCard">
-    <h2>My requirements</h2>
-    <p class="hint" id="reqSum"></p>
-    <div id="reqList"></div>
-    <p class="hint" style="margin-top:10px">A level turns <b>Ready</b> when you finish all its required items. It turns green when your counselor signs it off. Short names only: your counselor has the official wording.</p>
-  </section>
   <section class="card" id="finish">
     <h2>Send your log to the counselor</h2>
     <ol class="how">
@@ -229,7 +213,6 @@ body.leadpage{padding-bottom:44px}
       <button class="primary" id="btnPdf">Download PDF</button>
       <button class="secondary" id="btnMail">Email to counselor</button>
     </div>
-    <div hidden><button id="btnSave" type="button"></button><button id="btnLoad" type="button"></button><input type="file" id="fileIn" hidden></div>
     <div class="msg" id="msg"></div>
   </section>
   </div>
@@ -245,7 +228,6 @@ body.leadpage{padding-bottom:44px}
 </div>
 <div id="boardOv" class="boardov" hidden role="dialog" aria-modal="true" aria-label="Scoreboard"><iframe id="boardOvFrame" title="Scoreboard"></iframe></div>
 
-<script src="/assets/requirements.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function(){
@@ -354,29 +336,11 @@ function save(){
 var squads = [], squadTimer, syncTimer, lastSent = "", syncing = false;
 function newId(){ var a=new Uint8Array(12); try{ crypto.getRandomValues(a); }catch(e){ for(var i=0;i<12;i++) a[i]=Math.floor(Math.random()*256); } return Array.prototype.map.call(a,function(b){ return ("0"+b.toString(16)).slice(-2); }).join(""); }
 function ensureId(){ if(!/^[a-f0-9]{16,32}$/.test(state.scoutId||"")) state.scoutId=newId(); }
-function renderSquads(){
-  var sel=$("squad"), note=$("squadNote"); if(!sel) return;
-  if(STU){ sel.textContent=""; var o1=document.createElement("option"); o1.value=state.squadSlot?String(state.squadSlot):""; o1.textContent=state.squad||"Not on a team yet"; sel.appendChild(o1); sel.value=o1.value; sel.disabled=true; note.textContent=state.squadSlot?"":"Your instructor has not put you on a team yet. Your points count once you are on one."; return; }
-  var named=squads.map(function(n,i){ return {slot:i+1,name:n}; }).filter(function(x){ return x.name; });
-  sel.innerHTML="";
-  var o0=document.createElement("option"); o0.value=""; sel.appendChild(o0);
-  if(!named.length){
-    o0.textContent="Squads not set up yet"; sel.disabled=true;
-    note.textContent="Squads not set up yet. Your counselor adds them on the scoreboard. This page will check again by itself."; return;
-  }
-  o0.textContent="Choose your squad\u2026"; sel.disabled=false;
-  named.forEach(function(x){ var o=document.createElement("option"); o.value=String(x.slot); o.textContent=x.name; sel.appendChild(o); });
-  // Legacy typed squad names: match by name once, then rely on the slot.
-  if(!state.squadSlot && state.squad){ var m=named.filter(function(x){ return x.name.toLowerCase()===state.squad.trim().toLowerCase(); })[0]; if(m){ state.squadSlot=m.slot; save(); } }
-  if(state.squadSlot && squads[state.squadSlot-1]){ sel.value=String(state.squadSlot); if(state.squad!==squads[state.squadSlot-1]){ state.squad=squads[state.squadSlot-1]; save(); } note.textContent=""; }
-  else if(state.squadSlot){ note.textContent="Your squad was removed from the list. Choose your squad again."; }
-  else note.textContent=state.squad?"Choose your squad from the list (you had typed \u201c"+state.squad+"\u201d).":"";
-}
 function loadSquads(){
   return fetch("/api/scores/ai",{cache:"no-store"}).then(function(r){ if(!r.ok) throw new Error(); return r.json(); })
     .then(function(d){ squads=(d.lodges||[]).slice(0,6).map(function(x){ return String(x||"").trim(); }); })
     .catch(function(){ squads=[]; })
-    .then(function(){ renderSquads(); clearTimeout(squadTimer); if(!squads.some(Boolean)) squadTimer=setTimeout(loadSquads,20000); scheduleSync(); });
+    .then(function(){ clearTimeout(squadTimer); if(!squads.some(Boolean)) squadTimer=setTimeout(loadSquads,20000); scheduleSync(); });
 }
 // ---- Backup to the class storage and counselor page overrides ---------------------------------
 // A copy of this Field Log is saved for the counselor (name, squad and answers). Only the counselor
@@ -386,31 +350,6 @@ function summary(){
   var lv={}; lv[1]=[pointsNow().terms,LEVELS[0].items.length]; lv[2]=l2Count(); Object.keys(LV).forEach(function(k){ if(+k!==2) lv[k]=lvCount(+k); });
   return {unlocked:state.unlocked,won:state.won,vault:state.vault&&Number.isInteger(state.vault.best)?state.vault.best:null,aiOrNot:state.games&&state.games.ai&&Number.isInteger(state.games.ai.best)?state.games.ai.best:null,levels:lv};
 }
-// ---- Requirement checklist: a level is Ready when every required item on it is done (or it was unlocked past), Signed once staff sign it off ----
-var reqSigned={};
-function reqReady(n){
-  if(state.unlocked>n||(n===8&&state.won)) return true;
-  var c=n===1?[pointsNow().terms,LEVELS[0].items.length]:n===2?l2Count():lvCount(n);
-  return c[1]>0&&c[0]>=c[1]&&(n!==1||(state.vault&&state.vault.best!=null));
-}
-function reqStarted(n){ if(n===1) return pointsNow().terms>0||(state.vault&&state.vault.best!=null); var c=n===2?l2Count():lvCount(n); return c[0]>0; }
-function renderReqs(){
-  var host=$("reqList"); if(!host||!window.MB_REQS) return; host.textContent=""; var signedN=0, ready=0;
-  window.MB_REQS.ai.forEach(function(r){
-    var sg=reqSigned[r.code], row=el("div","rq"), box=el("div"), chip=el("span","s");
-    box.appendChild(document.createTextNode(r.title+": "+r.text)); box.appendChild(el("small",null,"Level "+r.code+" · "+r.when));
-    if(sg){ chip.className="s ok"; chip.textContent="Signed off by "+sg.by; signedN++; }
-    else if(reqReady(+r.code)){ chip.className="s rdy"; chip.textContent="Ready for counselor"; ready++; }
-    else chip.textContent=reqStarted(+r.code)?"In progress":"Not started";
-    row.appendChild(el("span","c","Req "+r.code)); row.appendChild(box); row.appendChild(chip); host.appendChild(row);
-  });
-  $("reqSum").textContent=signedN+" of 8 signed off"+(ready?", "+ready+" ready for your counselor":"")+".";
-}
-function pullSigned(){
-  if(!state.scoutId||!navigator.onLine) return;
-  ovrStatus().then(function(j){ var a=JSON.stringify(reqSigned); reqSigned=(j&&j.signed)||{}; if(JSON.stringify(reqSigned)!==a||!$("reqList").firstChild) renderReqs(); });
-}
-setInterval(function(){ if(!document.hidden) pullSigned(); },30000);
 function scheduleLog(){ clearTimeout(logTimer); logTimer=setTimeout(function(){ logTimer=0; backupLog(); },5000); }
 function backupLog(){
   if(logBusy){ scheduleLog(); return Promise.resolve(false); }
@@ -456,8 +395,8 @@ function scheduleSync(){ clearTimeout(syncTimer); syncTimer=setTimeout(syncPoint
 function syncPoints(){
   if(syncing) return scheduleSync();
   var nm=(state.name||"").trim().replace(/\s+/g," ");
-  if(!state.squadSlot || !squads[state.squadSlot-1]){ ptsMsg(""); return; }
-  if(!STU&&!NAME_OK.test(nm)){ ptsMsg("Enter your first name and last initial (like Sam K) to add your points to your squad."); return; }
+  if(!state.squadSlot){ ptsMsg("Your instructor has not put you on a team yet. Your points count once they do."); return; }
+  if(!squads[state.squadSlot-1]) return;
   ensureId();
   var p=pointsNow(), body={id:state.scoutId,slot:state.squadSlot,name:nm,vault:p.vault,terms:p.terms,levels:p.levels}, sig=JSON.stringify(body);
   if(sig===lastSent){ return; }
@@ -503,7 +442,6 @@ function renderMatch(){
 }
 function build(){
   renderMatch();
-  $("name").value = state.name||""; $("mid").value = state.memberId||""; renderSquads();
   refresh();
 }
 function refresh(){
@@ -569,7 +507,7 @@ function show(p,keepScroll,force){
   if(state.page==="L1"&&p!=="L1") topHide=true; // tuck the agent info away once page 1 is done
   state.page=p; save();
   ids.forEach(function(id){ var el=$("p-"+id); if(el){ el.hidden=(id!==p); if(id===p){ el.style.animation="none"; void el.offsetWidth; el.style.animation=""; } } });
-  renderNav(); if(p==="send"){ renderReqs(); pullSigned(); } if(!keepScroll) window.scrollTo({top:0,behavior:"smooth"});
+  renderNav(); if(!keepScroll) window.scrollTo({top:0,behavior:"smooth"});
 }
 function renderSub(){
   var sn=$("subnav"), par=parentLevel(curPage()); sn.innerHTML=""; var items=null;
@@ -1261,11 +1199,6 @@ function bonusTimer(){
 }
 function msg(t,cls){ var m=$("msg"); m.textContent=t||""; m.className="msg"+(cls?" "+cls:""); }
 function slug(s){ return (s||"agent").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"agent"; }
-function needName(){
-  if(!state.name.trim()){ msg("Add your agent name first.","err"); $("name").focus(); return true; }
-  return false;
-}
-
 function makePdf(){
   var J = window.jspdf && window.jspdf.jsPDF;
   if(!J){ throw new Error("PDF tool did not load. Check your Wi-Fi and reload."); }
@@ -1337,12 +1270,10 @@ function makePdf(){
 function filename(){ return "AIRA-Field-Log-"+slug(state.name)+".pdf"; }
 
 function download(){
-  if(needName()) return;
   try { var doc=makePdf(); doc.save(filename()); msg("PDF downloaded: "+filename()+". Now tap Email to counselor.","ok"); }
   catch(e){ msg(e.message,"err"); }
 }
 function mail(){
-  if(needName()) return;
   var doc; try{ doc=makePdf(); }catch(e){ msg(e.message,"err"); return; }
   var blob=doc.output("blob"), file=new File([blob],filename(),{type:"application/pdf"});
   var subject="AI merit badge field log - "+state.name.trim()+(state.squad.trim()?" ("+state.squad.trim()+")":"");
@@ -1358,26 +1289,6 @@ function fallback(doc,subject,body){
   msg("PDF downloaded. In the email that opened, attach "+filename()+" and send.","ok");
 }
 function snapshot(){ return {app:"aira-field-log",version:1,rev:state.rev||0,saved:new Date().toISOString(),name:state.name,memberId:state.memberId||"",squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,matched:state.matched,hvm:state.hvm,answers:state.answers,unlocked:state.unlocked,won:state.won,vault:state.vault,games:state.games,wwyd:state.wwyd,wwydGid:state.wwydGid||0,l2:state.l2,lv:state.lv}; }
-function saveJson(){
-  if(needName()) return;
-  var data=snapshot();
-  var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-  var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="AIRA-Field-Log-"+slug(state.name)+".json";
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
-  msg("Progress saved to "+a.download+". Keep it somewhere you can find it.","ok");
-}
-function loadJson(f){
-  if(!f) return;
-  if(f.size>1000000){ msg("That file is too big to be a field log.","err"); return; }
-  var r=new FileReader();
-  r.onload=function(){
-    try{
-      applyData(JSON.parse(r.result),f.name);
-    }catch(e){ msg("That doesn't look like an A.I.R.A. field log file.","err"); }
-  };
-  r.onerror=function(){ msg("Couldn't read that file.","err"); };
-  r.readAsText(f);
-}
 function applyData(d,label,quiet){
     try{
       if(!d || d.app!=="aira-field-log" || typeof d.answers!=="object" || d.answers===null) throw new Error("bad");
@@ -1386,32 +1297,14 @@ function applyData(d,label,quiet){
         var m=/^L1\|(\d+)$/.exec(k), v=d.answers[k];
         if(m && +m[1]<max && v && typeof v==="object") clean[k]={def:String(v.def||"").slice(0,400),ex:String(v.ex||"").slice(0,300)};
       });
-      var keepMid=state.memberId||"", keepPage=state.page; var keepId=/^[a-f0-9]{16,32}$/.test(String(d.scoutId||""))?String(d.scoutId):state.scoutId, slotIn=parseInt(d.squadSlot,10);
-      state={rev:Math.max(0,Math.floor(Number(d.rev)||0)),memberId:String(d.memberId||keepMid||"").replace(/\D/g,"").slice(0,12),name:String(d.name||"").slice(0,40),squad:String(d.squad||"").slice(0,40),squadSlot:(slotIn>=1&&slotIn<=4)?slotIn:0,scoutId:keepId,hvm:fixHvm(d.hvm),matched:(Array.isArray(d.matched)?d.matched.slice(0,max).map(function(v){return v===true;}):[]),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwydGid:(Number.isInteger(d.wwydGid)?d.wwydGid:0),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
+      var keepPage=state.page; // name, team, scouting ID and id always stay what the roster says
+      state={rev:Math.max(0,Math.floor(Number(d.rev)||0)),memberId:state.memberId,name:state.name,squad:state.squad,squadSlot:state.squadSlot,scoutId:state.scoutId,hvm:fixHvm(d.hvm),matched:(Array.isArray(d.matched)?d.matched.slice(0,max).map(function(v){return v===true;}):[]),answers:clean,unlocked:Math.min(8,Math.max(1,parseInt(d.unlocked,10)||1)),won:d.won===true,page:"L1",vault:{best:(d.vault&&Number.isInteger(d.vault.best))?Math.min(QN,Math.max(0,d.vault.best)):null,last:(d.vault&&Number.isInteger(d.vault.last))?Math.min(QN,Math.max(0,d.vault.last)):null},games:{ai:{best:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.best))?Math.min(10,Math.max(0,d.games.ai.best)):null,last:(d.games&&d.games.ai&&Number.isInteger(d.games.ai.last))?Math.min(10,Math.max(0,d.games.ai.last)):null}},l2:fixL2(d.l2),lv:fixLv(d.lv),wwydGid:(Number.isInteger(d.wwydGid)?d.wwydGid:0),wwyd:(Array.isArray(d.wwyd)?d.wwyd:[]).slice(0,5).map(function(r){return {n:String((r&&r.n)||"").slice(0,60),choice:String((r&&r.choice)||"").slice(0,80),why:String((r&&r.why)||"").slice(0,400)};})};
       try{localStorage.setItem(STORE_KEY,JSON.stringify(state));}catch(e){}
       lastSent=""; lastFp=""; buildPages(); build(); renderL8win();
       if(quiet){ show(keepPage||"L1",true); lastFp=fingerprint(); } else { show("L1"); scheduleSync(); msg("Loaded "+label+". Your work is back.","ok"); }
     }catch(e){ msg("That doesn't look like an A.I.R.A. field log.","err"); }
 }
-// Recovery code = your private device id, shown in groups of four. It brings your backup back on any device.
-function codeText(){ ensureId(); return state.scoutId.replace(/(.{4})/g,"$1-").replace(/-$/,""); }
-function showCode(){ var e=$("recCode"); if(e) e.textContent=codeText(); }
-function recover(){
-  var raw=$("recIn").value.toLowerCase().replace(/[^a-f0-9]/g,""), m=$("recMsg");
-  if(!/^[a-f0-9]{16,32}$/.test(raw)){ m.textContent="Type the whole recovery code (letters a-f and numbers)."; m.className="msg err"; return; }
-  if(hasWork() && !confirm("This replaces what is on this device right now with the backup. Continue?")) return;
-  m.textContent="Looking for your backup\u2026"; m.className="msg";
-  fetch("/api/fieldlog/restore?id="+raw,{cache:"no-store"}).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(r.status===404?"No backup found for that code. Check it and try again, or ask your counselor.":(j.error||"Could not recover.")); return j; }); })
-    .then(function(j){ j.state.scoutId=raw; applyData(j.state,"your backup"); showCode(); $("recMsg").textContent="Recovered. Your work is back."; $("recMsg").className="msg ok"; lastLogSig=""; })
-    .catch(function(e){ m.textContent=e.message; m.className="msg err"; });
-}
-function hasWork(){ return Object.keys(state.answers||{}).length>0 || (state.matched||[]).some(Boolean) || state.unlocked>1 || state.vault&&state.vault.best!=null || (state.name||"").trim().length>0; }
-function clearAll(){
-  if(!confirm("Erase everything on this device and start over?")) return;
-  var keepId=state.scoutId; state={name:"",squad:"",squadSlot:0,scoutId:keepId,matched:[],hvm:null,answers:{},unlocked:1,won:false,page:"L1",vault:{best:null,last:null},games:{ai:{best:null,last:null}},wwyd:[],l2:null}; try{localStorage.removeItem(STORE_KEY);}catch(e){}
-  location.reload();
-}
-// Several devices (phone and laptop) can share one Field Log by entering the same recovery code. Every 20 seconds,
+// Several devices (phone and laptop) share one Field Log by signing in with the same password. Every 20 seconds,
 // if the saved copy is newer than this device's, pull it in quietly (never while the Scout is typing or has unsent edits).
 var syncBusy=false;
 function typing(){ var a=document.activeElement; return !!a&&(a.tagName==="TEXTAREA"||(a.tagName==="INPUT"&&a.type==="text")); }
@@ -1424,14 +1317,7 @@ function pullNewer(){
   }).catch(function(){}).then(function(){ syncBusy=false; });
 }
 setInterval(pullNewer,20000); document.addEventListener("visibilitychange",function(){ if(!document.hidden) setTimeout(pullNewer,800); });
-$("recGo").addEventListener("click",recover); showCode();
-$("name").addEventListener("input",function(){ state.name=this.value; save(); });
-$("mid").addEventListener("input",function(){ state.memberId=this.value.replace(/\D/g,"").slice(0,12); this.value=state.memberId; save(); });
-$("squad").addEventListener("change",function(){ var v=parseInt(this.value,10)||0; state.squadSlot=v; state.squad=v?squads[v-1]||"":""; lastSent=""; save(); });
 window.addEventListener("focus",function(){ if(!squads.some(Boolean)) loadSquads(); });
-$("btnSave").addEventListener("click",saveJson);
-$("btnLoad").addEventListener("click",function(){ $("fileIn").click(); });
-$("fileIn").addEventListener("change",function(){ loadJson(this.files && this.files[0]); this.value=""; });
 $("btnPdf").addEventListener("click",download);
 document.addEventListener("click",function(e){ if(e.target&&e.target.id==="goCert"){ show("send"); setTimeout(function(){ var c=$("certCard"); if(c) c.scrollIntoView({behavior:"smooth",block:"start"}); },100); } });
 $("certPrint").addEventListener("click",certPrint); $("certPdf").addEventListener("click",certPdf); $("certMail").addEventListener("click",certMail);
@@ -1481,9 +1367,11 @@ STU=stu; STORE_KEY="aira_field_log_v1_"+stu.id;
 load();
 // The roster decides who this is: name, team and Scouting ID come from the instructor, and the student's id keys their log everywhere.
 state.scoutId=stu.id; state.name=stu.name; state.squadSlot=stu.slot===null?0:stu.slot+1; state.squad=stu.team||""; state.memberId=String(stu.scoutId||"").replace(/\D/g,"").slice(0,12);
-$("name").readOnly=true; $("mid").readOnly=true; $("signout").onclick=function(){ StudentLogin.signOut("ai"); };
-$("whoLine").textContent="Signed in as "+stu.name+(stu.team?" of "+stu.team:"")+". Nothing here is typed into an AI chatbot.";
+$("signout").onclick=function(){ StudentLogin.signOut("ai"); };
+$("whoLine").textContent="Signed in as "+stu.name+(stu.team?" of "+stu.team:"");
 ensureId(); if(!state.vault) state.vault={best:null,last:null}; if(!state.games) state.games={ai:{best:null,last:null}}; if(!state.wwyd) state.wwyd=[]; state.l2=fixL2(state.l2); state.lv=fixLv(state.lv); state.hvm=fixHvm(state.hvm); buildPages(); build(); startQuiz(); startAion(); renderWwyd0(); show(state.page); loadSquads(); setupFlow();
+// Fresh device (or cleared browser): bring back the saved log from the server.
+if(!state.rev) setTimeout(pullNewer,300);
 }
 StudentLogin.start("ai", main);
 })();
