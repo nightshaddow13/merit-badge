@@ -48,7 +48,7 @@ input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visib
 .tabs button.lk::after{content:"\1F512"}
 .tabs button[aria-selected=true]{background:var(--gold);color:#17112B;border-color:var(--gold);font-weight:700}
 .sec{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.25),0 6px 16px rgba(0,0,0,.28)}
-.sec[hidden],#reqPanel[hidden]{display:none}
+.sec[hidden],#doneCard[hidden]{display:none}
 .sec[data-st="2"]{border-color:var(--ok)}
 .sh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 16px;min-height:56px}
 .nextrow{display:flex;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap}
@@ -67,12 +67,6 @@ input:focus,textarea:focus,select:focus,button:focus-visible,summary:focus-visib
 .chips button[aria-pressed=true]{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
 .chips button small{display:block;color:var(--mut);font-size:12px}
 .warnmsg{color:var(--red);font-size:13px;margin:4px 0 0}
-.rq{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
-.rq:first-child{border-top:0}.rq .c{flex:none;min-width:38px;font-weight:800;color:var(--gold)}
-.rq .s{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--line);color:var(--mut);text-align:center;flex:none;max-width:48%}
-.rq .s.ok{border-color:var(--ok);color:var(--ok)}.rq .s.rdy{border-color:var(--gold);color:var(--gold)}
-.rq small{display:block;color:var(--mut)}
-.rgrp{margin:12px 0 2px;font-size:13px;font-weight:800;color:var(--gold);letter-spacing:.03em}
 .sign{margin-top:14px;padding:10px 12px;border-radius:8px;font-size:14px;border:1px solid var(--line);background:var(--panel2)}
 .sign.ok{border-color:var(--ok);color:var(--ok)}
 .sign.wait{color:var(--mut)}
@@ -143,17 +137,13 @@ body.led .nextrow{display:none}
 <div id="ledBar" class="gamebar" hidden role="status" aria-live="polite">Your instructor is leading the class. Your screen follows theirs.</div>
 <div id="gameBar" class="gamebar" hidden role="status" aria-live="polite"><span id="gameTxt"></span> <button class="btn" id="gameJoin" type="button">Join the game</button></div>
 <div id="gameOv" class="gameov" hidden role="dialog" aria-modal="true" aria-label="Live game"><div class="gameov-bar"><b id="gameOvT">Live game</b><button class="btn ghost" id="gameOvX" type="button">Close</button></div><iframe id="gameFrame" title="Live game"></iframe></div>
-<div id="reqPanel" role="tabpanel" hidden>
-<section class="card" id="reqCard"><h2>My requirements</h2><p class="hint" id="reqSum"></p><div id="reqList"></div><p class="hint" style="margin-top:10px">A requirement turns green when your counselor signs it off. Worksheets here check themselves as &ldquo;Ready for counselor&rdquo; when you finish them; the rest happen in class. Wording is paraphrased: your counselor has the official text.</p></section>
-
-<section class="card"><h2>All done?</h2><p class="hint">When a section says <b>Done</b>, find your counselor. He signs it off here on his own screen. A paper backup of every page is also available.</p><div class="row"><button class="btn" id="prn2" type="button">Print my log</button></div></section>
-</div>
 <div id="toolsPanel" role="tabpanel" aria-labelledby="t-board" hidden>
 <section class="card"><h2>Scoreboard</h2><p class="hint">How every lodge is doing. It updates on its own, and live games show up here too.</p>
 <iframe id="boardFrame" title="Scoreboard" style="width:100%;height:78vh;min-height:520px;border:1px solid var(--line);border-radius:10px;background:#fff"></iframe>
 <div class="row"><a class="btn ghost" href="/cybersecurity/scoreboard/" target="_blank" rel="noopener">Open in a new tab</a></div></section>
 </div>
 <div id="secs"></div>
+<section class="card" id="doneCard"><h2>All done?</h2><p class="hint">When a section says <b>Done</b>, find your counselor. He signs it off here on his own screen. A paper backup of every page is also available.</p><div class="row"><button class="btn" id="prn2" type="button">Print my log</button></div></section>
 <div id="printView" aria-hidden="true"></div>
 </div>
 
@@ -165,7 +155,6 @@ body.led .nextrow{display:none}
 </div>
 <div id="boardOv" class="boardov" hidden role="dialog" aria-modal="true" aria-label="Scoreboard"><iframe id="boardOvFrame" title="Scoreboard"></iframe></div>
 
-<script src="/assets/requirements.js"></script>
 <script src="/assets/warden-rules.js"></script>
 <script>
 (function(){
@@ -243,7 +232,7 @@ function blank(){
    reflect:{learned:"",lodge:"",next:""}}};
 }
 var state=blank(), signed={}, waive={};
-var flow={mode:"free",page:"req",message:"",rev:-1}, freeTab="";
+var flow={mode:"free",page:"career",message:"",rev:-1}, freeTab="";
 // merge any saved/imported object onto the blank shape so missing or odd values can never break a render
 function merge(dst,src){
   if(typeof dst==="string") return typeof src==="string"?src.slice(0,1000):dst;
@@ -400,23 +389,6 @@ function paintSign(sp,box){
   };
   row.appendChild(bt);box.appendChild(row);
 }
-function renderReqs(){
-  var host=$("reqList"); if(!host||!window.MB_REQS) return; host.textContent="";
-  var secByKey={}; SPEC.forEach(function(sp){secByKey[sp.k]=sp});
-  var signedN=0, ready=0, last="";
-  window.MB_REQS.cy.forEach(function(r){
-    if(r.group!==last){ last=r.group; host.appendChild(el("div",{"class":"rgrp"},r.group.toUpperCase())); }
-    var sg=signed[r.code], row=el("div",{"class":"rq"}), txt=el("div"), chip=el("span",{"class":"s"});
-    txt.appendChild(document.createTextNode(r.text)); txt.appendChild(el("small",null,r.auto?"Worksheet: "+secByKey[r.auto].title:r.when));
-    if(sg){ chip.className="s ok"; chip.textContent="Signed off by "+sg.by; signedN++; }
-    else if(r.auto&&secState(secByKey[r.auto])===2){ chip.className="s rdy"; chip.textContent="Ready for counselor"; ready++; }
-    else if(r.auto&&secState(secByKey[r.auto])===1) chip.textContent="In progress";
-    else chip.textContent=r.auto?"Open the worksheet":(r.when==="Before class"?"Before class":"Do in class");
-    row.appendChild(el("span",{"class":"c"},r.code)); row.appendChild(txt); row.appendChild(chip);
-    host.appendChild(row);
-  });
-  $("reqSum").textContent=signedN+" of "+window.MB_REQS.cy.length+" signed off"+(ready?", "+ready+" ready for your counselor":"")+".";
-}
 function build(){
   var host=$("secs");host.textContent="";uid=0;
   SPEC.forEach(function(sp,idx){
@@ -435,7 +407,7 @@ function build(){
     });
     body.appendChild(signBox(sp));
     var nr=el("div",{"class":"nextrow"}), ord=WORKSHEETS.map(function(t){return t.k}), at=ord.indexOf(sp.k);
-    if(at>=0){ var pb=el("button",{type:"button","class":"btn ghost"},"\u2190 "+WORKSHEETS[at-1].label); pb.onclick=function(){setTab(ord[at-1],true)}; nr.appendChild(pb);
+    if(at>=0){ if(at>0){ var pb=el("button",{type:"button","class":"btn ghost"},"\u2190 "+WORKSHEETS[at-1].label); pb.onclick=function(){setTab(ord[at-1],true)}; nr.appendChild(pb); }
     if(at<ord.length-1){ var nb=el("button",{type:"button","class":"btn"},"Next: "+WORKSHEETS[at+1].label+" \u2192"); nb.onclick=function(){setTab(ord[at+1],true)}; nr.appendChild(nb); }
     } body.appendChild(nr);
     det.appendChild(body);host.appendChild(det);
@@ -459,18 +431,17 @@ function refresh(){
     if(tb){ var lb=lockedBy(sp.k); tb.className=(sp.game?"":sp.nowrite?(signed[sp.req]?"d":""):(st===2?"d":st===1?"p":""))+(lb?" lk":""); tb.setAttribute("aria-disabled",lb?"true":"false");
       tb.title=lb?"Locked until "+lb.n+". "+lb.title.split(":")[0].replace(/^My /,"")+" is done or waived":""; }
   });
-  renderReqs();
   var writing=SPEC.filter(function(sp){return !sp.nowrite}).length;
   $("pt").textContent=done+" of "+writing+" worksheets done (the rest are signed off in class)";
   $("pb").style.width=Math.round(done/writing*100)+"%";
 }
-var TABS=[{k:"req",label:"My requirements"}].concat(SPEC.filter(function(sp){return !sp.notab}).map(function(sp){return {k:sp.k,label:sp.n+". "+sp.title.split(":")[0].replace(/^My /,"")}})).concat([{k:"board",label:"Scoreboard"}]);
+var TABS=[].concat(SPEC.filter(function(sp){return !sp.notab}).map(function(sp){return {k:sp.k,label:sp.n+". "+sp.title.split(":")[0].replace(/^My /,"")}})).concat([{k:"board",label:"Scoreboard"}]);
 var WORKSHEETS=TABS.filter(function(t){return t.k!=="board"});
 var curTab="";
 function startTab(){
   var h=(location.hash||"").replace("#s-",""); if(TABS.some(function(t){return t.k===h})) return h;
   try{var v=localStorage.getItem("warden_tab"); if(v&&TABS.some(function(t){return t.k===v})) return v;}catch(e){}
-  var f=SPEC.findIndex(function(sp){return !sp.nowrite&&secState(sp)<2}); return f<0?"req":SPEC[f].k;
+  var f=SPEC.findIndex(function(sp){return !sp.nowrite&&secState(sp)<2}); return f<0?TABS[0].k:SPEC[f].k;
 }
 // Worksheets open in order: a tab stays locked until every earlier worksheet is done or waived by the counselor.
 function lockedBy(k){
@@ -479,12 +450,12 @@ function lockedBy(k){
 }
 function setTab(k,scroll,force){
   if(flow.mode==="page"){ k=flow.page; force=true; }   // the instructor is leading: stay where they are, whatever is locked
-  if(!TABS.some(function(t){return t.k===k})) k="req";
+  if(!TABS.some(function(t){return t.k===k})) k=TABS[0].k;
   var lk=force?null:lockedBy(k);
   if(lk){ setStatus("Locked: finish "+lk.n+". "+lk.title.split(":")[0].replace(/^My /,"")+" first, or ask your counselor to waive it."); k=lk.k; }
   curTab=k;
   TABS.forEach(function(t){ var b=$("t-"+t.k); if(b){ b.setAttribute("aria-selected",t.k===k?"true":"false"); b.tabIndex=t.k===k?0:-1; } });
-  $("reqPanel").hidden=k!=="req"; $("toolsPanel").hidden=k!=="board"; if(k==="board"){var bf=$("boardFrame"); if(!bf.getAttribute("src")) bf.setAttribute("src","/cybersecurity/scoreboard/?embed=1"+(lodgeSlot()?"&lodge="+lodgeSlot():""));} document.querySelectorAll("#secs .sec").forEach(function(d){ d.hidden=d.dataset.sec!==k; });
+  $("toolsPanel").hidden=k!=="board"; $("doneCard").hidden=k==="board"; if(k==="board"){var bf=$("boardFrame"); if(!bf.getAttribute("src")) bf.setAttribute("src","/cybersecurity/scoreboard/?embed=1"+(lodgeSlot()?"&lodge="+lodgeSlot():""));} document.querySelectorAll("#secs .sec").forEach(function(d){ d.hidden=d.dataset.sec!==k; });
   try{localStorage.setItem("warden_tab",k)}catch(e){}
   var sel=$("t-"+k); if(sel&&sel.scrollIntoView) sel.scrollIntoView({inline:"center",block:"nearest"});
   if(scroll) window.scrollTo({top:0,behavior:"smooth"});
@@ -492,7 +463,7 @@ function setTab(k,scroll,force){
 function jumps(){
   var n=$("tabs");
   TABS.forEach(function(t,i){
-    var b=el("button",{type:"button",role:"tab",id:"t-"+t.k,"aria-selected":"false","aria-controls":t.k==="req"?"reqPanel":"s-"+t.k});
+    var b=el("button",{type:"button",role:"tab",id:"t-"+t.k,"aria-selected":"false","aria-controls":"s-"+t.k});
     b.appendChild(el("span",{"class":"dot"})); b.appendChild(document.createTextNode(t.label));
     b.onclick=function(){setTab(t.k,false)};
     b.onkeydown=function(e){ var d=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0; if(!d) return; e.preventDefault(); var nx=TABS[(i+d+TABS.length)%TABS.length]; setTab(nx.k,false); $("t-"+nx.k).focus(); };

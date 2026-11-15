@@ -80,7 +80,7 @@
 </style>
 <script>
 (function(){
- var PAGES=[["req","My requirements","What is left to sign off"],["career","1 \u00b7 Paths of the Order","Career worksheet (req 9)"],["surface","2 \u00b7 My Attack Surface","List (req 4f)"],["forge","3 \u00b7 Passphrase Forge","Class game"],["rite","4 \u00b7 Two-Key Rite","Class game"],["seal","5 \u00b7 Press the Seal","Hash Lab (req 6c)"],["breach","Breach News (discussion)","Req 4e. Scouts see My requirements"],["objects","Enchanted Objects (discussion)","Req 7. Scouts see My requirements"],["board","Scoreboard tab","Their Tools tab: the live scoreboard"]];
+ var PAGES=[["career","1 \u00b7 Paths of the Order","Career worksheet (req 9)"],["surface","2 \u00b7 My Attack Surface","List (req 4f)"],["forge","3 \u00b7 Passphrase Forge","Class game"],["rite","4 \u00b7 Two-Key Rite","Class game"],["seal","5 \u00b7 Press the Seal","Hash Lab (req 6c)"],["breach","Breach News (discussion)","Req 4e. Discussion with the counselor"],["objects","Enchanted Objects (discussion)","Req 7. Discussion with the counselor"]];
  var QUICK=["Eyes up front. Your instructor is talking.","Hands off the keyboards for a moment.","Back in five minutes.","Time to move: wait for the next instruction."];
  var msg=document.getElementById("msg"),S=null,busy=false;
  function $(i){return document.getElementById(i)}
@@ -116,7 +116,7 @@
 
  /* ---- On this page: game controls + what the Wardens wrote ---- */
  var names=[],G=null,LG=[],AN={},hereKey="",ORD=["1st","2nd","3rd","4th","5th","6th"],LABELS=["Too guessable","Very guessable","Somewhat guessable","Safely unguessable","Very unguessable"];
- var HINT={req:"Class overview. Scouts are looking at their own requirement list.",career:"Scouts are on the career worksheet (requirement 9, done before class).",surface:"Scouts are listing their attack surface (requirement 4f).",breach:"Discussion page: nothing is typed. Sign off requirement 4e as Wardens explain their incident.",forge:"Passphrase Forge tab. Scouts can practice scoring a made-up passphrase. Start the game from here when you are ready.",rite:"Two-Key Rite tab. Start the game from here when Wardens have their authenticators ready.",seal:"Hash Lab: nothing is typed. Sign off requirement 6c as Wardens show the hashing tool.",objects:"Discussion page: nothing is typed. Sign off requirement 7 as Wardens explain their objects.",board:"Scouts are on their Scoreboard tab (tools). Use Show the scoreboard instead to cover the whole screen."};
+ var HINT={career:"Scouts are on the career worksheet (requirement 9, done before class).",surface:"Scouts are listing their attack surface (requirement 4f).",breach:"Discussion page: nothing is typed. Sign off requirement 4e as Wardens explain their incident.",forge:"Passphrase Forge tab. Scouts can practice scoring a made-up passphrase. Start the game from here when you are ready.",rite:"Two-Key Rite tab. Start the game from here when Wardens have their authenticators ready.",seal:"Hash Lab: nothing is typed. Sign off requirement 6c as Wardens show the hashing tool.",objects:"Discussion page: nothing is typed. Sign off requirement 7 as Wardens explain their objects.",board:"Scouts are on their Scoreboard tab (tools). Use Show the scoreboard instead to cover the whole screen."};
  var REQP={career:["9","Career research"],surface:["4f","Attack surface list"]};
  var SIGN={breach:["4e","Read about a recent incident and explained how it happened and what it cost."],seal:["6c","Used a hashing tool to show integrity checking."],objects:["7","Explained how connected objects can be attacked and how to protect them."]};
  function lname(n){return names[n-1]||"Lodge "+n}
@@ -168,11 +168,6 @@
   paintGame();
   body.textContent="";
   var n=LG.length;
-  if(k==="req"){
-   var wv=[],sg=0;LG.forEach(function(l){sg+=Object.keys(l.signed||{}).length;Object.keys(l.waive||{}).forEach(function(r){if(l.waive[r].status==="pending")wv.push([l,r])})});
-   body.appendChild(E("p",null,n+" Warden Log"+(n===1?"":"s")+" started. "+sg+" requirement sign-off"+(sg===1?"":"s")+" recorded so far."));
-   if(wv.length){body.appendChild(E("p",null,"Waiver requests:"));wv.forEach(function(x){var row=E("div","sg");row.appendChild(E("b",null,who(x[0])+" \u00b7 "+x[1]));row.appendChild(E("span",null,x[0].waive[x[1]].reason||"No reason given"));row.appendChild(waiveBtn(x[0],x[1]));row.appendChild(declineBtn(x[0],x[1]));body.appendChild(row)})}else body.appendChild(E("p","muted","No waiver requests right now."));var a=E("a",null,"Waive any requirement for a Warden in the Warden Log dashboard");a.href="/cybersecurity/scoreboard/logs.html";a.target="_blank";a.rel="noopener";body.appendChild(a);
-   return}
   var d=AN[k]||[];
   if(k==="career"||k==="surface"){
    var done=LG.filter(function(l){return l.summary&&l.summary[k]===2}).length;
