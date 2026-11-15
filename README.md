@@ -163,7 +163,18 @@ A Scout can only enter the access code for Level N once the scoreboard's "Levels
 - **Show the scoreboard**: the live scoreboard covers every Warden Log.
 - **Let Scouts roam freely**: back to the normal behaviour; each Scout returns to the tab they were on.
 
-Holding keeps the page the instructor was on, so choosing it again resumes. Run `node api/test-cyberflow.js` for the library tests. Only the Warden Log follows the instructor; the A.I.R.A. Field Log does not yet.
+Holding keeps the page the instructor was on, so choosing it again resumes. Run `node api/test-cyberflow.js` for the library tests. The A.I.R.A. Field Log has the same tool; see the next section.
+
+## Run the class (AI, instructor-led)
+
+`/ai/scoreboard/run.html` (counselor or scorekeeper, linked from `/ai/instructor.html`) leads every Scout's A.I.R.A. Field Log from one screen. It uses the same record as the Cybersecurity version (`GET /api/aiflow` public, `POST /api/aiflow/control` staff only, partition `aiflow` in the `cup` table, no new Azure setup). The Field Log polls every 3 seconds and when the tab regains focus.
+
+- **Pages** are `L1`, `V1` (Level 1 Terms and Vocab Vault), `L2.aion` ... `L8.unlock` (a level's in-page tab; the last tab of each level is its access-code tab) and `send` (Send & save). Pick one (or Previous / Next, or the arrow keys) and every Scout's Field Log jumps to it, even past a locked tab or level, with the navigation hidden and a "your instructor is leading" bar. A page with no Scout tab (discussion pages, `DISCUSSION` in `api/src/lib/aiflow.js`) keeps Scouts where they are.
+- **Hold screens** shows the "Eyes up front" page with an optional message (200 characters, plain text) and blocks the page behind it. **Show the scoreboard** covers every Field Log with `/ai/scoreboard/?embed=1`. **Let Scouts roam freely** gives navigation back and returns each Scout to the tab they were on. Typed work is never changed.
+- **On this page** (below the page buttons, refreshed every ~8 s): What Would You Do? and Prompt Duel start/end controls (L4 and L6 Prompt Duel pages), what each Scout wrote on pages that collect writing (`GET /api/fieldlog/answers?section=`, staff only), a per-level sign-off roster with Waive / Revoke, and on Send & save the pending waiver requests with Approve (also signs off) and Decline.
+- Tabs and locks: see "Field Log backup, dashboard and overrides". While the instructor leads, locks are ignored.
+
+Run `node api/test-aiflow.js`; it also checks that the page list, the Field Log tabs and the run page stay in the same order.
 
 ## Warden Log (Cybersecurity worksheets)
 
