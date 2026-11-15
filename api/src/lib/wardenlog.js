@@ -113,6 +113,17 @@ function createWardenLog(stores, roster) {
     out.sort((a, b) => (a.updated < b.updated ? 1 : -1));
     return { status: 200, body: { logs: out } };
   }
+  // Staff: what every Warden wrote in one section, for the instructor's live view. body: [{ id, name, lodge, data }]
+  async function answers(section) {
+    if (!SECTIONS.includes(section)) return { status: 400, body: { error: "Unknown section." } };
+    const out = [];
+    for (const r of await logs.list()) {
+      const m = r.data.meta, rec = await logs.get(r.rowKey);
+      const d = rec && rec.state && typeof rec.state === "object" ? rec.state[section] : null;
+      out.push({ id: m.id, name: m.name || "", lodge: m.lodge || "", data: d && typeof d === "object" ? d : {} });
+    }
+    return { status: 200, body: { section, answers: out } };
+  }
   async function get(id) {
     if (badId(id)) return { status: 400, body: { error: "Missing id." } };
     const rec = await logs.get("log-" + id);
@@ -174,7 +185,7 @@ function createWardenLog(stores, roster) {
     return { status: 200, body: { removed: n } };
   }
 
-  return { save, status, requestWaive, restore, list, get, signoff, grant, edit, remove, resetAll };
+  return { save, status, requestWaive, restore, list, answers, get, signoff, grant, edit, remove, resetAll };
 }
 
 module.exports = { createWardenLog, MAX_STATE, MAX_LOGS, REQS, SECTIONS, SECTION_REQ };

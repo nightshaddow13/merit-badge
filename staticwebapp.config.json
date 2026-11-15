@@ -416,6 +416,16 @@
       ]
     },
     {
+      "route": "/api/wardenlog/answers",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/api/wardenlog/log",
       "methods": [
         "GET"
@@ -486,6 +496,16 @@
       ]
     },
     {
+      "route": "/api/cyberflow/control",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ]
+    },
+    {
       "route": "/cybersecurity/scoreboard/games.html",
       "allowedRoles": [
         "counselor",
@@ -493,6 +513,17 @@
       ],
       "headers": {
         "X-Robots-Tag": "noindex",
+        "Cache-Control": "private, no-store"
+      }
+    },
+    {
+      "route": "/cybersecurity/scoreboard/run.html",
+      "allowedRoles": [
+        "counselor",
+        "scorekeeper"
+      ],
+      "headers": {
+        "X-Robots-Tag": "noindex, nofollow",
         "Cache-Control": "private, no-store"
       }
     },

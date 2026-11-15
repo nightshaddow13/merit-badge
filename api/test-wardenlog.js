@@ -21,6 +21,16 @@ const body = (n, o) => Object.assign({ id: hex(n), name: "Sam K", lodge: "Owls",
   assert.strictEqual(Object.keys(SECTION_REQ).length, shared.cy.filter((r) => r.auto).length);
   const w = createWardenLog({ logs: mem(), ovr: mem() });
   assert.strictEqual((await w.save(body(1))).status, 200);
+  { // staff view of one section across every Warden
+    await w.save(body(5, { name: "Ana B", lodge: "Hawks", state: { career: { chosen: "Cryptographer", careers: ["a", "b", "c"] }, surface: { items: ["laptop"] } } }));
+    const a = (await w.answers("career")).body.answers, ana = a.find((x) => x.name === "Ana B");
+    assert.ok(a.length >= 2 && ana.lodge === "Hawks" && ana.data.chosen === "Cryptographer" && ana.data.careers.length === 3);
+    assert.ok(a.find((x) => x.name === "Sam K").data.chosen === "Analyst", "every Warden is listed");
+    assert.strictEqual((await w.answers("surface")).body.answers.find((x) => x.name === "Ana B").data.items[0], "laptop");
+    assert.strictEqual((await w.answers("bogus")).status, 400);
+    assert.strictEqual((await w.answers("__proto__")).status, 400);
+    assert.deepStrictEqual((await w.answers("seal")).body.answers.find((x) => x.name === "Ana B").data, {}, "a section nobody filled in is empty, not an error");
+  }
   for (const b of [null, [], { ...body(1), id: "zz" }, { ...body(1), state: null }, { ...body(1), state: [] }]) assert.ok((await w.save(b)).status >= 400);
   assert.strictEqual((await w.save(body(1, { state: { big: "x".repeat(150001) } }))).status, 413);
   // text is clamped, junk keys dropped, summary sanitized
@@ -63,7 +73,7 @@ const body = (n, o) => Object.assign({ id: hex(n), name: "Sam K", lodge: "Owls",
   // delete and reset
   assert.strictEqual((await w.remove({ id: hex(2) })).status, 200); assert.strictEqual((await w.get(hex(2))).status, 404);
   assert.strictEqual((await w.resetAll({})).status, 400);
-  assert.strictEqual((await w.resetAll({ confirm: "RESET" })).body.removed, 2); assert.strictEqual((await w.list()).body.logs.length, 0);
+  assert.strictEqual((await w.resetAll({ confirm: "RESET" })).body.removed, 3); assert.strictEqual((await w.list()).body.logs.length, 0);
   // class limit
   const f = createWardenLog({ logs: mem(), ovr: mem() });
   for (let i = 1; i <= 80; i++) assert.strictEqual((await f.save(body(i))).status, 200);
